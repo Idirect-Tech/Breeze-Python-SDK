@@ -9,11 +9,11 @@ from io import BytesIO
 from zipfile import ZipFile
 from urllib.request import urlopen
 import pandas as pd
+import config
 
 requests.packages.urllib3.util.connection.HAS_IPV6 = False
 
-url = "https://directlink.icicidirect.com/NewSecurityMaster/SecurityMaster.zip"
-resp = urlopen(url)
+resp = urlopen(config._security_master_url)
 zipfile = ZipFile(BytesIO(resp.read()))
 
 class SocketEventBreeze(socketio.ClientNamespace):
@@ -25,19 +25,16 @@ class SocketEventBreeze(socketio.ClientNamespace):
 
     def connect(self,hostname):
         auth = {"user": self.breeze.user_id, "token": self.breeze.session_key}
-        socket = self.sio.connect(hostname, headers={"User-Agent": "python-socketio[client]/socket"},auth=auth,transports="websocket", wait_timeout=3)
-        print("Connected for hostname: "+str(hostname)+" socket object : "+str(self.sio))
+        self.sio.connect(hostname, headers={"User-Agent": "python-socketio[client]/socket"},auth=auth,transports="websocket", wait_timeout=3)
         
     def on_disconnect(self):
         self.sio.emit("disconnect", "transport close")
         
     def notify(self):
         self.sio.on('order', self.on_message)
-    def on_mess(self, data):      
-        self.breeze.on_ticks(data)    
+
     def on_message(self, data):
         data = self.breeze.parse_data(data)
-        #print(data)
         if 'symbol' in data and data['symbol'] != None and len(data['symbol'])>0:
             data.update(self.breeze.get_data_from_stock_token_value(data['symbol']))
         self.breeze.on_ticks(data)
@@ -48,7 +45,6 @@ class SocketEventBreeze(socketio.ClientNamespace):
 
     def unwatch(self, data):
         self.sio.emit("leave", data)
-        
 
 
 class BreezeConnect():
@@ -64,66 +60,18 @@ class BreezeConnect():
         self.on_ticks = None
         self.stock_script_dict_list = []
         self.token_script_dict_list = []
-        self.tux_to_user_value = {
-            "orderFlow": {
-                "B": "Buy",
-                "S": "Sell",
-                "N": "NA"
-            },
-            "limitMarketFlag": {
-                "L": "Limit",
-                "M": "Market",
-                "S": "StopLoss"
-            },
-            "orderType": {
-                "T": "Day",
-                "I": "IoC",
-                "V": "VTC"
-            },
-            "productType": {
-                "F": "Futures",
-                "O": "Options",
-                "P": "FuturePlus",
-                "U": "FuturePlus_sltp",
-                "I": "OptionPlus",
-                "C": "Cash",
-                "Y": "eATM",
-                "B": "BTST",
-                "M": "Margin",
-                "T": "MarginPlus"
-            },
-            "orderStatus": {
-                "A": "All",
-                "R": "Requested",
-                "Q": "Queued",
-                "O": "Ordered",
-                "P": "Partially Executed",
-                "E": "Executed",
-                "J": "Rejected",
-                "X": "Expired",
-                "B": "Partially Executed And Expired",
-                "D": "Partially Executed And Cancelled",
-                "F": "Freezed",
-                "C": "Cancelled"
-            },
-            "optionType": {
-                "C": "Call",
-                "P": "Put",
-                "*": "Others"
-            },
-        }
+        self.tux_to_user_value = config._tux_to_user_map
 
     def _ws_connect(self,handler,order_flag): 
-        #print(order_flag)
-        
+
         if order_flag:
             if not self.sio_order_refresh_handler:
                 self.sio_order_refresh_handler = SocketEventBreeze("/", self)
-            self.sio_order_refresh_handler.connect("https://livefeeds.icicidirect.com")
+            self.sio_order_refresh_handler.connect(config._live_feeds_url)
         else:
             if not self.sio_rate_refresh_handler: 
                 self.sio_rate_refresh_handler = SocketEventBreeze("/", self)
-            self.sio_rate_refresh_handler.connect("https://livestream.icicidirect.com")
+            self.sio_rate_refresh_handler.connect(config._live_stream_url)
     
     def ws_disconnect(self,isOrder = False):
         if(isOrder == False):    
@@ -521,7 +469,7 @@ class BreezeConnect():
                 "AppKey": self.api_key
             }
             body = json.dumps(body, separators=(',', ':'))
-            url = "https://api.icicidirect.com/breezeapi/api/v1/customerdetails"
+            url = config._api_url + config._api_endpoints["cust.details"]
             response = requests.get(url=url, data=body, headers=headers)
             if response.json()['Success'] != None:
                 base64_session_token = response.json()['Success']['session_token']
@@ -538,7 +486,7 @@ class BreezeConnect():
             self.stock_script_dict_list = [{}, {}, {}, {}, {}]
             self.token_script_dict_list = [{}, {}, {}, {}, {}]
             with requests.Session() as s:
-                download = s.get("https://traderweb.icicidirect.com/Content/File/txtFile/ScripFile/StockScriptNew.csv")
+                download = s.get(config._stock_script_csv_url)
                 decoded_content = download.content.decode('utf-8')
                 cr = csv.reader(decoded_content.splitlines(), delimiter=',')
                 my_list = list(cr)
@@ -653,9 +601,19 @@ class ApificationBreeze():
 
     def __init__(self, breeze_instance):
         self.breeze = breeze_instance
-        self.hostname = 'https://api.icicidirect.com/breezeapi/api/v1/'
+        self.hostname = config._api_url
         self.base64_session_token = base64.b64encode(
             (self.breeze.user_id + ":" + self.breeze.session_key).encode('ascii')).decode('ascii')
+        
+    def error_exception(self,message,error):
+        raise Exception(message).with_traceback(error.__traceback__)
+
+    def validation_errors(self,message):
+        return {
+                    "Success": "", 
+                    "Status": 500, 
+                    "Error": message
+                }
 
     def generate_headers(self, body):
         try:
@@ -671,7 +629,7 @@ class ApificationBreeze():
             }
             return headers
         except Exception as e:
-            print("generate_headers() Error - ", e)
+            self.error_exception("generate_headers() Error",e)
 
     def make_request(self, method, endpoint, body, headers):
         try:
@@ -688,16 +646,13 @@ class ApificationBreeze():
             elif method == "DELETE":
                 res = requests.delete(url=url, data=body, headers=headers)
                 return res
-            else:
-                print("Invalid Request Method - Must be GET, POST, PUT or DELETE")
         except Exception as e:
-            print("Error while trying to make request "+method+" "+url+" - ", e)
+            self.error_exception("Error while trying to make request "+method+" "+url,e)
 
     def get_customer_details(self, api_session=""):
         try:
             if api_session == "" or api_session == None:
-                response = {"Success": "", "Status": 500, "Error": "api_session cannot be empty"}
-                return response
+                return self.validation_errors("api_session cannot be empty")
             headers = {
                 "Content-Type": "application/json"
             }
@@ -707,53 +662,49 @@ class ApificationBreeze():
             }
             body = json.dumps(body, separators=(',', ':'))
             response = self.make_request(
-                "GET", "customerdetails", body, headers)
+                "GET", config._api_endpoints["cust.details"], body, headers)
             response = response.json()
             if 'Success' in response and response['Success'] != None and 'session_token' in response['Success']:
                 del response['Success']['session_token']
             return response
         except Exception as e:
-            print("get_customer_details() Error - ", e)
+            self.error_exception("get_customer_details() Error",e)
 
     def get_demat_holdings(self):
         try:
             body = {}
             body = json.dumps(body, separators=(',', ':'))
             headers = self.generate_headers(body)
-            response = self.make_request("GET", "dematholdings", body, headers)
+            response = self.make_request("GET",config._api_endpoints["demat.holding"], body, headers)
             response = response.json()
             return response
         except Exception as e:
-            print("get_demat_holdings() Error- ", e)
+            self.error_exception("get_demat_holdings() Error",e)
 
     def get_funds(self):
         try:
             body = {}
             body = json.dumps(body, separators=(',', ':'))
             headers = self.generate_headers(body)
-            response = self.make_request("GET", "funds", body, headers)
+            response = self.make_request("GET", config._api_endpoints["fund"], body, headers)
             response = response.json()
             return response
         except Exception as e:
-            print("get_funds() Error - ", e)
+            self.error_exception("get_funds() Error",e)
 
     def set_funds(self, transaction_type="", amount="", segment=""):
         try:
             if transaction_type == "" or transaction_type == None or amount == "" or amount == None or segment == "" or segment == None:
-                response = {"Success": "", "Status": 500, "Error": ""}
                 if transaction_type == "" or transaction_type == None:
-                    response["Error"] = "Transaction-Type cannot be empty"
+                    return self.validation_errors("Transaction-Type cannot be empty")
                 elif amount == "" or amount == None:
-                    response["Error"] = "Amount cannot be empty"
+                    return self.validation_errors("Amount cannot be empty")
                 elif segment == "" or segment == None:
-                    response["Error"] = "Segment cannot be empty"
-                return response
+                    return self.validation_errors("Segment cannot be empty")
             elif transaction_type.lower() not in ["debit", "credit"]:
-                response = {"Success": "", "Status": 500, "Error": "Transaction-Type should be either 'debit' or 'credit'"}
-                return response
+                return self.validation_errors("Transaction-Type should be either 'debit' or 'credit'")
             elif not int(amount) > 0:
-                response = {"Success": "", "Status": 500, "Error": "Amount should be more than 0"}
-                return response
+                return self.validation_errors("Amount should be more than 0")
             body = {
                 "transaction_type": transaction_type,
                 "amount": amount,
@@ -761,48 +712,38 @@ class ApificationBreeze():
             }
             body = json.dumps(body, separators=(',', ':'))
             headers = self.generate_headers(body)
-            response = self.make_request("POST", "funds", body, headers)
+            response = self.make_request("POST", config._api_endpoints["fund"], body, headers)
             response = response.json()
             return response
         except Exception as e:
-            print("set_funds() Error - ", e)
+            self.error_exception("set_funds() Error",e)
 
     def get_historical_data(self, interval="", from_date="", to_date="", stock_code="", exchange_code="", product_type="", expiry_date="", right="", strike_price=""):
         try:
             if interval == "" or interval == None:
-                response = {"Success": "", "Status": 500, "Error": "Interval cannot be empty"}
-                return response
+                return self.validation_errors("Interval cannot be empty")
             elif interval.lower() not in ["1minute", "5minute", "30minute", "1day"]:
-                response = {"Success": "", "Status": 500, "Error": "Interval should be either '1minute', '5minute', '30minute', or '1day'"}
-                return response
+                return self.validation_errors("Interval should be either '1minute', '5minute', '30minute', or '1day'")
             elif exchange_code == "" or exchange_code == None:
-                response = {"Success": "", "Status": 500, "Error": "Exchange-Code cannot be empty"}
-                return response
+                return self.validation_errors("Exchange-Code cannot be empty")
             elif exchange_code.lower() not in ["nse", "nfo"]:
-                response = {"Success": "", "Status": 500, "Error": "Exchange-Code should be either 'nse', or 'nfo'"}
-                return response
+                return self.validation_errors("Exchange-Code should be either 'nse', or 'nfo'")
             elif from_date == "" or from_date == None:
-                response = {"Success": "", "Status": 500, "Error": "From-Date cannot be empty"}
-                return response
+                return self.validation_errors("From-Date cannot be empty")
             elif to_date == "" or to_date == None:
-                response = {"Success": "", "Status": 500, "Error": "To-Date cannot be empty"}
-                return response
+                return self.validation_errors("To-Date cannot be empty")
             elif stock_code == "" or stock_code == None:
-                response = {"Success": "", "Status": 500, "Error": "Stock-Code cannot be empty"}
-                return response
+                return self.validation_errors("Stock-Code cannot be empty")
             elif exchange_code.lower() == "nfo":
                 if product_type == "" or product_type == None:
-                    response = {"Success": "", "Status": 500, "Error": "Product-type cannot be empty for Exchange-Code 'nfo'"}
-                    return response
+                    return self.validation_errors("Product-type cannot be empty for Exchange-Code 'nfo'")
                 elif product_type.lower() not in ["futures", "options", "futureplus", "optionplus"]:
-                    response = {"Success": "", "Status": 500, "Error": "Product-type should be either 'futures', 'options', 'futureplus', or 'optionplus' for Exchange-Code 'NFO'"}
-                    return response
+                    return self.validation_errors("Product-type should be either 'futures', 'options', 'futureplus', or 'optionplus' for Exchange-Code 'NFO'")
                 elif product_type.lower() == "options" and (strike_price == "" or strike_price == None):
-                    response = {"Success": "", "Status": 500, "Error": "Strike-Price cannot be empty for Product-Type 'options'"}
-                    return response
+                    return self.validation_errors("Strike-Price cannot be empty for Product-Type 'options'")
                 elif expiry_date == "" or expiry_date == None:
-                    response = {"Success": "", "Status": 500, "Error": "Expiry-Date cannot be empty for exchange-code 'nfo'"}
-                    return response
+                    return self.validation_errors("Expiry-Date cannot be empty for exchange-code 'nfo'")
+
             if interval == '1minute':
                 interval = 'minute'
             elif interval == '1day':
@@ -825,23 +766,21 @@ class ApificationBreeze():
             body = json.dumps(body, separators=(',', ':'))
             headers = self.generate_headers(body)
             response = self.make_request(
-                "GET", "historicalcharts", body, headers)
+                "GET", config._api_endpoints["hist.chart"], body, headers)
             response = response.json()
             return response
         except Exception as e:
-            print("get_historical_data() Error - ", e)
+            self.error_exception("get_historical_data() Error",e)
 
     def add_margin(self, product_type="", stock_code="", exchange_code="", settlement_id="", add_amount="", margin_amount="", open_quantity="", cover_quantity="", category_index_per_stock="", expiry_date="", right="", contract_tag="", strike_price="", segment_code=""):
         try:
             if exchange_code == "" or exchange_code == None:
-                response = {"Success": "", "Status": 500, "Error": "Exchange-Code cannot be empty"}
-                return response
+                return self.validation_errors("Exchange-Code cannot be empty")
             elif product_type != "" and product_type != None and product_type.lower() not in ["futures", "options", "futureplus", "optionplus", "cash", "eatm", "margin"]:
-                response = {"Success": "", "Status": 500, "Error": "Product-type should be either 'futures', 'options', 'futureplus', 'optionplus', 'cash', 'eatm', or 'margin'"}
-                return response
+                return self.validation_errors("Product-type should be either 'futures', 'options', 'futureplus', 'optionplus', 'cash', 'eatm', or 'margin'")
             elif right != "" and right != None and right.lower() not in ["call", "put", "others"]:
-                response = {"Success": "", "Status": 500, "Error": "Right should be either 'call', 'put', or 'others'"}
-                return response
+                return self.validation_errors("Right should be either 'call', 'put', or 'others'")
+
             body = {
                 "exchange_code": exchange_code
             }
@@ -873,67 +812,56 @@ class ApificationBreeze():
                 body["open_quantity"] = open_quantity
             body = json.dumps(body, separators=(',', ':'))
             headers = self.generate_headers(body)
-            response = self.make_request("POST", "margin", body, headers)
+            response = self.make_request("POST", config._api_endpoints["margin"], body, headers)
             response = response.json()
             return response
         except Exception as e:
-            print("add_margin() Error - ", e)
+            self.error_exception("add_margin() Error",e)
 
     def get_margin(self, exchange_code=""):
         try:
             if exchange_code == "" or exchange_code == None:
-                response = {"Success": "", "Status": 500, "Error": "Exchange-Code cannot be empty"}
-                return response
+                return self.validation_errors("Exchange-Code cannot be empty")
+
             body = {
                 "exchange_code": exchange_code
             }
             body = json.dumps(body, separators=(',', ':'))
             headers = self.generate_headers(body)
-            response = self.make_request("GET", "margin", body, headers)
+            response = self.make_request("GET",  config._api_endpoints["margin"], body, headers)
             response = response.json()
             return response
         except Exception as e:
-            print("get_margin() Error - ", e)
+            self.error_exception("get_margin() Error",e)
 
     def place_order(self, stock_code="", exchange_code="", product="", action="", order_type="", stoploss="", quantity="", price="", validity="", validity_date="", disclosed_quantity="", expiry_date="", right="", strike_price="", user_remark=""):
         try:
             if stock_code == "" or stock_code == None or exchange_code == "" or exchange_code == None or product == "" or product == None or action == "" or action == None or order_type == "" or order_type == None or quantity == "" or quantity == None or price == "" or price == None or action == "" or action == None:
                 if stock_code == "" or stock_code == None:
-                    response = {"Success": "", "Status": 500, "Error": "Stock-Code cannot be empty"}
-                    return response
+                    return self.validation_errors("Stock-Code cannot be empty")
                 elif exchange_code == "" or exchange_code == None:
-                    response = {"Success": "", "Status": 500, "Error": "Exchange-Code cannot be empty"}
-                    return response
+                    return self.validation_errors("Exchange-Code cannot be empty")
                 elif product == "" or product == None:
-                    response = {"Success": "", "Status": 500, "Error": "Product cannot be empty"}
-                    return response
+                    return self.validation_errors("Product cannot be empty")
                 elif action == "" or action == None:
-                    response = {"Success": "", "Status": 500, "Error": "Action cannot be empty"}
-                    return response
+                    return self.validation_errors("Action cannot be empty")
                 elif order_type == "" or order_type == None:
-                    response = {"Success": "", "Status": 500, "Error": "Order-type cannot be empty"}
-                    return response
+                    return self.validation_errors("Order-type cannot be empty")
                 elif quantity == "" or quantity == None:
-                    response = {"Success": "", "Status": 500, "Error": "Quantity cannot be empty"}
-                    return response
+                    return self.validation_errors("Quantity cannot be empty")
                 elif validity == "" or validity == None:
-                    response = {"Success": "", "Status": 500, "Error": "Validity cannot be empty"}
-                    return response
+                    return self.validation_errors("Validity cannot be empty")
             elif product.lower() not in ["futures", "options", "futureplus", "optionplus", "cash", "eatm", "margin"]:
-                response = {"Success": "", "Status": 500, "Error": "Product should be either 'futures', 'options', 'futureplus', 'optionplus', 'cash', 'eatm', or 'margin'"}
-                return response
+                return self.validation_errors("Product should be either 'futures', 'options', 'futureplus', 'optionplus', 'cash', 'eatm', or 'margin'")
             elif action.lower() not in ["buy", "sell"]:
-                response = {"Success": "", "Status": 500, "Error": "Action should be either 'buy', or 'sell'"}
-                return response
+                return self.validation_errors("Action should be either 'buy', or 'sell'")
             elif order_type.lower() not in ["limit", "market", "stoploss"]:
-                response = {"Success": "", "Status": 500, "Error": "Order-type should be either 'limit', 'market', or 'stoploss'"}
-                return response
+                return self.validation_errors("Order-type should be either 'limit', 'market', or 'stoploss'")
             elif validity.lower() not in ["day", "ioc", "vtc"]:
-                response = {"Success": "", "Status": 500, "Error": "Validity should be either 'day', 'ioc', or 'vtc'"}
-                return response
+                return self.validation_errors("Validity should be either 'day', 'ioc', or 'vtc'")
             elif right != "" and right != None and right.lower() not in ["call", "put", "others"]:
-                response = {"Success": "", "Status": 500, "Error": "Right should be either 'call', 'put', or 'others'"}
-                return response
+                return self.validation_errors("Right should be either 'call', 'put', or 'others'")
+
             body = {
                 "stock_code": stock_code,
                 "exchange_code": exchange_code,
@@ -960,45 +888,42 @@ class ApificationBreeze():
                 body["user_remark"] = user_remark
             body = json.dumps(body, separators=(',', ':'))
             headers = self.generate_headers(body)
-            response = self.make_request("POST", "order", body, headers)
+            response = self.make_request("POST", config._api_endpoints["hist.chart"], body, headers)
             response = response.json()
             return response
         except Exception as e:
-            print("place_order() Error - ", e)
+            self.error_exception("place_order() Error",e)
 
     def get_order_detail(self, exchange_code, order_id):
         try:
             if exchange_code == "" or exchange_code == None or order_id == "" or order_id == None:
                 if exchange_code == "" or exchange_code == None:
-                    response = {"Success": "", "Status": 500, "Error": "Exchange-Code cannot be empty"}
-                    return response
+                    return self.validation_errors("Exchange-Code cannot be empty")
                 elif order_id == "" or order_id == None:
-                    response = {"Success": "", "Status": 500, "Error": "Order-Id cannot be empty"}
-                    return response
+                    return self.validation_errors("Order-Id cannot be empty")
+
             body = {
                 "exchange_code": exchange_code,
                 "order_id": order_id
             }
             body = json.dumps(body, separators=(',', ':'))
             headers = self.generate_headers(body)
-            response = self.make_request("GET", "order", body, headers)
+            response = self.make_request("GET", config._api_endpoints["order"], body, headers)
             response = response.json()
             return response
         except Exception as e:
-            print("get_order_detail() Error - ", e)
+            self.error_exception("get_order_detail() Error",e)
 
     def get_order_list(self, exchange_code, from_date, to_date):
         try:
             if exchange_code == "" or exchange_code == None or from_date == "" or from_date == None or to_date == "" or to_date == None:
                 if exchange_code == "" or exchange_code == None:
-                    response = {"Success": "", "Status": 500, "Error": "Exchange-Code cannot be empty"}
-                    return response
+                    return self.validation_errors("Exchange-Code cannot be empty")
                 elif from_date == "" or from_date == None:
-                    response = {"Success": "", "Status": 500, "Error": "From-Date cannot be empty"}
-                    return response
+                    return self.validation_errors("From-Date cannot be empty")
                 elif to_date == "" or to_date == None:
-                    response = {"Success": "", "Status": 500, "Error": "To-Date cannot be empty"}
-                    return response
+                    return self.validation_errors("To-Date cannot be empty")
+
             body = {
                 "exchange_code": exchange_code,
                 "from_date": from_date,
@@ -1006,48 +931,44 @@ class ApificationBreeze():
             }
             body = json.dumps(body, separators=(',', ':'))
             headers = self.generate_headers(body)
-            response = self.make_request("GET", "order", body, headers)
+            response = self.make_request("GET", config._api_endpoints["order"], body, headers)
             response = response.json()
             return response
         except Exception as e:
-            print("get_order_list() Error - ", e)
+            self.error_exception("get_order_list() Error",e)
 
     def cancel_order(self, exchange_code, order_id):
         try:
             if exchange_code == "" or exchange_code == None or order_id == "" or order_id == None:
                 if exchange_code == "" or exchange_code == None:
-                    response = {"Success": "", "Status": 500, "Error": "Exchange-Code cannot be empty"}
-                    return response
+                    return self.validation_errors("Exchange-Code cannot be empty")
                 elif order_id == "" or order_id == None:
-                    response = {"Success": "", "Status": 500, "Error": "Order-Id cannot be empty"}
-                    return response
+                    return self.validation_errors("Order-Id cannot be empty")
+
             body = {
                 "exchange_code": exchange_code,
                 "order_id": order_id
             }
             body = json.dumps(body, separators=(',', ':'))
             headers = self.generate_headers(body)
-            response = self.make_request("DELETE", "order", body, headers)
+            response = self.make_request("DELETE", config._api_endpoints["order"], body, headers)
             response = response.json()
             return response
         except Exception as e:
-            print("cancel_order() Error - ", e)
+            self.error_exception("cancel_order() Error")
 
     def modify_order(self, order_id, exchange_code, order_type, stoploss, quantity, price, validity, disclosed_quantity, validity_date):
         try:
             if exchange_code == "" or exchange_code == None or order_id == "" or order_id == None:
                 if exchange_code == "" or exchange_code == None:
-                    response = {"Success": "", "Status": 500, "Error": "Exchange-Code cannot be empty"}
-                    return response
+                    return self.validation_errors("Exchange-Code cannot be empty")
                 elif order_id == "" or order_id == None:
-                    response = {"Success": "", "Status": 500, "Error": "Order-Id cannot be empty"}
-                    return response
+                    return self.validation_errors("Order-Id cannot be empty")
             elif order_type != "" and order_type != None and order_type.lower() not in ["limit", "market", "stoploss"]:
-                response = {"Success": "", "Status": 500, "Error": "Order-type should be either 'limit', 'market', or 'stoploss'"}
-                return response
+                return self.validation_errors("Order-type should be either 'limit', 'market', or 'stoploss'")
             elif validity != "" and validity != None and validity.lower() not in ["day", "ioc", "vtc"]:
-                response = {"Success": "", "Status": 500, "Error": "Validity should be either 'day', 'ioc', or 'vtc'"}
-                return response
+                return self.validation_errors("Validity should be either 'day', 'ioc', or 'vtc'")
+
             body = {
                 "order_id": order_id,
                 "exchange_code": exchange_code,
@@ -1068,17 +989,17 @@ class ApificationBreeze():
                 body["validity_date"] = validity_date
             body = json.dumps(body, separators=(',', ':'))
             headers = self.generate_headers(body)
-            response = self.make_request("PUT", "order", body, headers)
+            response = self.make_request("PUT", config._api_endpoints["order"], body, headers)
             response = response.json()
             return response
         except Exception as e:
-            print("modify_order() Error - ", e)
+            self.error_exception("modify_order() Error")
 
     def get_portfolio_holdings(self, exchange_code, from_date, to_date, stock_code, portfolio_type):
         try:
             if exchange_code == "" or exchange_code == None:
-                response = {"Success": "", "Status": 500, "Error": "Exchange-Code cannot be empty"}
-                return response
+                return self.validation_errors("Exchange-Code cannot be empty")
+
             body = {
                 "exchange_code": exchange_code,
             }
@@ -1093,11 +1014,11 @@ class ApificationBreeze():
             body = json.dumps(body, separators=(',', ':'))
             headers = self.generate_headers(body)
             response = self.make_request(
-                "GET", "portfolioholdings", body, headers)
+                "GET", config._api_endpoints["portfolio.holding"], body, headers)
             response = response.json()
             return response
         except Exception as e:
-            print("get_portfolio_holdings() Error - ", e)
+            self.error_exception("get_portfolio_holdings() Error")
 
     def get_portfolio_positions(self):
         try:
@@ -1105,27 +1026,24 @@ class ApificationBreeze():
             body = json.dumps(body, separators=(',', ':'))
             headers = self.generate_headers(body)
             response = self.make_request(
-                "GET", "portfoliopositions", body, headers)
+                "GET", config._api_endpoints["portfolio.position"], body, headers)
             response = response.json()
             return response
         except Exception as e:
-            print("get_portfolio_positions() Error - ", e)
+            self.error_exception("get_portfolio_positions Error")
 
     def get_quotes(self, stock_code, exchange_code, expiry_date, product_type, right, strike_price):
         try:
             if exchange_code == "" or exchange_code == None or stock_code == "" or stock_code == None:
                 if exchange_code == "" or exchange_code == None:
-                    response = {"Success": "", "Status": 500, "Error": "Exchange-Code cannot be empty"}
-                    return response
+                    return self.validation_errors("Exchange-Code cannot be empty")
                 if stock_code == "" or stock_code == None:
-                    response = {"Success": "", "Status": 500, "Error": "Stock-Code cannot be empty"}
-                    return response
+                    return self.validation_errors("Stock-Code cannot be empty")
             elif product_type != "" and product_type != None and product_type.lower() not in ["futures", "options", "futureplus", "optionplus", "cash", "eatm", "margin"]:
-                response = {"Success": "", "Status": 500, "Error": "Product-type should be either 'futures', 'options', 'futureplus', 'optionplus', 'cash', 'eatm', or 'margin'"}
-                return response
+                return self.validation_errors("Product-type should be either 'futures', 'options', 'futureplus', 'optionplus', 'cash', 'eatm', or 'margin'")
             elif right != "" and right != None and right.lower() not in ["call", "put", "others"]:
-                response = {"Success": "", "Status": 500, "Error": "Right should be either 'call', 'put', or 'others'"}
-                return response
+                return self.validation_errors("Right should be either 'call', 'put', or 'others'")
+
             body = {
                 "stock_code": stock_code,
                 "exchange_code": exchange_code
@@ -1140,42 +1058,34 @@ class ApificationBreeze():
                 body["strike_price"] = strike_price
             body = json.dumps(body, separators=(',', ':'))
             headers = self.generate_headers(body)
-            response = self.make_request("GET", "quotes", body, headers)
+            response = self.make_request("GET", config._api_endpoints["quote"], body, headers)
             response = response.json()
             return response
         except Exception as e:
-            print("get_quotes() Error - ", e)
+            self.error_exception("get_quotes() Error")
 
     def get_option_chain_quotes(self,stock_code, exchange_code, expiry_date, product_type, right, strike_price):
         try:
             if exchange_code == "" or exchange_code == None or  exchange_code.lower()!="nfo":
-                response = {"Success": "", "Status": 500, "Error": "exchange code should be nfo"}
-                return(response)
+                return self.validation_errors("Exchange code should be nfo")
             elif product_type=="" or product_type== None:
-                response = {"Success": "", "Status": 500, "Error": "Product-Type cannot be empty for Exchange-Code value as 'nfo'."}
-                return response
+                return self.validation_errors("Product-Type cannot be empty for Exchange-Code value as 'nfo'.")
             elif product_type.lower()!="futures" and product_type.lower()!="options":
-                response = {"Success": "", "Status": 500, "Error": "Product-type should be either 'futures' or 'options' for Exchange-Code value as 'nfo'." }
-                return response
+                return self.validation_errors("Product-type should be either 'futures' or 'options' for Exchange-Code value as 'nfo'.")
             elif stock_code=="" or stock_code==None:
-                response = {"Success": "", "Status": 500, "Error": "stock code cannot be empty"}
-                return response
+                return self.validation_errors("Stock code cannot be empty")
             elif product_type.lower() == 'options':
                 if((expiry_date=="" or expiry_date==None)  and (strike_price=="" or strike_price==None) and (right=="" or right==None)):
-                    response = {"Success": "", "Status": 500, "Error": "Atleast two inputs are required out of Expiry-Date, Right & Strike-Price. All three cannot be empty'."}
-                    return response
+                    return self.validation_errors("Atleast two inputs are required out of Expiry-Date, Right & Strike-Price. All three cannot be empty'.")
                 elif((expiry_date!="" and expiry_date!=None) and (strike_price=="" or  strike_price==None) and (right=="" or right==None)):
-                    response = {"Success": "", "Status": 500, "Error": "Either Right or Strike-Price cannot be empty."}
-                    return response
+                    return self.validation_errors("Either Right or Strike-Price cannot be empty.")
                 elif((expiry_date == "" or expiry_date == None) and (strike_price!="" or strike_price!=None) and (right=="" or right == None)):
-                    response = {"Success": "", "Status": 500, "Error": "Either Expiry-Date or Right cannot be empty."}
-                    return response
+                    return self.validation_errors("Either Expiry-Date or Right cannot be empty.")
                 elif((expiry_date=="" or expiry_date==None) and (strike_price=="" or strike_price==None) and (right!=None or right!="")):
-                    response = {"Success": "", "Status": 500, "Error": "Either Expiry-Date or Strike-Price cannot be empty."}
-                    return response
+                    return self.validation_errors("Either Expiry-Date or Strike-Price cannot be empty.")
                 elif((right!="" and right!=None) and (right.lower()!="call" and right.lower()!="put" and right.lower()!="others")):
-                    response = {"Success": "", "Status": 500, "Error": "Right should be either 'call', 'put', or 'others'."}
-                    return response
+                    return self.validation_errors("Right should be either 'call', 'put', or 'others'.")
+
             body = {
                 "stock_code": stock_code,
                 "exchange_code": exchange_code
@@ -1190,11 +1100,11 @@ class ApificationBreeze():
                 body["strike_price"] = strike_price
             body = json.dumps(body, separators=(',', ':'))
             headers = self.generate_headers(body)
-            response = self.make_request("GET", "optionchain", body, headers)
+            response = self.make_request("GET", config._api_endpoints["opt.chain"], body, headers)
             response = response.json()
             return response
-        except:
-            print("get_option_chain_quotes() Error -",e)
+        except Exception as e:
+            self.error_exception("get_option_chain_quotes() Error",e)
 
     def square_off(self, source_flag, stock_code, exchange_code, quantity, price, action, order_type, validity, stoploss, disclosed_quantity, protection_percentage, settlement_id, margin_amount, open_quantity, cover_quantity, product, expiry_date, right, strike_price, validity_date, trade_password, alias_name):
         try:
@@ -1224,23 +1134,21 @@ class ApificationBreeze():
             }
             body = json.dumps(body, separators=(',', ':'))
             headers = self.generate_headers(body)
-            response = self.make_request("POST", "squareoff", body, headers)
+            response = self.make_request("POST", config._api_endpoints["square.off"], body, headers)
             response = response.json()
             return response
         except Exception as e:
-            print("square_off() Error - ", e)
+            self.error_exception("square_off() Error",e)
 
     def get_trade_list(self, from_date, to_date, exchange_code, product_type, action, stock_code):
         try:
             if exchange_code == "" or exchange_code == None:
-                response = {"Success": "", "Status": 500, "Error": "Exchange-Code cannot be empty"}
-                return response
+                return self.validation_errors("Exchange-Code cannot be empty")
             elif product_type != "" and product_type != None and product_type.lower() not in ["futures", "options", "futureplus", "optionplus", "cash", "eatm", "margin"]:
-                response = {"Success": "", "Status": 500, "Error": "Product-type should be either 'futures', 'options', 'futureplus', 'optionplus', 'cash', 'eatm', or 'margin'"}
-                return response
+                return self.validation_errors("Product-type should be either 'futures', 'options', 'futureplus', 'optionplus', 'cash', 'eatm', or 'margin'")
             elif action != "" and action != None and action.lower() not in ["buy", "sell"]:
-                response = {"Success": "", "Status": 500, "Error": "Action should be either 'buy', or 'sell'"}
-                return response
+                return self.validation_errors("Action should be either 'buy', or 'sell'")
+
             body = {
                 "exchange_code": exchange_code,
             }
@@ -1256,31 +1164,30 @@ class ApificationBreeze():
                 body["stock_code"] = stock_code
             body = json.dumps(body, separators=(',', ':'))
             headers = self.generate_headers(body)
-            response = self.make_request("GET", "trades", body, headers)
+            response = self.make_request("GET", config._api_endpoints["trade"], body, headers)
             response = response.json()
             return response
         except Exception as e:
-            print("get_trade_list() Error - ", e)
+            self.error_exception("get_trade_list() Error",e)
 
     def get_trade_detail(self, exchange_code, order_id):
         try:
             if exchange_code == "" or exchange_code == None:
-                response = {"Success": "", "Status": 500, "Error": "Exchange-Code cannot be empty"}
-                return response
+                return self.validation_errors("Exchange-Code cannot be empty")
             elif order_id == "" or order_id == None:
-                response = {"Success": "", "Status": 500, "Error": "Order-Id cannot be empty"}
-                return response
+                return self.validation_errors("Order-Id cannot be empty")
+ 
             body = {
                 "exchange_code": exchange_code,
                 "order_id": order_id
             }
             body = json.dumps(body, separators=(',', ':'))
             headers = self.generate_headers(body)
-            response = self.make_request("GET", "trades", body, headers)
+            response = self.make_request("GET", config._api_endpoints["trade"], body, headers)
             response = response.json()
             return response
         except Exception as e:
-            print("get_trade_detail() Error - ", e)
+            self.error_exception("get_trade_detail() Error",e)
     
     def get_names(self, exchange_code, stock_code):
         try:
@@ -1296,10 +1203,6 @@ class ApificationBreeze():
             dataframe = pd.read_csv(required_file, sep=',', engine='python')
              
             df2 = dataframe[(dataframe[' "ExchangeCode"'] == stock_code) | (dataframe[' "ShortName"'] == stock_code)]
-            #time2 = time.time()
-            #print("compute time: ",time2-time1)
-            #if(len(df2)==0):
-                #df2 = dataframe[dataframe[' "ShortName"'] == stock_code]
             if(len(df2)==0):
                 return({"Status ": "Result Not Found"})
             requiredresult = df2[[' "ShortName"',' "ExchangeCode"','Token',' "CompanyName"']]
@@ -1310,15 +1213,14 @@ class ApificationBreeze():
             compname = " ".join(requiredresult[' "CompanyName"'].to_string().split()[1:])
             if(" " in exchange):
                 exchange = " ".join(exchange.split()[1:])
-            #print(value,"val")
+
             result = {}
             result['exchange_code'] = exchange_code
             result['exchange_stock_code'] = exchange
             result['isec_stock_code'] = isec_stock
             result['isec_token'] = token
             result['company name'] = compname
-            #response = json.dumps(result,indent = 4)
     
-            return(result)
+            return result
         except Exception as e:
-            return({"Status" : "get_names() : data not found"})
+            self.error_exception("get_names() : data not found",e)
