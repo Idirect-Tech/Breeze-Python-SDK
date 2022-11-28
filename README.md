@@ -674,9 +674,9 @@ breeze.get_trade_detail(exchange_code="NSE",
 <h4 id = "get_names">Get Names </h4>
 
 
-  ```python
-      breeze.get_names(exchange_code = 'NSE',stock_code = 'TATASTEEL')
-      breeze.get_names(exchange_code = 'NSE',stock_code = 'RELIND')
-  ```
+```python
+breeze.get_names(exchange_code = 'NSE',stock_code = 'TATASTEEL')
+breeze.get_names(exchange_code = 'NSE',stock_code = 'RELIND')
+```
 
 <a href="#index">Back to Index</a>
