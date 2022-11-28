@@ -17,6 +17,7 @@ resp = urlopen(config.SECURITY_MASTER_URL)
 zipfile = ZipFile(BytesIO(resp.read()))
 api_endpoint = config.APIEndPoint
 resp_message = config.ResponseMessage
+except_message = config.ExceptionMessage
 req_type = config.APIRequestType
 
 class SocketEventBreeze(socketio.ClientNamespace):
@@ -84,18 +85,18 @@ class BreezeConnect():
     def ws_disconnect(self,isOrder = False):
         if(isOrder == False):    
             if not self.sio_rate_refresh_handler:
-                return self.socket_connection_response("socket server is not connected to rate refresh.")
+                return self.socket_connection_response(resp_message.RATE_REFRESH_NOT_CONNECTED)
             else:
                 self.sio_rate_refresh_handler.on_disconnect()
                 self.sio_rate_refresh_handler = None
-                return self.socket_connection_response("socket server for rate refresh  has been disconnected.")
+                return self.socket_connection_response(resp_message.RATE_REFRESH_DISCONNECTED)
         else:
             if not self.sio_order_refresh_handler:
-                return self.socket_connection_response("socket server is not connected to order refresh.")
+                return self.socket_connection_response(resp_message.ORDER_REFRESH_NOT_CONNECTED)
             else:    
                 self.sio_order_refresh_handler.on_disconnect()
                 self.sio_order_refresh_handler = None
-                return self.socket_connection_response("socket server for order streaming has been disconnected.")
+                return self.socket_connection_response(resp_message.ORDER_REFRESH_DISCONNECTED)
     
     def ws_connect(self):
         self._ws_connect(self.sio_rate_refresh_handler,False)
@@ -113,27 +114,27 @@ class BreezeConnect():
             }
             exchange_code_name = exchange_code_list.get(exchange_type, False)
             if exchange_code_name == False:
-                self.subscribe_exception("Stock-Token cannot be found due to wrong exchange-code.")
+                self.subscribe_exception(except_message.WRONG_EXCHANGE_CODE_EXCEPTION)
             elif exchange_code_name.lower() == "bse":
                 stock_data = self.token_script_dict_list[0].get(stock_token, False)
                 if stock_data == False:
-                    self.subscribe_exception("Stock-Data does not exist in exchange-code BSE for Stock-Token "+input_stock_token+".")
+                    self.subscribe_exception(except_message.STOCK_NOT_EXIST_EXCEPTION.format("BSE",input_stock_token))
             elif exchange_code_name.lower() == "nse":
                 stock_data = self.token_script_dict_list[1].get(stock_token, False)
                 if stock_data == False:
                     stock_data = self.token_script_dict_list[4].get(stock_token, False)
-                    if stock_data == False:
-                        self.subscribe_exception("Stock_Token does not exist in both exchange-code i.e. NSE or NFO for Stock-Token "+input_stock_token+".")
+                    if stock_data == False:    
+                        self.subscribe_exception(except_message.STOCK_NOT_EXIST_EXCEPTION.format("i.e. NSE or NFO",input_stock_token))
                     else:
                         exchange_code_name = "NFO"
             elif exchange_code_name.lower() == "ndx":
                 stock_data = self.token_script_dict_list[2].get(stock_token, False)
                 if stock_data == False:
-                    self.subscribe_exception("Stock-Data does not exist in exchange-code NDX for Stock-Token "+input_stock_token+".")
+                    self.subscribe_exception(except_message.STOCK_NOT_EXIST_EXCEPTION.format("NDX",input_stock_token))
             elif exchange_code_name.lower() == "mcx":
                 stock_data = self.token_script_dict_list[3].get(stock_token, False)
                 if stock_data == False:
-                    self.subscribe_exception("Stock-Data does not exist in exchange-code MCX for Stock-Token "+input_stock_token+".")
+                    self.subscribe_exception(except_message.STOCK_NOT_EXIST_EXCEPTION.format("MCX",input_stock_token))
             output_data["stock_name"] = stock_data[1]
             if exchange_code_name.lower() not in ["nse", "bse"]:
                 product_type = stock_data[0].split("-")[0]
@@ -158,7 +159,7 @@ class BreezeConnect():
 
     def get_stock_token_value(self, exchange_code="", stock_code="", product_type="", expiry_date="", strike_price="", right="", get_exchange_quotes=True, get_market_depth=True):
         if get_exchange_quotes == False and get_market_depth == False:
-            self.subscribe_exception("Either getExchangeQuotes must be true or getMarketDepth must be true")
+            self.subscribe_exception(except_message.QUOTE_DEPTH_EXCEPTION)
         else:
             exchange_code_name = ""
             exchange_code_list = {
@@ -170,9 +171,9 @@ class BreezeConnect():
             }
             exchange_code_name = exchange_code_list.get(exchange_code, False)
             if exchange_code_name == False:
-                self.subscribe_exception("Exchange Code allowed are 'BSE', 'NSE', 'NDX', 'MCX' or 'NFO'.")
+                self.subscribe_exception(except_message.EXCHANGE_CODE_EXCEPTION)
             elif stock_code == "":
-                self.subscribe_exception("Stock-Code cannot be empty.")
+                self.subscribe_exception(except_message.STOCK_CODE_EXCEPTION)
             else:
                 token_value = False
                 if exchange_code.lower() == "bse":
@@ -181,17 +182,17 @@ class BreezeConnect():
                     token_value = self.stock_script_dict_list[1].get(stock_code, False)
                 else:
                     if expiry_date == "":
-                        self.subscribe_exception("Expiry-Date cannot be empty for given Exchange-Code.")
+                        self.subscribe_exception(except_message.EXPIRY_DATE_EXCEPTION)
                     if product_type.lower() == "futures":
                         contract_detail_value = "FUT"
                     elif product_type.lower() == "options":
                         contract_detail_value = "OPT"
                     else:
-                        self.subscribe_exception("Product-Type should either be Futures or Options for given Exchange-Code.")
+                        self.subscribe_exception(except_message.PRODUCT_TYPE_EXCEPTION)
                     contract_detail_value = contract_detail_value + "-" + stock_code + "-" + expiry_date
                     if product_type.lower() == "options":
                         if strike_price == "":
-                            self.subscribe_exception("Strike Price cannot be empty for Product-Type 'Options'.")
+                            self.subscribe_exception(except_message.STRIKE_PRICE_EXCEPTION)
                         else:
                             contract_detail_value = contract_detail_value + "-" + strike_price
                         if right.lower() == "put":
@@ -199,7 +200,7 @@ class BreezeConnect():
                         elif right.lower() == "call":
                             contract_detail_value = contract_detail_value + "-" + "CE"
                         else:
-                            self.subscribe_exception("Rights should either be Put or Call for Product-Type 'Options'.")
+                            self.subscribe_exception(except_message.RIGHT_EXCEPTION)
                     if exchange_code.lower() == "ndx":
                         token_value = self.stock_script_dict_list[2].get(contract_detail_value, False)
                     elif exchange_code.lower() == "mcx":
@@ -207,7 +208,7 @@ class BreezeConnect():
                     elif exchange_code.lower() == "nfo":
                         token_value = self.stock_script_dict_list[4].get(contract_detail_value, False)
                 if token_value == False:
-                    self.subscribe_exception("Stock-Code not found.")
+                    self.subscribe_exception(except_message.STOCK_INVALID_EXCEPTION)
                 exchange_quotes_token_value = False
                 if get_exchange_quotes != False:
                     exchange_quotes_token_value = exchange_code_name + "1!" + token_value
@@ -220,13 +221,12 @@ class BreezeConnect():
         if self.sio_rate_refresh_handler:
             return_object = {}
             if get_order_notification == True:
-                #self.sio_rate_refresh_handler.onOrderFeed()
                 self._ws_connect(self.sio_order_refresh_handler,True)
                 self.sio_order_refresh_handler.notify()
-                return_object = self.socket_connection_response("Order Notification subscribed successfully")
+                return_object = self.socket_connection_response(resp_message.ORDER_NOTIFICATION_SUBSRIBED)
             if stock_token != "":
                 self.sio_rate_refresh_handler.watch(stock_token)
-                return_object = self.socket_connection_response("Stock " + stock_token + " subscribed successfully")
+                return_object = self.socket_connection_response(resp_message.STOCK_SUBSCRIBE_MESSAGE.format(stock_token))
             elif get_order_notification == True and exchange_code == "":
                 return return_object
             else:
@@ -235,7 +235,7 @@ class BreezeConnect():
                     self.sio_rate_refresh_handler.watch(exchange_quotes_token)
                 if market_depth_token != False:
                     self.sio_rate_refresh_handler.watch(market_depth_token)
-                return_object =  self.socket_connection_response("Stock " + stock_code + " subscribed successfully")
+                return_object =  self.socket_connection_response(resp_message.STOCK_SUBSCRIBE_MESSAGE.format(stock_code))
             return return_object
         
     def unsubscribe_feeds(self, stock_token="", exchange_code="", stock_code="", product_type="", expiry_date="", strike_price="", right="", get_exchange_quotes=True, get_market_depth=True,get_order_notification=False):
@@ -243,20 +243,20 @@ class BreezeConnect():
             if self.sio_order_refresh_handler:
                 self.sio_order_refresh_handler.on_disconnect()
                 self.sio_order_refresh_handler = None
-                return self.socket_connection_response("socket server for order streaming has been disconnected.")
+                return self.socket_connection_response(resp_message.ORDER_REFRESH_DISCONNECTED)
             else:
-                return self.socket_connection_response("order streaming server is not connected.")
+                return self.socket_connection_response(resp_message.ORDER_REFRESH_NOT_CONNECTED)
         if self.sio_rate_refresh_handler:
             if stock_token != "":
                 self.sio_rate_refresh_handler.unwatch(stock_token)
-                return self.socket_connection_response("Stock " + stock_token + " unsubscribed successfully")
+                return self.socket_connection_response(resp_message.STOCK_UNSUBSCRIBE_MESSAGE.format(stock_token))
             else:
                 exchange_quotes_token, market_depth_token = self.get_stock_token_value(exchange_code=exchange_code, stock_code=stock_code, product_type=product_type, expiry_date=expiry_date, strike_price=strike_price, right=right, get_exchange_quotes=get_exchange_quotes, get_market_depth=get_market_depth)
                 if exchange_quotes_token != False:
                     self.sio_rate_refresh_handler.unwatch(exchange_quotes_token)
                 if market_depth_token != False:
                     self.sio_rate_refresh_handler.unwatch(market_depth_token)
-                return self.socket_connection_response("Stock " + stock_code + " unsubscribed successfully")
+                return self.socket_connection_response(resp_message.STOCK_UNSUBSCRIBE_MESSAGE.format(stock_code))
 
     def parse_market_depth(self, data, exchange):
         depth = []
@@ -485,9 +485,9 @@ class BreezeConnect():
                 self.user_id = result.split(":")[0]
                 self.session_key = result.split(":")[1]
             else:
-                raise Exception("Could not authenticate credentials. Please check token and keys")
+                raise Exception(except_message.AUTHENICATION_EXCEPTION)
         except Exception as e:
-            raise Exception("Could not authenticate credentials. Please check token and keys")
+            raise Exception(except_message.AUTHENICATION_EXCEPTION)
 
     def get_stock_script_list(self):
         try:
@@ -613,7 +613,8 @@ class ApificationBreeze():
         self.base64_session_token = base64.b64encode(
             (self.breeze.user_id + ":" + self.breeze.session_key).encode('ascii')).decode('ascii')
         
-    def error_exception(self,message,error):
+    def error_exception(self,func_name,error):
+        message = "{0}() Error".format(func_name)
         raise Exception(message).with_traceback(error.__traceback__)
 
     def validation_error_response(self,message):
@@ -637,7 +638,7 @@ class ApificationBreeze():
             }
             return headers
         except Exception as e:
-            self.error_exception("generate_headers() Error",e)
+            self.error_exception(self.generate_headers.__name__,e)
 
     def make_request(self, method, endpoint, body, headers):
         try:
@@ -655,12 +656,12 @@ class ApificationBreeze():
                 res = requests.delete(url=url, data=body, headers=headers)
                 return res
         except Exception as e:
-            self.error_exception("Error while trying to make request "+method+" "+url,e)
+            self.error_exception(except_message.API_REQUEST_EXCEPTION.format(method,url),e)
 
     def get_customer_details(self, api_session=""):
         try:
             if api_session == "" or api_session == None:
-                return self.validation_error_response("API Session cannot be empty")
+                return self.validation_error_response(resp_message.API_SESSION_ERROR)
             headers = {
                 "Content-Type": "application/json"
             }
@@ -676,7 +677,7 @@ class ApificationBreeze():
                 del response['Success']['session_token']
             return response
         except Exception as e:
-            self.error_exception("get_customer_details() Error",e)
+            self.error_exception(self.get_customer_details.__name__,e)
 
     def get_demat_holdings(self):
         try:
@@ -687,7 +688,7 @@ class ApificationBreeze():
             response = response.json()
             return response
         except Exception as e:
-            self.error_exception("get_demat_holdings() Error",e)
+            self.error_exception(self.get_demat_holdings.__name__,e)
 
     def get_funds(self):
         try:
@@ -698,7 +699,7 @@ class ApificationBreeze():
             response = response.json()
             return response
         except Exception as e:
-            self.error_exception("get_funds() Error",e)
+            self.error_exception(self.get_funds.__name__,e)
 
     def set_funds(self, transaction_type="", amount="", segment=""):
         try:
@@ -724,7 +725,7 @@ class ApificationBreeze():
             response = response.json()
             return response
         except Exception as e:
-            self.error_exception("set_funds() Error",e)
+            self.error_exception(self.set_funds.__name__,e)
 
     def get_historical_data(self, interval="", from_date="", to_date="", stock_code="", exchange_code="", product_type="", expiry_date="", right="", strike_price=""):
         try:
@@ -744,9 +745,9 @@ class ApificationBreeze():
                 return self.validation_error_response(resp_message.BLANK_STOCK_CODE)
             elif exchange_code.lower() == "nfo":
                 if product_type == "" or product_type == None:
-                    return self.validation_error_response(resp_message.BLANK_PRODUCT_TYPE_HIST)
+                    return self.validation_error_response(resp_message.BLANK_PRODUCT_TYPE_NFO)
                 elif product_type.lower() not in config.PRODUCT_TYPES_HIST:
-                    return self.validation_error_response(resp_message.PRODUCT_TYPE_ERROR_HIST)
+                    return self.validation_error_response(resp_message.PRODUCT_TYPE_ERROR_NFO)
                 elif product_type.lower() == "options" and (strike_price == "" or strike_price == None):
                     return self.validation_error_response(resp_message.BLANK_STRIKE_PRICE)
                 elif expiry_date == "" or expiry_date == None:
@@ -778,7 +779,7 @@ class ApificationBreeze():
             response = response.json()
             return response
         except Exception as e:
-            self.error_exception("get_historical_data() Error",e)
+            self.error_exception(self.get_historical_data.__name__,e)
 
     def add_margin(self, product_type="", stock_code="", exchange_code="", settlement_id="", add_amount="", margin_amount="", open_quantity="", cover_quantity="", category_index_per_stock="", expiry_date="", right="", contract_tag="", strike_price="", segment_code=""):
         try:
@@ -824,7 +825,7 @@ class ApificationBreeze():
             response = response.json()
             return response
         except Exception as e:
-            self.error_exception("add_margin() Error",e)
+            self.error_exception(self.add_margin.__name__,e)
 
     def get_margin(self, exchange_code=""):
         try:
@@ -840,7 +841,7 @@ class ApificationBreeze():
             response = response.json()
             return response
         except Exception as e:
-            self.error_exception("get_margin() Error",e)
+            self.error_exception(self.get_margin.__name__,e)
 
     def place_order(self, stock_code="", exchange_code="", product="", action="", order_type="", stoploss="", quantity="", price="", validity="", validity_date="", disclosed_quantity="", expiry_date="", right="", strike_price="", user_remark=""):
         try:
@@ -900,7 +901,7 @@ class ApificationBreeze():
             response = response.json()
             return response
         except Exception as e:
-            self.error_exception("place_order() Error",e)
+            self.error_exception(self.place_order.__name__,e)
 
     def get_order_detail(self, exchange_code, order_id):
         try:
@@ -920,7 +921,7 @@ class ApificationBreeze():
             response = response.json()
             return response
         except Exception as e:
-            self.error_exception("get_order_detail() Error",e)
+            self.error_exception(self.get_order_detail.__name__,e)
 
     def get_order_list(self, exchange_code, from_date, to_date):
         try:
@@ -943,7 +944,7 @@ class ApificationBreeze():
             response = response.json()
             return response
         except Exception as e:
-            self.error_exception("get_order_list() Error",e)
+            self.error_exception(self.get_order_list.__name__,e)
 
     def cancel_order(self, exchange_code, order_id):
         try:
@@ -963,7 +964,7 @@ class ApificationBreeze():
             response = response.json()
             return response
         except Exception as e:
-            self.error_exception("cancel_order() Error")
+            self.error_exception(self.cancel_order.__name__,e)
 
     def modify_order(self, order_id, exchange_code, order_type, stoploss, quantity, price, validity, disclosed_quantity, validity_date):
         try:
@@ -1001,7 +1002,7 @@ class ApificationBreeze():
             response = response.json()
             return response
         except Exception as e:
-            self.error_exception("modify_order() Error")
+            self.error_exception(self.modify_order.__name__,e)
 
     def get_portfolio_holdings(self, exchange_code, from_date, to_date, stock_code, portfolio_type):
         try:
@@ -1026,7 +1027,7 @@ class ApificationBreeze():
             response = response.json()
             return response
         except Exception as e:
-            self.error_exception("get_portfolio_holdings() Error")
+            self.error_exception(self.get_portfolio_holdings.__name__,e)
 
     def get_portfolio_positions(self):
         try:
@@ -1038,7 +1039,7 @@ class ApificationBreeze():
             response = response.json()
             return response
         except Exception as e:
-            self.error_exception("get_portfolio_positions Error")
+            self.error_exception(self.get_portfolio_positions.__name__,e)
 
     def get_quotes(self, stock_code, exchange_code, expiry_date, product_type, right, strike_price):
         try:
@@ -1070,27 +1071,27 @@ class ApificationBreeze():
             response = response.json()
             return response
         except Exception as e:
-            self.error_exception("get_quotes() Error")
+            self.error_exception(self.get_quotes.__name__,e)
 
     def get_option_chain_quotes(self,stock_code, exchange_code, expiry_date, product_type, right, strike_price):
         try:
             if exchange_code == "" or exchange_code == None or  exchange_code.lower()!="nfo":
-                return self.validation_error_response("Exchange code should be nfo")
+                return self.validation_error_response(resp_message.OPT_CHAIN_EXCH_CODE_ERROR)
             elif product_type=="" or product_type== None:
-                return self.validation_error_response("Product-Type cannot be empty for Exchange-Code value as 'nfo'.")
+                return self.validation_error_response(resp_message.BLANK_PRODUCT_TYPE_NFO)
             elif product_type.lower()!="futures" and product_type.lower()!="options":
-                return self.validation_error_response("Product-type should be either 'futures' or 'options' for Exchange-Code value as 'nfo'.")
+                return self.validation_error_response(resp_message.PRODUCT_TYPE_ERROR_NFO)
             elif stock_code=="" or stock_code==None:
                 return self.validation_error_response(resp_message.BLANK_STOCK_CODE)
             elif product_type.lower() == 'options':
                 if((expiry_date=="" or expiry_date==None)  and (strike_price=="" or strike_price==None) and (right=="" or right==None)):
-                    return self.validation_error_response("Atleast two inputs are required out of Expiry-Date, Right & Strike-Price. All three cannot be empty'.")
+                    return self.validation_error_response(resp_message.NFO_FIELDS_MISSING_ERROR)
                 elif((expiry_date!="" and expiry_date!=None) and (strike_price=="" or  strike_price==None) and (right=="" or right==None)):
-                    return self.validation_error_response("Either Right or Strike-Price cannot be empty.")
+                    return self.validation_error_response(resp_message.BLANK_RIGHT_STRIKE_PRICE)
                 elif((expiry_date == "" or expiry_date == None) and (strike_price!="" or strike_price!=None) and (right=="" or right == None)):
-                    return self.validation_error_response("Either Expiry-Date or Right cannot be empty.")
+                    return self.validation_error_response(resp_message.BLANK_RIGHT_EXPIRY_DATE)
                 elif((expiry_date=="" or expiry_date==None) and (strike_price=="" or strike_price==None) and (right!=None or right!="")):
-                    return self.validation_error_response("Either Expiry-Date or Strike-Price cannot be empty.")
+                    return self.validation_error_response(resp_message.BLANK_EXPIRY_DATE_STRIKE_PRICE)
                 elif((right!="" and right!=None) and (right.lower()!="call" and right.lower()!="put" and right.lower()!="others")):
                     return self.validation_error_response(resp_message.RIGHT_TYPE_ERROR)
 
@@ -1112,7 +1113,7 @@ class ApificationBreeze():
             response = response.json()
             return response
         except Exception as e:
-            self.error_exception("get_option_chain_quotes() Error",e)
+            self.error_exception(self.get_option_chain_quotes.__name__,e)
 
     def square_off(self, source_flag, stock_code, exchange_code, quantity, price, action, order_type, validity, stoploss, disclosed_quantity, protection_percentage, settlement_id, margin_amount, open_quantity, cover_quantity, product, expiry_date, right, strike_price, validity_date, trade_password, alias_name):
         try:
@@ -1146,7 +1147,7 @@ class ApificationBreeze():
             response = response.json()
             return response
         except Exception as e:
-            self.error_exception("square_off() Error",e)
+            self.error_exception(self.square_off.__name__,e)
 
     def get_trade_list(self, from_date, to_date, exchange_code, product_type, action, stock_code):
         try:
@@ -1176,7 +1177,7 @@ class ApificationBreeze():
             response = response.json()
             return response
         except Exception as e:
-            self.error_exception("get_trade_list() Error",e)
+            self.error_exception(self.get_trade_list.__name__s,e)
 
     def get_trade_detail(self, exchange_code, order_id):
         try:
@@ -1195,7 +1196,7 @@ class ApificationBreeze():
             response = response.json()
             return response
         except Exception as e:
-            self.error_exception("get_trade_detail() Error",e)
+            self.error_exception(self.get_trade_detail.__name__,e)
     
     def get_names(self, exchange_code, stock_code):
         try:
@@ -1208,7 +1209,7 @@ class ApificationBreeze():
              
             df2 = dataframe[(dataframe[' "ExchangeCode"'] == stock_code) | (dataframe[' "ShortName"'] == stock_code)]
             if(len(df2)==0):
-                return self.validation_error_response("Result Not Found")
+                return self.validation_error_response(except_message.ISEC_NSE_STOCK_MAP_EXCEPTION)
             requiredresult = df2[[' "ShortName"',' "ExchangeCode"','Token',' "CompanyName"']]
     
             isec_stock = requiredresult[' "ShortName"'].to_string().split()[1]
@@ -1228,4 +1229,4 @@ class ApificationBreeze():
     
             return result
         except Exception as e:
-            self.error_exception("get_names() : data not found",e)
+            self.error_exception(self.get_names.__name__,e)
