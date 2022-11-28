@@ -1,4 +1,4 @@
-# breeze_python
+# Breeze Python SDK
 The official Python client library for the ICICI Securities trading APIs
 
 # Index
@@ -130,7 +130,9 @@ breeze.ws_disconnect()
 ```
 <br>
 <p><a href="#index">Back to Index</a></p>
+
 ---
+
 **NOTE**
 
 Examples for stock_token are "4.1!38071" or "1.1!500780".
@@ -198,12 +200,12 @@ iso_date_time_string = datetime.datetime.strptime("28/02/2021 23:59:59","%d/%m/%
 # customer_detail
 
 <h4 id="customer_detail" > Get Customer details by api-session value.</h4>
-<pre><code class="python" >
+
 
 ```python
 breeze.get_customer_details(api_session="your_api_session") 
 ```
-</code></pre>
+
 <br>
 <a href="#index">Back to Index</a>
 <hr>
@@ -211,7 +213,7 @@ breeze.get_customer_details(api_session="your_api_session")
 # demat_holding
 
 <h4 id="demat_holding"> Get Demat Holding details of your account.</h4>
-<pre><code class="python" >breeze.get_demat_holdings()</code></pre>
+breeze.get_demat_holdings()
 <br>
 <a href="#index">Back to Index</a>
 <hr>
@@ -219,7 +221,7 @@ breeze.get_customer_details(api_session="your_api_session")
 # get_funds
 
 <h4 id="get_funds"> Get Funds details of your account.</h4>
-<pre><code class="python" >
+
 
 ```python
 
@@ -227,7 +229,7 @@ breeze.get_funds()
 
 ```
 
-</code></pre>
+
 <br>
 <a href="#index">Back to Index</a>
 <hr>
@@ -235,14 +237,14 @@ breeze.get_funds()
 # set_funds
 
 <h4 id="set_funds"> Set Funds of your account</h4>
-<pre><code class="python" >
+
 
 ```python
 breeze.set_funds(transaction_type="debit", 
                     amount="200",
                     segment="Equity")
 ```
-</code></pre>
+
 <p> Note: Set Funds of your account by transaction-type as "Credit" or "Debit" with amount in numeric string as rupees and segment-type as "Equity" or "FNO".</p>
 <br>
 <a href="#index">Back to Index</a>
@@ -251,7 +253,7 @@ breeze.set_funds(transaction_type="debit",
 # historical_data
 
 <h4 id="historical_data">Get Historical Data for Futures</h4>
-<pre><code class="python" >
+
 
 ```python
 breeze.get_historical_data(interval="1minute",
@@ -265,11 +267,11 @@ breeze.get_historical_data(interval="1minute",
                             strike_price="0")
                             
 ```
-</code></pre>
+
 <a href="#index">Back to Index</a>
 
 <h4 id="historical_data2">Get Historical Data for Equity</h4>
-<pre><code class="python" >
+
 
 ```python
 breeze.get_historical_data(interval="1minute",
@@ -279,10 +281,10 @@ breeze.get_historical_data(interval="1minute",
                             exchange_code="NSE",
                             product_type="cash")
 ```
-</code></pre>
+
 <a href="#index">Back to Index</a>
 <h4 id="historical_data3">Get Historical Data for Options</h4>
-<pre><code class="python" >
+
 
 ```python
 
@@ -297,7 +299,7 @@ breeze.get_historical_data(interval="1minute",
                             strike_price="38000")
 ```
 
-</code></pre>
+
 <p> Note : Get Historical Data for specific stock-code by mentioned interval either as "1minute", "5minute", "30minutes" or as "1day"</p>
 <br>
 <a href="#index">Back to Index</a>
@@ -306,7 +308,7 @@ breeze.get_historical_data(interval="1minute",
 # add_margin
 
 <h4 id="add_margin">Add Margin to your account.</h4>
-<pre><code class="python" >
+
 
 ```python
 breeze.add_margin(product_type="margin", 
@@ -325,7 +327,7 @@ breeze.add_margin(product_type="margin",
                     segment_code="")
 ```
 
-</code></pre>
+
 <br>
 <a href="#index">Back to Index</a>
 <hr>
@@ -333,13 +335,13 @@ breeze.add_margin(product_type="margin",
 # get_margin
 
 <h4 id="get_margin">Get Margin of your account.</h4>
-<pre><code class="python" >
+
 
 ```python
 breeze.get_margin(exchange_code="NSE")
 
 ```
-</code></pre>
+
 <p> Note: Please change exchange_code=“NFO” to get F&O margin details </p>
 <br>
 <a href="#index">Back to Index</a>
@@ -348,7 +350,7 @@ breeze.get_margin(exchange_code="NSE")
 # place_order
 
 <h4 id="place_order">Placing a Futures Order from your account.</h4>
-<pre><code class="python" >
+
 
 ```python
 breeze.place_order(stock_code="ICIBAN",
@@ -367,10 +369,10 @@ breeze.place_order(stock_code="ICIBAN",
                     strike_price="0",
                     user_remark="Test")
 ```                    
-</code></pre>
+
 
 <h4 id="place_order2">Placing an Option Order from your account.</h4>
-<pre><code class="python" >
+
 
 ```python 
 breeze.place_order(stock_code="NIFTY",
@@ -389,12 +391,12 @@ breeze.place_order(stock_code="NIFTY",
                     strike_price="16600")
 ```
 
-</code></pre>
+
 <br>
 <a href="#index">Back to Index</a>
 
 <h4 id="place_order3">Place a cash order from your account.</h4>
-<pre><code class="python" >
+
 
 ```python
 breeze.place_order(stock_code="ITC",
@@ -408,7 +410,7 @@ breeze.place_order(stock_code="ITC",
                     validity="day"
                 )
 ```                
-</code></pre>
+
 <br>
 <a href="#index">Back to Index</a>
 <hr>
@@ -416,13 +418,13 @@ breeze.place_order(stock_code="ITC",
 # get_order_detail
 
 <h4 id="order_detail">Get an order details by exchange-code and order-id from your account.</h4>
-<pre><code class="python" >
+
 
 ```python
 breeze.get_order_detail(exchange_code="NSE",
                         order_id="20220819N100000001")
 ```                        
-</code></pre>
+
 <p> Note: Please change exchange_code=“NFO” to get details about F&O</p>
 <br>
 <a href="#index">Back to Index</a>
@@ -431,14 +433,14 @@ breeze.get_order_detail(exchange_code="NSE",
 # get_order_list
 
 <h4 id="order_list">Get order list of your account.</h4>
-<pre><code class="python" >
+
 
 ```python
 breeze.get_order_list(exchange_code="NSE",
                         from_date="2022-08-01T10:00:00.000Z",
                         to_date="2022-08-19T10:00:00.000Z")
 ```
-</code></pre>
+
 <p> Note: Please change exchange_code=“NFO” to get details about F&O</p>
 <br>
 <a href="#index">Back to Index</a>
@@ -447,13 +449,13 @@ breeze.get_order_list(exchange_code="NSE",
 # cancel_order
 
 <h4 id="cancel_order">Cancel an order from your account whose status are not Executed.</h4> 
-<pre><code class="python" >
+
 
 ```python
 breeze.cancel_order(exchange_code="NSE",
                     order_id="20220819N100000001")
 ```                    
-</code></pre>
+
 <br>
 <a href="#index">Back to Index</a>
 <hr>
@@ -461,7 +463,7 @@ breeze.cancel_order(exchange_code="NSE",
 # modify_order
 
 <h4 id="modify_order">Modify an order from your account whose status are not Executed.</h4> 
-<pre><code class="python" >
+
 
 ```python
 breeze.modify_order(order_id="202208191100000001",
@@ -474,7 +476,7 @@ breeze.modify_order(order_id="202208191100000001",
                     disclosed_quantity="0",
                     validity_date="2022-08-22T06:00:00.000Z")
 ```
-</code></pre>
+
 <br>
 <a href="#index">Back to Index</a>
 <hr>
@@ -482,7 +484,7 @@ breeze.modify_order(order_id="202208191100000001",
 # get_portfolio_holding
 
 <h4 id="portfolio_holding">Get Portfolio Holdings of your account.</h4>
-<pre><code class="python" >
+
 
 ```python
 breeze.get_portfolio_holdings(exchange_code="NFO",
@@ -491,7 +493,7 @@ breeze.get_portfolio_holdings(exchange_code="NFO",
                                 stock_code="",
                                 portfolio_type="")
 ```
-</code></pre>
+
 <p> Note: Please change exchange_code=“NSE” to get Equity Portfolio Holdings</p>
 <br>
 <a href="#index">Back to Index</a>
@@ -500,13 +502,13 @@ breeze.get_portfolio_holdings(exchange_code="NFO",
 # get_portfolio_position
 
 <h4 id="portfolio_position">Get Portfolio Positions from your account.</h4>
-<pre><code class="python" >
+
 
 ```python
 breeze.get_portfolio_positions()
 
 ```
-</code></pre>
+
 <br>
 <a href="#index">Back to Index</a>
 <hr>
@@ -514,7 +516,7 @@ breeze.get_portfolio_positions()
 # get_quotes
 
 <h4 id="get_quotes">Get quotes of mentioned stock-code </h4>
-<pre><code class="python" >
+
 
 ```python
 breeze.get_quotes(stock_code="ICIBAN",
@@ -524,7 +526,7 @@ breeze.get_quotes(stock_code="ICIBAN",
                     right="others",
                     strike_price="0")
 ```
-</code></pre>
+
 <br>
 <a href="#index">Back to Index</a>
 <hr>
@@ -532,7 +534,7 @@ breeze.get_quotes(stock_code="ICIBAN",
 # get_option_chain
 
 <h4 id="get_option_chain">Get option-chain of mentioned stock-code for product-type Futures where input of expiry-date is not compulsory</h4>
-<pre><code class="python" >
+
 
 ```python
 breeze.get_option_chain_quotes(stock_code="ICIBAN",
@@ -540,12 +542,12 @@ breeze.get_option_chain_quotes(stock_code="ICIBAN",
                     product_type="futures",
                     expiry_date="2022-08-25T06:00:00.000Z")
 ```                    
-</code></pre>
+
 <br>
 <a href="#index">Back to Index</a>
 
 <h4 id="get_option_chain2">Get option-chain of mentioned stock-code for product-type Options where atleast 2 input is required out of expiry-date, right and strike-price</h4>
-<pre><code class="python" >
+
 
 ```python
 breeze.get_option_chain_quotes(stock_code="ICIBAN",
@@ -555,7 +557,7 @@ breeze.get_option_chain_quotes(stock_code="ICIBAN",
                     right="call",
                     strike_price="16850")
 ```
-</code></pre>
+
 <br>
 <a href="#index">Back to Index</a>
 <hr>
@@ -563,7 +565,7 @@ breeze.get_option_chain_quotes(stock_code="ICIBAN",
 # square_off
 
 <h4 id="square_off1">Square off an Equity Margin Order</h4>
-<pre><code class="python" >
+
 
 ```python
 breeze.square_off(exchange_code="NSE",
@@ -582,13 +584,13 @@ breeze.square_off(exchange_code="NSE",
                     open_quantity="",
                     margin_amount="")
 ```
-</code></pre>
+
 <p> Note: Please refer get_portfolio_positions() for settlement id and margin_amount</p>
 <br>
 <a href="#index">Back to Index</a>
 
 <h4 id="square_off2">Square off an FNO Futures Order</h4>
-<pre><code class="python" >
+
 
 ```python
 breeze.square_off(exchange_code="NFO",
@@ -605,12 +607,12 @@ breeze.square_off(exchange_code="NFO",
                     trade_password="",
                     disclosed_quantity="0")
 ```
-</code></pre>
+
 <br>
 <a href="#index">Back to Index</a>
 
 <h4 id="square_off3">Square off an FNO Options Order</h4>
-<pre><code class="python" >
+
 
 ```python
 breeze.square_off(exchange_code="NFO",
@@ -629,7 +631,7 @@ breeze.square_off(exchange_code="NFO",
                     trade_password="",
                     disclosed_quantity="0")
 ```                    
-</code></pre>
+
 <br>
 <a href="#index">Back to Index</a>
 <hr>
@@ -637,7 +639,7 @@ breeze.square_off(exchange_code="NFO",
 # get_trade_list
 
 <h4 id="trade_list">Get trade list of your account.</h4>
-<pre><code class="python" >
+
 
 ```python
 breeze.get_trade_list(from_date="2022-08-01T06:00:00.000Z",
@@ -647,7 +649,7 @@ breeze.get_trade_list(from_date="2022-08-01T06:00:00.000Z",
                         action="",
                         stock_code="")
 ```                        
-</code></pre>
+
 <p> Note: Please change exchange_code=“NFO” to get details about F&O</p>
 <br>
 <a href="#index">Back to Index</a>
@@ -656,13 +658,13 @@ breeze.get_trade_list(from_date="2022-08-01T06:00:00.000Z",
 # get_trade_detail
 
 <h4 id="trade_detail">Get trade detail of your account.</h4>
-<pre><code class="python" >
+
 
 ```python
 breeze.get_trade_detail(exchange_code="NSE",
                         order_id="20220819N100000005")
 ```
-</code></pre>
+
 <p> Note: Please change exchange_code=“NFO” to get details about F&O</p>
 <br>
 <a href="#index">Back to Index</a>
@@ -670,11 +672,11 @@ breeze.get_trade_detail(exchange_code="NSE",
 # get_names
 
 <h4 id = "get_names">Get Names </h4>
-<pre><code class="python" >
+
 
   ```python
       breeze.get_names(exchange_code = 'NSE',stock_code = 'TATASTEEL')
       breeze.get_names(exchange_code = 'NSE',stock_code = 'RELIND')
   ```
-</code></pre>
+
 <a href="#index">Back to Index</a>
