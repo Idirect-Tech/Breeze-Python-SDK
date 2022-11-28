@@ -213,10 +213,12 @@ breeze.get_customer_details(api_session="your_api_session")
 # demat_holding
 
 <h4 id="demat_holding"> Get Demat Holding details of your account.</h4>
+
+```python
+
 breeze.get_demat_holdings()
-<br>
-<a href="#index">Back to Index</a>
-<hr>
+
+```
 
 # get_funds
 
