@@ -148,7 +148,7 @@ Either get_exchange_quotes must be True or get_market_depth must be True. Both g
 
 <div class="sticky" id="index">
 <ul>
-li><a href="#customer_detail">get_customer_details</a></li>
+ <li><a href="#customer_detail">get_customer_details</a></li>
  <li><a href="#demat_holding">get_demat_holdings</a></li>
  <li><a href="#get_funds">get_funds</a></li>
  <li><a href="#set_funds">set_funds</a></li>
