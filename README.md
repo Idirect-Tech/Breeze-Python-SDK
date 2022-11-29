@@ -151,7 +151,7 @@ Either get_exchange_quotes must be True or get_market_depth must be True. Both g
  <li><a href="#demat_holding">get_demat_holdings</a></li>
  <li><a href="#get_funds">get_funds</a></li>
  <li><a href="#set_funds">set_funds</a></li>
- <li><a href="#historical_data">get_historical_data</a></li>
+ <li><a href="#historical_data1">get_historical_data</a></li>
  <li><a href="#add_margin">add_margin</a></li>
  <li><a href="#get_margin">get_margin</a></li>
  <li><a href="#place_order">place_order</a></li>
@@ -223,8 +223,6 @@ breeze.set_funds(transaction_type="debit",
 <br>
 <a href="#index">Back to Index</a>
 <hr>
-
-<h4 id="historical_data">Get Historical Data</h4>
 
 <h4 id="historical_data1">Get Historical Data for Futures</h4>
 
@@ -411,7 +409,6 @@ breeze.get_order_list(exchange_code="NSE",
 <a href="#index">Back to Index</a>
 <hr>
 
-# cancel_order
 
 <h4 id="cancel_order">Cancel an order from your account whose status are not Executed.</h4> 
 
@@ -424,8 +421,6 @@ breeze.cancel_order(exchange_code="NSE",
 <br>
 <a href="#index">Back to Index</a>
 <hr>
-
-# modify_order
 
 <h4 id="modify_order">Modify an order from your account whose status are not Executed.</h4> 
 
@@ -445,8 +440,6 @@ breeze.modify_order(order_id="202208191100000001",
 <br>
 <a href="#index">Back to Index</a>
 <hr>
-
-# get_portfolio_holding
 
 <h4 id="portfolio_holding">Get Portfolio Holdings of your account.</h4>
 
@@ -492,8 +485,6 @@ breeze.get_quotes(stock_code="ICIBAN",
 <a href="#index">Back to Index</a>
 <hr>
 
-# get_option_chain
-
 <h4 id="get_option_chain">Get option-chain of mentioned stock-code for product-type Futures where input of expiry-date is not compulsory</h4>
 
 
@@ -522,8 +513,6 @@ breeze.get_option_chain_quotes(stock_code="ICIBAN",
 <br>
 <a href="#index">Back to Index</a>
 <hr>
-
-<h4 id="square_off">Square off</h4>
 
 <h4 id="square_off1">Square off an Equity Margin Order</h4>
 
