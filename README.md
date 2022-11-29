@@ -5,7 +5,7 @@ This is a package to integrate streaming of stocks or user's order-notification 
 
 ## Documentation
 
-<div class="sticky" id="index">
+<div class="sticky" id="docslink">
 <ul>
  <li><a href="https://api.icicidirect.com/breezeapi/documents/index.html">Breeze HTTP API Documentation</a></li>
  <li><a href="https://pypi.org/project/breeze-connect/">Python client documentation</a></li>
@@ -37,7 +37,7 @@ source breeze_venv/bin/activate
 You can install the latest release via pip
 
 ```
-pip install --upgrade breeze-connect==1.0.24
+pip install --upgrade breeze-connect
 ```
 
 Or, You can also install the specific release version via pip
@@ -148,6 +148,7 @@ Either get_exchange_quotes must be True or get_market_depth must be True. Both g
 
 <div class="sticky" id="index">
 <ul>
+li><a href="#customer_detail">get_customer_details</a></li>
  <li><a href="#demat_holding">get_demat_holdings</a></li>
  <li><a href="#get_funds">get_funds</a></li>
  <li><a href="#set_funds">set_funds</a></li>
