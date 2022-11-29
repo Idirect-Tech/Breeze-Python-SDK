@@ -1,7 +1,6 @@
 # Breeze API Python Client
-The official Python client library for the ICICI Securities trading APIs
-## Breeze Connect SDK
 
+The official Python client library for the ICICI Securities trading APIs.
 This is a package to integrate streaming of stocks or user's order-notification & call APIs through which you can fetch live/historical data, automate your trading strategies, and monitor your portfolio in real time.
 
 ## Documentation
@@ -225,8 +224,9 @@ breeze.set_funds(transaction_type="debit",
 <a href="#index">Back to Index</a>
 <hr>
 
+<h4 id="historical_data">Get Historical Data</h4>
 
-<h4 id="historical_data">Get Historical Data for Futures</h4>
+<h4 id="historical_data1">Get Historical Data for Futures</h4>
 
 
 ```python
@@ -384,8 +384,6 @@ breeze.place_order(stock_code="ITC",
 <a href="#index">Back to Index</a>
 <hr>
 
-# get_order_detail
-
 <h4 id="order_detail">Get an order details by exchange-code and order-id from your account.</h4>
 
 
@@ -398,8 +396,6 @@ breeze.get_order_detail(exchange_code="NSE",
 <br>
 <a href="#index">Back to Index</a>
 <hr>
-
-# get_order_list
 
 <h4 id="order_list">Get order list of your account.</h4>
 
@@ -468,8 +464,6 @@ breeze.get_portfolio_holdings(exchange_code="NFO",
 <a href="#index">Back to Index</a>
 <hr>
 
-# get_portfolio_position
-
 <h4 id="portfolio_position">Get Portfolio Positions from your account.</h4>
 
 
@@ -481,8 +475,6 @@ breeze.get_portfolio_positions()
 <br>
 <a href="#index">Back to Index</a>
 <hr>
-
-# get_quotes
 
 <h4 id="get_quotes">Get quotes of mentioned stock-code </h4>
 
@@ -531,7 +523,7 @@ breeze.get_option_chain_quotes(stock_code="ICIBAN",
 <a href="#index">Back to Index</a>
 <hr>
 
-# square_off
+<h4 id="square_off">Square off</h4>
 
 <h4 id="square_off1">Square off an Equity Margin Order</h4>
 
@@ -604,8 +596,6 @@ breeze.square_off(exchange_code="NFO",
 <br>
 <a href="#index">Back to Index</a>
 <hr>
-
-# get_trade_list
 
 <h4 id="trade_list">Get trade list of your account.</h4>
 
