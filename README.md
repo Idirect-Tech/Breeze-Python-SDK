@@ -1,49 +1,20 @@
-# Breeze Python SDK
+# Breeze API Python Client
 The official Python client library for the ICICI Securities trading APIs
+## Breeze Connect SDK
 
-# Index
+This is a package to integrate streaming of stocks or user's order-notification & call APIs through which you can fetch live/historical data, automate your trading strategies, and monitor your portfolio in real time.
+
+## Documentation
 
 <div class="sticky" id="index">
 <ul>
- <li><a href="#Uat_Breeze">Breeze_Connect_SDK</a></li>
- <li><a href="#Setup_env">Setup Virtual Environment</a></li>
- <li><a href="#Installing_client">Installing the client</a></li>
- <li><a href="#Web_socket">Websocket Usage</a></li>
- <li><a href="#Api_Usage">API Usage</a></li>
- <li><a href="#customer_detail">get_customer_details</a></li>
- <li><a href="#demat_holding">get_demat_holdings</a></li>
- <li><a href="#get_funds">get_funds</a></li>
- <li><a href="#set_funds">set_funds</a></li>
- <li><a href="#historical_data">get_historical_data</a></li>
- <li><a href="#add_margin">add_margin</a></li>
- <li><a href="#get_margin">get_margin</a></li>
- <li><a href="#place_order">place_order</a></li>
- <li><a href="#order_detail">order_detail</a></li>
- <li><a href="#order_list">order_list</a></li>
- <li><a href="#cancel_order">cancel_order</a></li>
- <li><a href="#modify_order">modify_order</a></li>
- <li><a href="#portfolio_holding">get_portfolio_holding</a></li>
- <li><a href="#portfolio_position">get_portfolio_position</a></li>
- <li><a href="#get_quotes">get_quotes</a></li>
- <li><a href="#get_option_chain">get_option_chain_quotes</a></li>
- <li><a href="#square_off1">square_off</a></li>
- <li><a href="#modify_order">modify_order</a></li>
- <li><a href="#trade_list">get_trade_list</a></li>
- <li><a href="#trade_detail">get_trade_detail</a></li>
- <li><a href="#get_names"> get_names </a></li>
+ <li><a href="https://api.icicidirect.com/breezeapi/documents/index.html">Breeze HTTP API Documentation</a></li>
+ <li><a href="https://pypi.org/project/breeze-connect/">Python client documentation</a></li>
 </ul>
 </div>
 
+## Setup virtual environment in your Machine
 
-## Breeze Connect SDK
-<h4 id="Uat_Breeze">Breeze Connect</h4>
-This is a package to integrate streaming of stocks or user's order-notification & call APIs through which you can fetch live/historical data, automate your trading strategies, and monitor your portfolio in real time.
-<br>
-<a href="#index">Back to Index</a>
-<br>
-
-## Setup virtual environment
-<h4 id="Setup_env">Setup virtual environment in your Machine</h4>
 You must install the virtualenv package via pip
 
 ```
@@ -61,26 +32,46 @@ And then, You can activate virtual environment via source
 ```
 source breeze_venv/bin/activate
 ```
-<a href="#index">Back to Index</a>
-<br>
 
 ## Installing the client
-<h4 id="Installing_client">Installing the client</h4>
+
 You can install the latest release via pip
 
 ```
-pip install --upgrade breeze-connect==1.0.23
+pip install --upgrade breeze-connect==1.0.24
 ```
 
 Or, You can also install the specific release version via pip
 
 ```
-pip install breeze-connect==1.0.23
+pip install breeze-connect==1.0.24
 ```
-<a href="#index">Back to Index</a>
+
+## API Usage
+
+```python
+from breeze_connect import BreezeConnect
+
+# Initialize SDK
+breeze = BreezeConnect(api_key="your_api_key")
+
+# Obtain your session key from https://api.icicidirect.com/apiuser/login?api_key=YOUR_API_KEY
+# Incase your api-key has special characters(like +,=,!) then encode the api key before using in the url as shown below.
+import urllib
+print("https://api.icicidirect.com/apiuser/login?api_key="+urllib.parse.quote_plus("your_api_key"))
+
+# Generate Session
+breeze.generate_session(api_secret="your_secret_key",
+                        session_token="your_api_session")
+
+# Generate ISO8601 Date/DateTime String
+import datetime
+iso_date_string = datetime.datetime.strptime("28/02/2021","%d/%m/%Y").isoformat()[:10] + 'T05:30:00.000Z'
+iso_date_time_string = datetime.datetime.strptime("28/02/2021 23:59:59","%d/%m/%Y %H:%M:%S").isoformat()[:19] + '.000Z'
+```
+<br>
 
 ## Websocket Usage
-<h4 id="Web_socket">Websocket Usage</h4>
 
 ```python
 from breeze_connect import BreezeConnect
@@ -129,7 +120,6 @@ breeze.unsubscribe_feeds(get_order_notification=True)
 breeze.ws_disconnect()
 ```
 <br>
-<p><a href="#index">Back to Index</a></p>
 
 ---
 
@@ -152,52 +142,36 @@ right can be either 'Put', 'Call' or an empty string. right can not be an empty 
 Either get_exchange_quotes must be True or get_market_depth must be True. Both get_exchange_quotes and get_market_depth can be True, But both must not be False.
 
 ---
-<p><a href="#index">Back to Index</a></p>
-<br>
 
-## API Usage
-<h4 id="Api_Usage">API Usage</h4>
+# List of other SDK Methods:
 
-```python
-from breeze_connect import BreezeConnect
+<h4 id="index_title" >Index</h4>
 
-# Initialize SDK
-breeze = BreezeConnect(api_key="your_api_key")
+<div class="sticky" id="index">
+<ul>
+ <li><a href="#demat_holding">get_demat_holdings</a></li>
+ <li><a href="#get_funds">get_funds</a></li>
+ <li><a href="#set_funds">set_funds</a></li>
+ <li><a href="#historical_data">get_historical_data</a></li>
+ <li><a href="#add_margin">add_margin</a></li>
+ <li><a href="#get_margin">get_margin</a></li>
+ <li><a href="#place_order">place_order</a></li>
+ <li><a href="#order_detail">order_detail</a></li>
+ <li><a href="#order_list">order_list</a></li>
+ <li><a href="#cancel_order">cancel_order</a></li>
+ <li><a href="#modify_order">modify_order</a></li>
+ <li><a href="#portfolio_holding">get_portfolio_holding</a></li>
+ <li><a href="#portfolio_position">get_portfolio_position</a></li>
+ <li><a href="#get_quotes">get_quotes</a></li>
+ <li><a href="#get_option_chain">get_option_chain_quotes</a></li>
+ <li><a href="#square_off1">square_off</a></li>
+ <li><a href="#modify_order">modify_order</a></li>
+ <li><a href="#trade_list">get_trade_list</a></li>
+ <li><a href="#trade_detail">get_trade_detail</a></li>
+ <li><a href="#get_names"> get_names </a></li>
+</ul>
+</div>
 
-# Obtain your session key from https://api.icicidirect.com/apiuser/login?api_key=YOUR_API_KEY
-# Incase your api-key has special characters(like +,=,!) then encode the api key before using in the url as shown below.
-import urllib
-print("https://api.icicidirect.com/apiuser/login?api_key="+urllib.parse.quote_plus("your_api_key"))
-
-# Generate Session
-breeze.generate_session(api_secret="your_secret_key",
-                        session_token="your_api_session")
-
-# Generate ISO8601 Date/DateTime String
-import datetime
-iso_date_string = datetime.datetime.strptime("28/02/2021","%d/%m/%Y").isoformat()[:10] + 'T05:30:00.000Z'
-iso_date_time_string = datetime.datetime.strptime("28/02/2021 23:59:59","%d/%m/%Y %H:%M:%S").isoformat()[:19] + '.000Z'
-```
-<br>
-<button><a href="#index">Back to Index</a></button>
-<!--<head>
-    <style>
-      div.sticky {
-        position: -webkit-sticky;
-        position: sticky;
-      }
-      .python
-      {
-        color: green;
-      }
-    </style>
-</head>
--->
-
-
-# Following are the complete list of API method:
-
-# customer_detail
 
 <h4 id="customer_detail" > Get Customer details by api-session value.</h4>
 
@@ -210,7 +184,6 @@ breeze.get_customer_details(api_session="your_api_session")
 <a href="#index">Back to Index</a>
 <hr>
 
-# demat_holding
 
 <h4 id="demat_holding"> Get Demat Holding details of your account.</h4>
 
@@ -219,8 +192,10 @@ breeze.get_customer_details(api_session="your_api_session")
 breeze.get_demat_holdings()
 
 ```
+<br>
+<a href="#index">Back to Index</a>
+<hr>
 
-# get_funds
 
 <h4 id="get_funds"> Get Funds details of your account.</h4>
 
@@ -236,8 +211,6 @@ breeze.get_funds()
 <a href="#index">Back to Index</a>
 <hr>
 
-# set_funds
-
 <h4 id="set_funds"> Set Funds of your account</h4>
 
 
@@ -252,7 +225,6 @@ breeze.set_funds(transaction_type="debit",
 <a href="#index">Back to Index</a>
 <hr>
 
-# historical_data
 
 <h4 id="historical_data">Get Historical Data for Futures</h4>
 
@@ -307,7 +279,6 @@ breeze.get_historical_data(interval="1minute",
 <a href="#index">Back to Index</a>
 <hr>
 
-# add_margin
 
 <h4 id="add_margin">Add Margin to your account.</h4>
 
@@ -334,8 +305,6 @@ breeze.add_margin(product_type="margin",
 <a href="#index">Back to Index</a>
 <hr>
 
-# get_margin
-
 <h4 id="get_margin">Get Margin of your account.</h4>
 
 
@@ -348,8 +317,6 @@ breeze.get_margin(exchange_code="NSE")
 <br>
 <a href="#index">Back to Index</a>
 <hr>
-
-# place_order
 
 <h4 id="place_order">Placing a Futures Order from your account.</h4>
 
@@ -657,8 +624,6 @@ breeze.get_trade_list(from_date="2022-08-01T06:00:00.000Z",
 <a href="#index">Back to Index</a>
 <hr>
 
-# get_trade_detail
-
 <h4 id="trade_detail">Get trade detail of your account.</h4>
 
 
@@ -670,8 +635,8 @@ breeze.get_trade_detail(exchange_code="NSE",
 <p> Note: Please change exchange_code=“NFO” to get details about F&O</p>
 <br>
 <a href="#index">Back to Index</a>
+<hr>
 
-# get_names
 
 <h4 id = "get_names">Get Names </h4>
 

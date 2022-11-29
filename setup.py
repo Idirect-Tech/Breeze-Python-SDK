@@ -5,14 +5,14 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="breeze_connect",
-    version="1.0.23",
+    version="1.0.24",
     author="ICICI Direct Breeze",
     author_email="breezeapi@icicisecurities.com",
     description="ICICI Direct Breeze",
     long_description=long_description,
     long_description_content_type="text/markdown",
     install_requires=['python-socketio[client]','requests','pandas'],
-    url="https://github.com/pypa/sampleproject",
+    url="https://github.com/Idirect-Tech/Breeze-Python-SDK/",
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
