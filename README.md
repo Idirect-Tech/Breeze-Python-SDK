@@ -170,7 +170,7 @@ Both get_exchange_quotes and get_market_depth can be True, But both must not be 
 
 ---
 
-# List of other SDK Methods:
+## List of other SDK Methods:
 
 <h4 id="index_title" >Index</h4>
 
