@@ -9,7 +9,7 @@ The official Python client library for the ICICI Securities trading APIs. Breeze
 5. Option Chain API
 
 
-API Documentation
+## API Documentation
 
 <div class="sticky" id="docslink">
 <ul>
@@ -21,19 +21,16 @@ API Documentation
 ## Setup virtual environment in your Machine
 
 You must install the virtualenv package via pip
-
 ```
 pip install virtualenv
 ```
 
 You should create breeze virtual environment via virtualenv
-
 ```
 virtualenv -p python3 breeze_venv
 ```
 
 And then, You can activate virtual environment via source
-
 ```
 source breeze_venv/bin/activate
 ```
