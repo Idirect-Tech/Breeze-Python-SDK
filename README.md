@@ -1,7 +1,13 @@
 # Breeze API Python Client
 
-The official Python client library for the ICICI Securities trading APIs.
-This is a package to integrate streaming of stocks or user's order-notification & call APIs through which you can fetch live/historical data, automate your trading strategies, and monitor your portfolio in real time.
+The official Python client library for the ICICI Securities trading APIs. BreezeConnect is a set of REST-like APIs that allows one to build a complete investment and trading platform. Following are some notable features of Breeze APIs:
+
+1. Execute orders in real time
+2. Manage Portfolio
+3. Access to 10 years of historical market data including 1 sec OHLCV
+4. Streaming live OHLC (websockets)
+5. Option Chain API
+
 
 ## Documentation
 
@@ -126,19 +132,43 @@ breeze.ws_disconnect()
 
 Examples for stock_token are "4.1!38071" or "1.1!500780".
 
+Template for stock_token : X.Y!<token>
+X : exchange code
+Y : Market Level data
+Token : ISEC stock code
+
+Value of X can be :
+1 for BSE,
+4 for NSE,
+13 for NDX,
+6 for MCX,
+4 for NFO,
+
+Value of Y can be :
+1 for Level 1 data,
+4 for Level 2 data
+
+Token number can be obtained via get_names() function or downloading master security file via 
+https://api.icicidirect.com/breezeapi/documents/index.html#instruments
+
+
 exchange_code must be 'BSE', 'NSE', 'NDX', 'MCX' or 'NFO'.
 
 stock_code should not be an empty string. Examples for stock_code are "WIPRO" or "ZEEENT".
 
-product_type can be either 'Futures', 'Options' or an empty string. product_type can not be an empty string for exchange_code 'NDX', 'MCX' and 'NFO'. 
+product_type can be either 'Futures', 'Options' or an empty string. 
+Product_type can not be an empty string for exchange_code 'NDX', 'MCX' and 'NFO'. 
 
-strike_date can be in DD-MMM-YYYY(Ex.: 01-Jan-2022) or an empty string. strike_date can not be an empty string for exchange_code 'NDX', 'MCX' and 'NFO'.
+strike_date can be in DD-MMM-YYYY(Ex.: 01-Jan-2022) or an empty string. 
+strike_date can not be an empty string for exchange_code 'NDX', 'MCX' and 'NFO'.
 
-strike_price can be float-value in string or an empty string. strike_price can not be an empty string for product_type 'Options'.
+strike_price can be float-value in string or an empty string. 
+strike_price can not be an empty string for product_type 'Options'.
 
 right can be either 'Put', 'Call' or an empty string. right can not be an empty string for product_type 'Options'.
 
-Either get_exchange_quotes must be True or get_market_depth must be True. Both get_exchange_quotes and get_market_depth can be True, But both must not be False.
+Either get_exchange_quotes must be True or get_market_depth must be True. 
+Both get_exchange_quotes and get_market_depth can be True, But both must not be False.
 
 ---
 
