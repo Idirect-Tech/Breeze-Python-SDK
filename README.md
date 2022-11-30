@@ -9,7 +9,7 @@ The official Python client library for the ICICI Securities trading APIs. Breeze
 5. Option Chain API
 
 
-## Documentation
+API Documentation
 
 <div class="sticky" id="docslink">
 <ul>
