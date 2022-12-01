@@ -1224,7 +1224,9 @@ class ApificationBreeze():
                     'exchange_stock_code': exchange,
                     'isec_stock_code':isec_stock,
                     'isec_token': token,
-                    'company name':compname
+                    'company name':compname,
+                    'isec_token_level1':str('4.1!') + str(token),
+                    'isec_token_level2':str('4.2!') + str(token)
                 }
     
             return result
