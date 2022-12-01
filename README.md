@@ -623,7 +623,7 @@ breeze.get_trade_detail(exchange_code="NSE",
 
 ```python
 breeze.get_names(exchange_code = 'NSE',stock_code = 'TATASTEEL')
-breeze.get_names(exchange_code = 'NSE',stock_code = 'RELIND')
+breeze.get_names(exchange_code = 'NSE',stock_code = 'RELIANCE')
 ```
 <p>Note: Use this method to find ICICI specific stock codes / token </p>
 
