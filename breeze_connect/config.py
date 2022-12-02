@@ -3,6 +3,9 @@ import enum
 #Breeze API BASE URL
 API_URL = "https://api.icicidirect.com/breezeapi/api/v1/"
 
+#Breeze New Endpoint
+OHLC_HIST_V2_URL = "https://breezeapi.icicidirect.com"
+
 #Live Feeds URL
 LIVE_FEEDS_URL = "https://livefeeds.icicidirect.com"
 
@@ -17,25 +20,34 @@ STOCK_SCRIPT_CSV_URL = "https://traderweb.icicidirect.com/Content/File/txtFile/S
 
 #API Methods
 class APIRequestType(enum.Enum):
+
     POST = "POST"
     GET = "GET"
     PUT = "PUT"
     DELETE = "DELETE"
 
+    def __str__(self):
+        return str(self.value)
+
 #API endpoints
 class APIEndPoint(enum.Enum):
+
     CUST_DETAILS = "customerdetails"
     DEMAT_HOLDING = "dematholdings"
     FUND = "funds"
     HIST_CHART = "historicalcharts"
+    HIST_CHART_V2 = '/api/v2/historicalcharts'
     MARGIN = "margin"
     ORDER = "order"
     PORTFOLIO_HOLDING = "portfolioholdings"
     PORTFOLIO_POSITION = "portfoliopositions"
     QUOTE = "quotes"
+    TRADE = "trades"
     OPT_CHAIN = "optionchain"
     SQUARE_OFF = "squareoff"
-    TRADE = "trades"
+
+    def __str__(self):
+        return str(self.value)
 
 #TUX Mapping
 TUX_TO_USER_MAP = {
@@ -95,6 +107,7 @@ class ResponseMessage(enum.Enum):
     BLANK_STOCK_CODE = "Stock-Code cannot be empty"
     BLANK_PRODUCT_TYPE = "Product cannot be empty"
     BLANK_PRODUCT_TYPE_NFO = "Product-type cannot be empty for Exchange-Code 'nfo'"
+    BLANK_PRODUCT_TYPE_HIST_V2 = "Product-type cannot be empty for Exchange-Code 'nfo','ndx' or 'mcx'"
     BLANK_ACTION = "Action cannot be empty"
     BLANK_ORDER_TYPE = "Order-type cannot be empty"
     BLANK_QUANTITY = "Quantity cannot be empty"
@@ -114,8 +127,10 @@ class ResponseMessage(enum.Enum):
 
     #Validation Errors
     EXCHANGE_CODE_ERROR = "Exchange-Code should be either 'nse', or 'nfo'"
+    EXCHANGE_CODE_HIST_V2_ERROR = "Exchange-Code should be either 'nse', 'bse' ,'nfo', 'ndx' or 'mcx'"
     PRODUCT_TYPE_ERROR = "Product should be either 'futures', 'options', 'futureplus', 'optionplus', 'cash', 'eatm', or 'margin'"
     PRODUCT_TYPE_ERROR_NFO = "Product-type should be either 'futures', 'options', 'futureplus', or 'optionplus' for Exchange-Code 'NFO'"
+    PRODUCT_TYPE_ERROR_HIST_V2 = "Product-type should be either 'futures', 'options' for Exchange-Code 'NFO','NDX' or 'MCX'"
     ACTION_TYPE_ERROR = "Action should be either 'buy', or 'sell'"
     ORDER_TYPE_ERROR = "Order-type should be either 'limit', 'market', or 'stoploss'"
     VALIDITY_TYPE_ERROR = "Validity should be either 'day', 'ioc', or 'vtc'"
@@ -123,6 +138,7 @@ class ResponseMessage(enum.Enum):
     TRANSACTION_TYPE_ERROR = "Transaction-Type should be either 'debit' or 'credit'"
     ZERO_AMOUNT_ERROR = "Amount should be more than 0"
     INTERVAL_TYPE_ERROR = "Interval should be either '1minute', '5minute', '30minute', or '1day'"
+    INTERVAL_TYPE_ERROR_HIST_V2 = "Interval should be either '1second','1minute', '5minute', '30minute', or '1day'"
     API_SESSION_ERROR = "API Session cannot be empty"
     OPT_CHAIN_EXCH_CODE_ERROR = "Exchange code should be nfo"
     NFO_FIELDS_MISSING_ERROR = "Atleast two inputs are required out of Expiry-Date, Right & Strike-Price. All three cannot be empty'."
@@ -133,11 +149,15 @@ class ResponseMessage(enum.Enum):
     ORDER_REFRESH_NOT_CONNECTED = "socket server is not connected to order refresh."
     ORDER_REFRESH_DISCONNECTED = "socket server for order streaming has been disconnected."
     ORDER_NOTIFICATION_SUBSRIBED = "Order Notification subscribed successfully"
+    OHLCV_STREAM_NOT_CONNECTED = "socket server is not connected to OHLCV Stream."
+    OHLCV_STREAM_DISCONNECTED = "socket server for OHLCV Streaming has been disconnected."
 
     #Stock Subscription Message
     STOCK_SUBSCRIBE_MESSAGE = "Stock {0} subscribed successfully"
     STOCK_UNSUBSCRIBE_MESSAGE = "Stock {0} unsubscribed successfully"
 
+    def __str__(self):
+        return str(self.value)
 class ExceptionMessage(enum.Enum):
 
     #Authentication Error
@@ -155,20 +175,28 @@ class ExceptionMessage(enum.Enum):
     WRONG_EXCHANGE_CODE_EXCEPTION = "Stock-Token cannot be found due to wrong exchange-code."
     STOCK_NOT_EXIST_EXCEPTION = "Stock-Data does not exist in exchange-code {0} for Stock-Token {1}."
     ISEC_NSE_STOCK_MAP_EXCEPTION = "Result Not Found"
+    STREAM_OHLC_INTERVAL_ERROR = "Interval should be either '1second','1minute', '5minute', '30minute'"
 
     #API Call Exception
     API_REQUEST_EXCEPTION = "Error while trying to make request {0} {1}"
 
+    def __str__(self):
+        return str(self.value)
+
 # Type List
 INTERVAL_TYPES = ["1minute", "5minute", "30minute", "1day"]
+INTERVAL_TYPES_HIST_V2 = ["1second","1minute", "5minute", "30minute", "1day"]
+INTERVAL_TYPES_STREAM_OHLC = ["1second","1minute", "5minute", "30minute"]
 PRODUCT_TYPES = ["futures", "options", "futureplus", "optionplus", "cash", "eatm", "margin"]
 PRODUCT_TYPES_HIST = ["futures", "options", "futureplus", "optionplus"]
+PRODUCT_TYPES_HIST_V2 = ["futures", "options","cash"]
 RIGHT_TYPES = ["call", "put", "others"]
 ACTION_TYPES = ["buy", "sell"]
 ORDER_TYPES = ["limit", "market", "stoploss"]
 VALIDITY_TYPES = ["day", "ioc", "vtc"]
 TRANSACTION_TYPES = ["debit", "credit"]
 EXCHANGE_CODES_HIST = ["nse", "nfo"]
+EXCHANGE_CODES_HIST_V2 = ["nse","bse","nfo","ndx","mcx"]
 
 #Isec NSE Stockcode mapping file
 ISEC_NSE_CODE_MAP_FILE = {
@@ -176,4 +204,18 @@ ISEC_NSE_CODE_MAP_FILE = {
     'bse':'BSEScripMaster.txt',
     'cdnse':'CDNSEScripMaster.txt',
     'fonse':'FONSEScripMaster.txt'
+}
+
+feed_interval_map = {
+    '1MIN':"1minute",
+    '5MIN':"5minute",
+    '30MIN':'30minute',
+    '1SEC':'1second'
+}
+
+channel_interval_map = {
+    '1minute':'1MIN',
+    '5minute':'5MIN',
+    '30minute':'30MIN',
+    '1second':'1SEC'
 }

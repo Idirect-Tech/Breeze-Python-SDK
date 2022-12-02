@@ -47,7 +47,7 @@ pip install --upgrade breeze-connect
 Or, You can also install the specific release version via pip
 
 ```
-pip install breeze-connect==1.0.24
+pip install breeze-connect==1.0.27
 ```
 
 ## API Usage
@@ -113,6 +113,18 @@ breeze.unsubscribe_feeds(exchange_code="NFO", stock_code="ZEEENT", product_type=
 # unsubscribe stocks feeds by stock-token
 breeze.unsubscribe_feeds(stock_token="1.1!500780")
 
+# subscribe to Real Time Streaming OHLCV Data of stocks
+breeze.subscribe_feeds(exchange_code="NFO", stock_code="ZEEENT", product_type="options", expiry_date="31-Mar-2022", strike_price="350", right="Call", interval="1minute")
+
+# subscribe to Real Time Streaming OHLCV Data of stocks by stock-token
+breeze.subscribe_feeds(stock_token="1.1!500780",interval="1second")
+
+# unsubscribe to Real Time Streaming OHLCV Data of stocks
+breeze.unsubscribe_feeds(exchange_code="NFO", stock_code="ZEEENT", product_type="options", expiry_date="31-Mar-2022", strike_price="350", right="Call", interval="1minute")
+
+# unsubscribe to Real Time Streaming OHLCV Data of stocks by stock-token
+breeze.unsubscribe_feeds(stock_token="1.1!500780",interval="1second")
+
 # subscribe order notification feeds(it will connect to order streaming server)
 breeze.subscribe_feeds(get_order_notification=True)
 
@@ -166,7 +178,10 @@ strike_price can not be an empty string for product_type 'Options'.
 right can be either 'Put', 'Call' or an empty string. right can not be an empty string for product_type 'Options'.
 
 Either get_exchange_quotes must be True or get_market_depth must be True. 
+
 Both get_exchange_quotes and get_market_depth can be True, But both must not be False.
+
+For Streaming OHLCV, interval must not be empty and must be equal to either of the following "1second","1minute", "5minute", "30minute"
 
 ---
 
@@ -181,6 +196,7 @@ Both get_exchange_quotes and get_market_depth can be True, But both must not be 
  <li><a href="#get_funds">get_funds</a></li>
  <li><a href="#set_funds">set_funds</a></li>
  <li><a href="#historical_data1">get_historical_data</a></li>
+ <li><a href="#historical_data_v21">get_historical_data_v2</a></li>
  <li><a href="#add_margin">add_margin</a></li>
  <li><a href="#get_margin">get_margin</a></li>
  <li><a href="#place_order">place_order</a></li>
@@ -284,6 +300,8 @@ breeze.get_historical_data(interval="1minute",
 ```
 
 <a href="#index">Back to Index</a>
+
+
 <h4 id="historical_data3">Get Historical Data for Options</h4>
 
 
@@ -301,7 +319,70 @@ breeze.get_historical_data(interval="1minute",
 ```
 
 
-<p> Note : Get Historical Data for specific stock-code by mentioned interval either as "1minute", "5minute", "30minutes" or as "1day"</p>
+<p> Note : Get Historical Data for specific stock-code by mentioned interval either as "1minute", "5minute", "30minute" or as "1day"</p>
+<br>
+<a href="#index">Back to Index</a>
+<hr>
+
+<h4 id="historical_data_v21">Get Historical Data (version 2) for Futures</h4>
+
+
+```python
+breeze.get_historical_data_v2(interval="1minute",
+                            from_date= "2022-08-15 07:00:00",
+                            to_date= "2022-08-17 07:00:00",
+                            stock_code="ICIBAN",
+                            exchange_code="NFO",
+                            product_type="futures",
+                            expiry_date="2022-08-25",
+                            right="others",
+                            strike_price="0")
+                            
+```
+
+<a href="#index">Back to Index</a>
+
+<h4 id="historical_data_v22">Get Historical Data (version 2) for Equity</h4>
+
+
+```python
+breeze.get_historical_data(interval="1minute",
+                            from_date= "2022-08-15 07:00:00",
+                            to_date= "2022-08-17 07:00:00",
+                            stock_code="ITC",
+                            exchange_code="NSE",
+                            product_type="cash")
+```
+
+<a href="#index">Back to Index</a>
+<h4 id="historical_data_v23">Get Historical Data (version 2) for Options</h4>
+
+
+```python
+
+breeze.get_historical_data(interval="1minute",
+                            from_date= "2022-08-15 07:00:00",
+                            to_date= "2022-08-17 07:00:00",
+                            stock_code="CNXBAN",
+                            exchange_code="NFO",
+                            product_type="options",
+                            expiry_date="2022-09-29",
+                            right="call",
+                            strike_price="38000")
+```
+
+
+<p> 
+Note : 
+
+1) Get Historical Data (version 2) for specific stock-code by mentioning interval either as "1second","1minute", "5minute", "30minute" or as "1day". 
+
+2) Maximum candle intervals in one single request is 1000
+
+3) From Date and To Date should be of format YYYY-MM-DD HH:MM:SS
+
+4) Expiry Date should be of format YYYY-MM-DD
+</p>
 <br>
 <a href="#index">Back to Index</a>
 <hr>
@@ -651,7 +732,8 @@ breeze.get_trade_detail(exchange_code="NSE",
 
 ```python
 breeze.get_names(exchange_code = 'NSE',stock_code = 'TATASTEEL')
-breeze.get_names(exchange_code = 'NSE',stock_code = 'RELIND')
+breeze.get_names(exchange_code = 'NSE',stock_code = 'RELIANCE')
 ```
+<p>Note: Use this method to find ICICI specific stock codes / token </p>
 
 <a href="#index">Back to Index</a>
