@@ -373,14 +373,15 @@ breeze.get_historical_data(interval="1minute",
 
 
 <p> 
-    Note : 
-    1)Get Historical Data (version 2) for specific stock-code by mentioning interval either as "1second","1minute", "5minute", "30minute" or as "1day". 
+Note : 
 
-    2)Maximum candle intervals in one single request is 1000
+1)Get Historical Data (version 2) for specific stock-code by mentioning interval either as "1second","1minute", "5minute", "30minute" or as "1day". 
 
-    3)From Date and To Date should be of format YYYY-MM-DD HH:MM:SS
+2)Maximum candle intervals in one single request is 1000
 
-    4) Expiry Date should be of format YYYY-MM-DD
+3)From Date and To Date should be of format YYYY-MM-DD HH:MM:SS
+
+4) Expiry Date should be of format YYYY-MM-DD
 </p>
 <br>
 <a href="#index">Back to Index</a>
