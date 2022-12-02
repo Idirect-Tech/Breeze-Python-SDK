@@ -27,9 +27,12 @@ class SocketEventBreeze(socketio.ClientNamespace):
         self.breeze = breeze_instance
         self.sio = socketio.Client()
 
-    def connect(self,hostname):
+    def connect(self,hostname,is_ohlc_stream = False):
         auth = {"user": self.breeze.user_id, "token": self.breeze.session_key}
-        self.sio.connect(hostname, headers={"User-Agent": "python-socketio[client]/socket"},auth=auth,transports="websocket", wait_timeout=3)
+        if is_ohlc_stream:
+            self.sio.connect(hostname,socketio_path='ohlcvstream' ,headers={"User-Agent": "python-socketio[client]/socket"},auth=auth,transports="websocket", wait_timeout=3)
+        else:
+            self.sio.connect(hostname, headers={"User-Agent": "python-socketio[client]/socket"},auth=auth,transports="websocket", wait_timeout=3)
         
     def on_disconnect(self):
         self.sio.emit("disconnect", "transport close")
@@ -42,6 +45,14 @@ class SocketEventBreeze(socketio.ClientNamespace):
         if 'symbol' in data and data['symbol'] != None and len(data['symbol'])>0:
             data.update(self.breeze.get_data_from_stock_token_value(data['symbol']))
         self.breeze.on_ticks(data)
+
+    def on_ohlc_stream(self,data):
+        data = self.breeze.parse_ohlc_data(data)
+        self.breeze.on_ticks(data)
+    
+    def watch_stream_data(self,data,channel):
+        self.sio.emit('join', data)
+        self.sio.on(channel, self.on_ohlc_stream)
 
     def watch(self, data):
         self.sio.emit('join', data)
@@ -60,6 +71,7 @@ class BreezeConnect():
         self.secret_key = None
         self.sio_rate_refresh_handler = None
         self.sio_order_refresh_handler = None
+        self.sio_ohlcv_stream_handler = None
         self.api_handler = None
         self.on_ticks = None
         self.stock_script_dict_list = []
@@ -72,31 +84,42 @@ class BreezeConnect():
     def subscribe_exception(self,message):
         return Exception(message)
 
-    def _ws_connect(self,handler,order_flag): 
+    def _ws_connect(self,handler,order_flag=False,ohlcv_flag=False): 
         if order_flag:
             if not self.sio_order_refresh_handler:
                 self.sio_order_refresh_handler = SocketEventBreeze("/", self)
             self.sio_order_refresh_handler.connect(config.LIVE_FEEDS_URL)
+        elif ohlcv_flag:
+            if not self.sio_ohlcv_stream_handler:
+                self.sio_ohlcv_stream_handler = SocketEventBreeze("/", self)
+            self.sio_ohlcv_stream_handler.connect(config.OHLC_HIST_V2_URL,is_ohlc_stream=True)           
         else:
             if not self.sio_rate_refresh_handler: 
                 self.sio_rate_refresh_handler = SocketEventBreeze("/", self)
             self.sio_rate_refresh_handler.connect(config.LIVE_STREAM_URL)
     
-    def ws_disconnect(self,isOrder = False):
+    def ws_disconnect(self,isOrder = False,is_ohlc_stream = False):
         if(isOrder == False):    
             if not self.sio_rate_refresh_handler:
-                return self.socket_connection_response(resp_message.RATE_REFRESH_NOT_CONNECTED)
+                return self.socket_connection_response(resp_message.RATE_REFRESH_NOT_CONNECTED.value)
             else:
                 self.sio_rate_refresh_handler.on_disconnect()
                 self.sio_rate_refresh_handler = None
-                return self.socket_connection_response(resp_message.RATE_REFRESH_DISCONNECTED)
+                return self.socket_connection_response(resp_message.RATE_REFRESH_DISCONNECTED.value)
+        elif is_ohlc_stream:    
+            if not self.sio_ohlcv_stream_handler:
+                return self.socket_connection_response(resp_message.OHLCV_STREAM_NOT_CONNECTED.value)
+            else:
+                self.sio_ohlcv_stream_handler.on_disconnect()
+                self.sio_ohlcv_stream_handler = None
+                return self.socket_connection_response(resp_message.OHLCV_STREAM_DISCONNECTED.value)
         else:
             if not self.sio_order_refresh_handler:
-                return self.socket_connection_response(resp_message.ORDER_REFRESH_NOT_CONNECTED)
+                return self.socket_connection_response(resp_message.ORDER_REFRESH_NOT_CONNECTED.value)
             else:    
                 self.sio_order_refresh_handler.on_disconnect()
                 self.sio_order_refresh_handler = None
-                return self.socket_connection_response(resp_message.ORDER_REFRESH_DISCONNECTED)
+                return self.socket_connection_response(resp_message.ORDER_REFRESH_DISCONNECTED.value)
     
     def ws_connect(self):
         self._ws_connect(self.sio_rate_refresh_handler,False)
@@ -114,27 +137,27 @@ class BreezeConnect():
             }
             exchange_code_name = exchange_code_list.get(exchange_type, False)
             if exchange_code_name == False:
-                self.subscribe_exception(except_message.WRONG_EXCHANGE_CODE_EXCEPTION)
+                self.subscribe_exception(except_message.WRONG_EXCHANGE_CODE_EXCEPTION.value)
             elif exchange_code_name.lower() == "bse":
                 stock_data = self.token_script_dict_list[0].get(stock_token, False)
                 if stock_data == False:
-                    self.subscribe_exception(except_message.STOCK_NOT_EXIST_EXCEPTION.format("BSE",input_stock_token))
+                    self.subscribe_exception(except_message.STOCK_NOT_EXIST_EXCEPTION.value.format("BSE",input_stock_token))
             elif exchange_code_name.lower() == "nse":
                 stock_data = self.token_script_dict_list[1].get(stock_token, False)
                 if stock_data == False:
                     stock_data = self.token_script_dict_list[4].get(stock_token, False)
                     if stock_data == False:    
-                        self.subscribe_exception(except_message.STOCK_NOT_EXIST_EXCEPTION.format("i.e. NSE or NFO",input_stock_token))
+                        self.subscribe_exception(except_message.STOCK_NOT_EXIST_EXCEPTION.value.format("i.e. NSE or NFO",input_stock_token))
                     else:
                         exchange_code_name = "NFO"
             elif exchange_code_name.lower() == "ndx":
                 stock_data = self.token_script_dict_list[2].get(stock_token, False)
                 if stock_data == False:
-                    self.subscribe_exception(except_message.STOCK_NOT_EXIST_EXCEPTION.format("NDX",input_stock_token))
+                    self.subscribe_exception(except_message.STOCK_NOT_EXIST_EXCEPTION.value.format("NDX",input_stock_token))
             elif exchange_code_name.lower() == "mcx":
                 stock_data = self.token_script_dict_list[3].get(stock_token, False)
                 if stock_data == False:
-                    self.subscribe_exception(except_message.STOCK_NOT_EXIST_EXCEPTION.format("MCX",input_stock_token))
+                    self.subscribe_exception(except_message.STOCK_NOT_EXIST_EXCEPTION.value.format("MCX",input_stock_token))
             output_data["stock_name"] = stock_data[1]
             if exchange_code_name.lower() not in ["nse", "bse"]:
                 product_type = stock_data[0].split("-")[0]
@@ -159,7 +182,7 @@ class BreezeConnect():
 
     def get_stock_token_value(self, exchange_code="", stock_code="", product_type="", expiry_date="", strike_price="", right="", get_exchange_quotes=True, get_market_depth=True):
         if get_exchange_quotes == False and get_market_depth == False:
-            self.subscribe_exception(except_message.QUOTE_DEPTH_EXCEPTION)
+            self.subscribe_exception(except_message.QUOTE_DEPTH_EXCEPTION.value)
         else:
             exchange_code_name = ""
             exchange_code_list = {
@@ -171,9 +194,9 @@ class BreezeConnect():
             }
             exchange_code_name = exchange_code_list.get(exchange_code, False)
             if exchange_code_name == False:
-                self.subscribe_exception(except_message.EXCHANGE_CODE_EXCEPTION)
+                self.subscribe_exception(except_message.EXCHANGE_CODE_EXCEPTION.value)
             elif stock_code == "":
-                self.subscribe_exception(except_message.STOCK_CODE_EXCEPTION)
+                self.subscribe_exception(except_message.STOCK_CODE_EXCEPTION.value)
             else:
                 token_value = False
                 if exchange_code.lower() == "bse":
@@ -182,17 +205,17 @@ class BreezeConnect():
                     token_value = self.stock_script_dict_list[1].get(stock_code, False)
                 else:
                     if expiry_date == "":
-                        self.subscribe_exception(except_message.EXPIRY_DATE_EXCEPTION)
+                        self.subscribe_exception(except_message.EXPIRY_DATE_EXCEPTION.value)
                     if product_type.lower() == "futures":
                         contract_detail_value = "FUT"
                     elif product_type.lower() == "options":
                         contract_detail_value = "OPT"
                     else:
-                        self.subscribe_exception(except_message.PRODUCT_TYPE_EXCEPTION)
+                        self.subscribe_exception(except_message.PRODUCT_TYPE_EXCEPTION.value)
                     contract_detail_value = contract_detail_value + "-" + stock_code + "-" + expiry_date
                     if product_type.lower() == "options":
                         if strike_price == "":
-                            self.subscribe_exception(except_message.STRIKE_PRICE_EXCEPTION)
+                            self.subscribe_exception(except_message.STRIKE_PRICE_EXCEPTION.value)
                         else:
                             contract_detail_value = contract_detail_value + "-" + strike_price
                         if right.lower() == "put":
@@ -200,7 +223,7 @@ class BreezeConnect():
                         elif right.lower() == "call":
                             contract_detail_value = contract_detail_value + "-" + "CE"
                         else:
-                            self.subscribe_exception(except_message.RIGHT_EXCEPTION)
+                            self.subscribe_exception(except_message.RIGHT_EXCEPTION.value)
                     if exchange_code.lower() == "ndx":
                         token_value = self.stock_script_dict_list[2].get(contract_detail_value, False)
                     elif exchange_code.lower() == "mcx":
@@ -208,7 +231,7 @@ class BreezeConnect():
                     elif exchange_code.lower() == "nfo":
                         token_value = self.stock_script_dict_list[4].get(contract_detail_value, False)
                 if token_value == False:
-                    self.subscribe_exception(except_message.STOCK_INVALID_EXCEPTION)
+                    self.subscribe_exception(except_message.STOCK_INVALID_EXCEPTION.value)
                 exchange_quotes_token_value = False
                 if get_exchange_quotes != False:
                     exchange_quotes_token_value = exchange_code_name + "1!" + token_value
@@ -217,46 +240,121 @@ class BreezeConnect():
                     market_depth_token_value = exchange_code_name + "2!" + token_value
                 return exchange_quotes_token_value, market_depth_token_value
 
-    def subscribe_feeds(self, stock_token="", exchange_code="", stock_code="", product_type="", expiry_date="", strike_price="", right="", get_exchange_quotes=True, get_market_depth=True, get_order_notification=False):
+    def subscribe_feeds(self, stock_token="", exchange_code="", stock_code="", product_type="", expiry_date="", strike_price="", right="", interval = "", get_exchange_quotes=True, get_market_depth=True, get_order_notification=False):
+        if interval != "":
+            if interval not in config.INTERVAL_TYPES_STREAM_OHLC:
+                raise Exception(except_message.STREAM_OHLC_INTERVAL_ERROR.value)
+            else:
+                interval = config.channel_interval_map[interval]
         if self.sio_rate_refresh_handler:
             return_object = {}
             if get_order_notification == True:
-                self._ws_connect(self.sio_order_refresh_handler,True)
+                self._ws_connect(self.sio_order_refresh_handler,order_flag=True)
                 self.sio_order_refresh_handler.notify()
-                return_object = self.socket_connection_response(resp_message.ORDER_NOTIFICATION_SUBSRIBED)
+                return_object = self.socket_connection_response(resp_message.ORDER_NOTIFICATION_SUBSRIBED.value)
             if stock_token != "":
-                self.sio_rate_refresh_handler.watch(stock_token)
-                return_object = self.socket_connection_response(resp_message.STOCK_SUBSCRIBE_MESSAGE.format(stock_token))
+                if interval!="":
+                    if self.sio_ohlcv_stream_handler is None:
+                        self._ws_connect(self.sio_ohlcv_stream_handler,ohlcv_flag=True)
+                    self.sio_ohlcv_stream_handler.watch_stream_data(stock_token,interval)
+                else:
+                    self.sio_rate_refresh_handler.watch(stock_token)
+                return_object = self.socket_connection_response(resp_message.STOCK_SUBSCRIBE_MESSAGE.value.format(stock_token))
             elif get_order_notification == True and exchange_code == "":
                 return return_object
             else:
                 exchange_quotes_token, market_depth_token = self.get_stock_token_value(exchange_code=exchange_code, stock_code=stock_code, product_type=product_type, expiry_date=expiry_date, strike_price=strike_price, right=right, get_exchange_quotes=get_exchange_quotes, get_market_depth=get_market_depth)
-                if exchange_quotes_token != False:
-                    self.sio_rate_refresh_handler.watch(exchange_quotes_token)
-                if market_depth_token != False:
-                    self.sio_rate_refresh_handler.watch(market_depth_token)
-                return_object =  self.socket_connection_response(resp_message.STOCK_SUBSCRIBE_MESSAGE.format(stock_code))
+                if interval!="":
+                    if self.sio_ohlcv_stream_handler is None:
+                        self._ws_connect(self.sio_ohlcv_stream_handler,ohlcv_flag=True)
+                    self.sio_ohlcv_stream_handler.watch_stream_data(exchange_quotes_token,interval)
+                else:
+                    if exchange_quotes_token != False:
+                        self.sio_rate_refresh_handler.watch(exchange_quotes_token)
+                    if market_depth_token != False:
+                        self.sio_rate_refresh_handler.watch(market_depth_token)
+                return_object =  self.socket_connection_response(resp_message.STOCK_SUBSCRIBE_MESSAGE.value.format(stock_code))
             return return_object
         
-    def unsubscribe_feeds(self, stock_token="", exchange_code="", stock_code="", product_type="", expiry_date="", strike_price="", right="", get_exchange_quotes=True, get_market_depth=True,get_order_notification=False):
+    def unsubscribe_feeds(self, stock_token="", exchange_code="", stock_code="", product_type="", expiry_date="", strike_price="", right="",interval = "",get_exchange_quotes=True, get_market_depth=True,get_order_notification=False):
+        if interval != "":
+            if interval not in config.INTERVAL_TYPES_STREAM_OHLC:
+                raise Exception(except_message.STREAM_OHLC_INTERVAL_ERROR.value)
+            else:
+                interval = config.channel_interval_map[interval]
         if(get_order_notification == True):
             if self.sio_order_refresh_handler:
                 self.sio_order_refresh_handler.on_disconnect()
                 self.sio_order_refresh_handler = None
-                return self.socket_connection_response(resp_message.ORDER_REFRESH_DISCONNECTED)
+                return self.socket_connection_response(resp_message.ORDER_REFRESH_DISCONNECTED.value)
             else:
-                return self.socket_connection_response(resp_message.ORDER_REFRESH_NOT_CONNECTED)
+                return self.socket_connection_response(resp_message.ORDER_REFRESH_NOT_CONNECTED.value)
         if self.sio_rate_refresh_handler:
             if stock_token != "":
-                self.sio_rate_refresh_handler.unwatch(stock_token)
-                return self.socket_connection_response(resp_message.STOCK_UNSUBSCRIBE_MESSAGE.format(stock_token))
+                if interval != "":
+                    if self.sio_ohlcv_stream_handler is not None:
+                        self.sio_ohlcv_stream_handler.unwatch(stock_token)
+                else:
+                    self.sio_rate_refresh_handler.unwatch(stock_token)
+                return self.socket_connection_response(resp_message.STOCK_UNSUBSCRIBE_MESSAGE.value.format(stock_token))
             else:
                 exchange_quotes_token, market_depth_token = self.get_stock_token_value(exchange_code=exchange_code, stock_code=stock_code, product_type=product_type, expiry_date=expiry_date, strike_price=strike_price, right=right, get_exchange_quotes=get_exchange_quotes, get_market_depth=get_market_depth)
-                if exchange_quotes_token != False:
-                    self.sio_rate_refresh_handler.unwatch(exchange_quotes_token)
-                if market_depth_token != False:
-                    self.sio_rate_refresh_handler.unwatch(market_depth_token)
-                return self.socket_connection_response(resp_message.STOCK_UNSUBSCRIBE_MESSAGE.format(stock_code))
+                if interval != "":
+                    if self.sio_ohlcv_stream_handler is not None:
+                        self.sio_ohlcv_stream_handler.unwatch(exchange_quotes_token)
+                else:
+                    if exchange_quotes_token != False:
+                        self.sio_rate_refresh_handler.unwatch(exchange_quotes_token)
+                    if market_depth_token != False:
+                        self.sio_rate_refresh_handler.unwatch(market_depth_token)
+                return self.socket_connection_response(resp_message.STOCK_UNSUBSCRIBE_MESSAGE.value.format(stock_code))
+
+    def parse_ohlc_data(self,data):
+        split_data = data.split(",")
+        if split_data[0] in ["NSE","BSE"]:
+            parsed_data = {
+                "interval":config.feed_interval_map[split_data[8]],
+                "exchange_code":split_data[0],
+                "stock_code":split_data[1],
+                "low":split_data[2],
+                "high":split_data[3],
+                "open":split_data[4],
+                "close":split_data[5],
+                "volume":split_data[6],
+                "datetime":split_data[7]
+            }
+        elif split_data[0] in ["NFO","NDX","MCX"]:
+            if len(split_data) == 13:
+                parsed_data = {
+                    "interval":config.feed_interval_map[split_data[12]],
+                    "exchange_code":split_data[0],
+                    "stock_code":split_data[1],
+                    "expiry_date":split_data[2],
+                    "strike_price":split_data[3],
+                    "right_type":split_data[4],
+                    "low":split_data[5],
+                    "high":split_data[6],
+                    "open":split_data[7],
+                    "close":split_data[8],
+                    "volume":split_data[9],
+                    "oi":split_data[10],
+                    "datetime":split_data[11]
+                }
+            else:
+                parsed_data = {
+                    "interval":config.feed_interval_map[split_data[10]],
+                    "exchange_code":split_data[0],
+                    "stock_code":split_data[1],
+                    "expiry_date":split_data[2],
+                    "low":split_data[3],
+                    "high":split_data[4],
+                    "open":split_data[5],
+                    "close":split_data[6],
+                    "volume":split_data[7],
+                    "oi":split_data[8],
+                    "datetime":split_data[9]
+                }
+        return parsed_data
 
     def parse_market_depth(self, data, exchange):
         depth = []
@@ -477,7 +575,7 @@ class BreezeConnect():
                 "AppKey": self.api_key
             }
             body = json.dumps(body, separators=(',', ':'))
-            url = config.API_URL + api_endpoint.CUST_DETAILS
+            url = config.API_URL + api_endpoint.CUST_DETAILS.value
             response = requests.get(url=url, data=body, headers=headers)
             if response.json()['Success'] != None:
                 base64_session_token = response.json()['Success']['session_token']
@@ -485,9 +583,9 @@ class BreezeConnect():
                 self.user_id = result.split(":")[0]
                 self.session_key = result.split(":")[1]
             else:
-                raise Exception(except_message.AUTHENICATION_EXCEPTION)
+                raise Exception(except_message.AUTHENICATION_EXCEPTION.value)
         except Exception as e:
-            raise Exception(except_message.AUTHENICATION_EXCEPTION)
+            raise Exception(except_message.AUTHENICATION_EXCEPTION.value)
 
     def get_stock_script_list(self):
         try:
@@ -543,6 +641,10 @@ class BreezeConnect():
     def get_historical_data(self, interval="", from_date="", to_date="", stock_code="", exchange_code="", product_type="", expiry_date="", right="", strike_price=""):
         if self.api_handler:
             return self.api_handler.get_historical_data(interval, from_date, to_date, stock_code, exchange_code, product_type, expiry_date, right, strike_price)
+
+    def get_historical_data_v2(self, interval="", from_date="", to_date="", stock_code="", exchange_code="", product_type="", expiry_date="", right="", strike_price=""):
+        if self.api_handler:
+            return self.api_handler.get_historical_data_v2(interval, from_date, to_date, stock_code, exchange_code, product_type, expiry_date, right, strike_price)
 
     def add_margin(self, product_type="", stock_code="", exchange_code="", settlement_id="", add_amount="", margin_amount="", open_quantity="", cover_quantity="", category_index_per_stock="", expiry_date="", right="", contract_tag="", strike_price="", segment_code=""):
         if self.api_handler:
@@ -656,12 +758,12 @@ class ApificationBreeze():
                 res = requests.delete(url=url, data=body, headers=headers)
                 return res
         except Exception as e:
-            self.error_exception(except_message.API_REQUEST_EXCEPTION.format(method,url),e)
+            self.error_exception(except_message.API_REQUEST_EXCEPTION.value.format(method,url),e)
 
     def get_customer_details(self, api_session=""):
         try:
             if api_session == "" or api_session == None:
-                return self.validation_error_response(resp_message.API_SESSION_ERROR)
+                return self.validation_error_response(resp_message.API_SESSION_ERROR.value)
             headers = {
                 "Content-Type": "application/json"
             }
@@ -671,7 +773,7 @@ class ApificationBreeze():
             }
             body = json.dumps(body, separators=(',', ':'))
             response = self.make_request(
-                req_type.GET, api_endpoint.CUST_DETAILS, body, headers)
+                req_type.GET, api_endpoint.CUST_DETAILS.value, body, headers)
             response = response.json()
             if 'Success' in response and response['Success'] != None and 'session_token' in response['Success']:
                 del response['Success']['session_token']
@@ -684,7 +786,7 @@ class ApificationBreeze():
             body = {}
             body = json.dumps(body, separators=(',', ':'))
             headers = self.generate_headers(body)
-            response = self.make_request(req_type.GET,api_endpoint.DEMAT_HOLDING, body, headers)
+            response = self.make_request(req_type.GET,api_endpoint.DEMAT_HOLDING.value, body, headers)
             response = response.json()
             return response
         except Exception as e:
@@ -695,7 +797,7 @@ class ApificationBreeze():
             body = {}
             body = json.dumps(body, separators=(',', ':'))
             headers = self.generate_headers(body)
-            response = self.make_request(req_type.GET, api_endpoint.FUND, body, headers)
+            response = self.make_request(req_type.GET, api_endpoint.FUND.value, body, headers)
             response = response.json()
             return response
         except Exception as e:
@@ -705,15 +807,15 @@ class ApificationBreeze():
         try:
             if transaction_type == "" or transaction_type == None or amount == "" or amount == None or segment == "" or segment == None:
                 if transaction_type == "" or transaction_type == None:
-                    return self.validation_error_response(resp_message.BLANK_TRANSACTION_TYPE)
+                    return self.validation_error_response(resp_message.BLANK_TRANSACTION_TYPE.value)
                 elif amount == "" or amount == None:
-                    return self.validation_error_response(resp_message.BLANK_AMOUNT)
+                    return self.validation_error_response(resp_message.BLANK_AMOUNT.value)
                 elif segment == "" or segment == None:
-                    return self.validation_error_response(resp_message.BLANK_SEGMENT)
+                    return self.validation_error_response(resp_message.BLANK_SEGMENT.value)
             elif transaction_type.lower() not in config.TRANSACTION_TYPES:
-                return self.validation_error_response(resp_message.TRANSACTION_TYPE_ERROR)
+                return self.validation_error_response(resp_message.TRANSACTION_TYPE_ERROR.value)
             elif not int(amount) > 0:
-                return self.validation_error_response(resp_message.ZERO_AMOUNT_ERROR)
+                return self.validation_error_response(resp_message.ZERO_AMOUNT_ERROR.value)
             body = {
                 "transaction_type": transaction_type,
                 "amount": amount,
@@ -721,7 +823,7 @@ class ApificationBreeze():
             }
             body = json.dumps(body, separators=(',', ':'))
             headers = self.generate_headers(body)
-            response = self.make_request(req_type.POST, api_endpoint.FUND, body, headers)
+            response = self.make_request(req_type.POST, api_endpoint.FUND.value, body, headers)
             response = response.json()
             return response
         except Exception as e:
@@ -730,28 +832,28 @@ class ApificationBreeze():
     def get_historical_data(self, interval="", from_date="", to_date="", stock_code="", exchange_code="", product_type="", expiry_date="", right="", strike_price=""):
         try:
             if interval == "" or interval == None:
-                return self.validation_error_response(resp_message.BLANK_INTERVAL)
+                return self.validation_error_response(resp_message.BLANK_INTERVAL.value)
             elif interval.lower() not in config.INTERVAL_TYPES:
-                return self.validation_error_response(resp_message.INTERVAL_TYPE_ERROR)
+                return self.validation_error_response(resp_message.INTERVAL_TYPE_ERROR.value)
             elif exchange_code == "" or exchange_code == None:
-                return self.validation_error_response(resp_message.BLANK_EXCHANGE_CODE)
+                return self.validation_error_response(resp_message.BLANK_EXCHANGE_CODE.value)
             elif exchange_code.lower() not in config.EXCHANGE_CODES_HIST:
-                return self.validation_error_response(resp_message.EXCHANGE_CODE_ERROR)
+                return self.validation_error_response(resp_message.EXCHANGE_CODE_ERROR.value)
             elif from_date == "" or from_date == None:
-                return self.validation_error_response(resp_message.BLANK_FROM_DATE)
+                return self.validation_error_response(resp_message.BLANK_FROM_DATE.value)
             elif to_date == "" or to_date == None:
-                return self.validation_error_response(resp_message.BLANK_TO_DATE)
+                return self.validation_error_response(resp_message.BLANK_TO_DATE.value)
             elif stock_code == "" or stock_code == None:
-                return self.validation_error_response(resp_message.BLANK_STOCK_CODE)
+                return self.validation_error_response(resp_message.BLANK_STOCK_CODE.value)
             elif exchange_code.lower() == "nfo":
                 if product_type == "" or product_type == None:
-                    return self.validation_error_response(resp_message.BLANK_PRODUCT_TYPE_NFO)
+                    return self.validation_error_response(resp_message.BLANK_PRODUCT_TYPE_NFO.value)
                 elif product_type.lower() not in config.PRODUCT_TYPES_HIST:
-                    return self.validation_error_response(resp_message.PRODUCT_TYPE_ERROR_NFO)
+                    return self.validation_error_response(resp_message.PRODUCT_TYPE_ERROR_NFO.value)
                 elif product_type.lower() == "options" and (strike_price == "" or strike_price == None):
-                    return self.validation_error_response(resp_message.BLANK_STRIKE_PRICE)
+                    return self.validation_error_response(resp_message.BLANK_STRIKE_PRICE.value)
                 elif expiry_date == "" or expiry_date == None:
-                    return self.validation_error_response(resp_message.BLANK_EXPIRY_DATE)
+                    return self.validation_error_response(resp_message.BLANK_EXPIRY_DATE.value)
 
             if interval == '1minute':
                 interval = 'minute'
@@ -775,20 +877,79 @@ class ApificationBreeze():
             body = json.dumps(body, separators=(',', ':'))
             headers = self.generate_headers(body)
             response = self.make_request(
-                req_type.GET, api_endpoint.HIST_CHART, body, headers)
+                req_type.GET, api_endpoint.HIST_CHART.value, body, headers)
             response = response.json()
             return response
         except Exception as e:
             self.error_exception(self.get_historical_data.__name__,e)
 
+    def get_historical_data_v2(self, interval="", from_date="", to_date="", stock_code="", exchange_code="", product_type="", expiry_date="", right="", strike_price=""):
+        try:
+            if interval == "" or interval == None:
+                return self.validation_error_response(resp_message.BLANK_INTERVAL.value)
+            elif interval.lower() not in config.INTERVAL_TYPES_HIST_V2:
+                return self.validation_error_response(resp_message.INTERVAL_TYPE_ERROR_HIST_V2.value)
+            elif exchange_code == "" or exchange_code == None:
+                return self.validation_error_response(resp_message.BLANK_EXCHANGE_CODE.value)
+            elif exchange_code.lower() not in config.EXCHANGE_CODES_HIST_V2:
+                return self.validation_error_response(resp_message.EXCHANGE_CODE_HIST_V2_ERROR.value)
+            elif from_date == "" or from_date == None:
+                return self.validation_error_response(resp_message.BLANK_FROM_DATE.value)
+            elif to_date == "" or to_date == None:
+                return self.validation_error_response(resp_message.BLANK_TO_DATE.value)
+            elif stock_code == "" or stock_code == None:
+                return self.validation_error_response(resp_message.BLANK_STOCK_CODE.value)
+            elif exchange_code.lower() == "nfo":
+                if product_type == "" or product_type == None:
+                    return self.validation_error_response(resp_message.BLANK_PRODUCT_TYPE_HIST_V2.value)
+                elif product_type.lower() not in config.PRODUCT_TYPES_HIST_V2:
+                    return self.validation_error_response(resp_message.PRODUCT_TYPE_ERROR_HIST_V2.value)
+                elif product_type.lower() == "options" and (strike_price == "" or strike_price == None):
+                    return self.validation_error_response(resp_message.BLANK_STRIKE_PRICE.value)
+                elif expiry_date == "" or expiry_date == None:
+                    return self.validation_error_response(resp_message.BLANK_EXPIRY_DATE.value)
+
+            if interval == '1minute':
+                interval = 'minute'
+            elif interval == '1second':
+                interval = 'second'
+            elif interval == '1day':
+                interval = 'day'
+            url_params = {
+                "interval": interval,
+                "from_date": from_date,
+                "to_date": to_date,
+                "stock_code": stock_code,
+                "exch_code": exchange_code
+            }
+            if product_type != "" and product_type != None:
+                url_params["product_type"] = product_type
+            if expiry_date != "" and expiry_date != None:
+                url_params["expiry_date"] = expiry_date
+            if strike_price != "" and strike_price != None:
+                url_params["strike_price"] = strike_price
+            if right != "" and right != None:
+                url_params["right"] = right
+            headers = {
+                "Content-Type": "application/json",
+                'X-SessionToken':self.base64_session_token,
+                'apikey':self.breeze.api_key
+            }
+            url = config.OHLC_HIST_V2_URL + api_endpoint.HIST_CHART_V2.value
+            response = requests.get(url=url, params=url_params, headers=headers)
+            response = response.json()
+            return response
+        except Exception as e:
+            self.error_exception(self.get_historical_data_v2.__name__,e)
+
     def add_margin(self, product_type="", stock_code="", exchange_code="", settlement_id="", add_amount="", margin_amount="", open_quantity="", cover_quantity="", category_index_per_stock="", expiry_date="", right="", contract_tag="", strike_price="", segment_code=""):
         try:
             if exchange_code == "" or exchange_code == None:
-                return self.validation_error_response(resp_message.BLANK_EXCHANGE_CODE)
+                return self.validation_error_response(resp_message.BLANK_EXCHANGE_CODE.value)
             elif product_type != "" and product_type != None and product_type.lower() not in config.PRODUCT_TYPES:
-                return self.validation_error_response(resp_message.PRODUCT_TYPE_ERROR)
+                return self.validation_error_response(resp_message.PRODUCT_TYPE_ERROR.value)
             elif right != "" and right != None and right.lower() not in config.RIGHT_TYPES:
-                return self.validation_error_response(resp_message.RIGHT_TYPE_ERROR)
+                return self.validation_error_response(resp_message.RIGHT_TYPE_ERROR.value)
 
             body = {
                 "exchange_code": exchange_code
@@ -821,7 +982,7 @@ class ApificationBreeze():
                 body["open_quantity"] = open_quantity
             body = json.dumps(body, separators=(',', ':'))
             headers = self.generate_headers(body)
-            response = self.make_request(req_type.POST, api_endpoint.MARGIN, body, headers)
+            response = self.make_request(req_type.POST, api_endpoint.MARGIN.value, body, headers)
             response = response.json()
             return response
         except Exception as e:
@@ -830,14 +991,14 @@ class ApificationBreeze():
     def get_margin(self, exchange_code=""):
         try:
             if exchange_code == "" or exchange_code == None:
-                return self.validation_error_response(resp_message.BLANK_EXCHANGE_CODE)
+                return self.validation_error_response(resp_message.BLANK_EXCHANGE_CODE.value)
 
             body = {
                 "exchange_code": exchange_code
             }
             body = json.dumps(body, separators=(',', ':'))
             headers = self.generate_headers(body)
-            response = self.make_request(req_type.GET,  api_endpoint.MARGIN, body, headers)
+            response = self.make_request(req_type.GET,  api_endpoint.MARGIN.value, body, headers)
             response = response.json()
             return response
         except Exception as e:
@@ -847,29 +1008,29 @@ class ApificationBreeze():
         try:
             if stock_code == "" or stock_code == None or exchange_code == "" or exchange_code == None or product == "" or product == None or action == "" or action == None or order_type == "" or order_type == None or quantity == "" or quantity == None or price == "" or price == None or action == "" or action == None:
                 if stock_code == "" or stock_code == None:
-                    return self.validation_error_response(resp_message.BLANK_STOCK_CODE)
+                    return self.validation_error_response(resp_message.BLANK_STOCK_CODE.value)
                 elif exchange_code == "" or exchange_code == None:
-                    return self.validation_error_response(resp_message.BLANK_EXCHANGE_CODE)
+                    return self.validation_error_response(resp_message.BLANK_EXCHANGE_CODE.value)
                 elif product == "" or product == None:
-                    return self.validation_error_response(resp_message.BLANK_PRODUCT_TYPE)
+                    return self.validation_error_response(resp_message.BLANK_PRODUCT_TYPE.value)
                 elif action == "" or action == None:
-                    return self.validation_error_response(resp_message.BLANK_ACTION)
+                    return self.validation_error_response(resp_message.BLANK_ACTION.value)
                 elif order_type == "" or order_type == None:
-                    return self.validation_error_response(resp_message.BLANK_ORDER_TYPE)
+                    return self.validation_error_response(resp_message.BLANK_ORDER_TYPE.value)
                 elif quantity == "" or quantity == None:
-                    return self.validation_error_response(resp_message.BLANK_QUANTITY)
+                    return self.validation_error_response(resp_message.BLANK_QUANTITY.value)
                 elif validity == "" or validity == None:
-                    return self.validation_error_response(resp_message.BLANK_VALIDITY)
+                    return self.validation_error_response(resp_message.BLANK_VALIDITY.value)
             elif product.lower() not in config.PRODUCT_TYPES:
-                return self.validation_error_response(resp_message.PRODUCT_TYPE_ERROR)
+                return self.validation_error_response(resp_message.PRODUCT_TYPE_ERROR.value)
             elif action.lower() not in config.ACTION_TYPES:
-                return self.validation_error_response(resp_message.ACTION_TYPE_ERROR)
+                return self.validation_error_response(resp_message.ACTION_TYPE_ERROR.value)
             elif order_type.lower() not in config.ORDER_TYPES:
-                return self.validation_error_response(resp_message.ORDER_TYPE_ERROR)
+                return self.validation_error_response(resp_message.ORDER_TYPE_ERROR.value)
             elif validity.lower() not in config.VALIDITY_TYPES:
-                return self.validation_error_response(resp_message.VALIDITY_TYPE_ERROR)
+                return self.validation_error_response(resp_message.VALIDITY_TYPE_ERROR.value)
             elif right != "" and right != None and right.lower() not in config.RIGHT_TYPES:
-                return self.validation_error_response(resp_message.RIGHT_TYPE_ERROR)
+                return self.validation_error_response(resp_message.RIGHT_TYPE_ERROR.value)
 
             body = {
                 "stock_code": stock_code,
@@ -897,7 +1058,7 @@ class ApificationBreeze():
                 body["user_remark"] = user_remark
             body = json.dumps(body, separators=(',', ':'))
             headers = self.generate_headers(body)
-            response = self.make_request(req_type.POST, api_endpoint.ORDER, body, headers)
+            response = self.make_request(req_type.POST, api_endpoint.ORDER.value, body, headers)
             response = response.json()
             return response
         except Exception as e:
@@ -907,9 +1068,9 @@ class ApificationBreeze():
         try:
             if exchange_code == "" or exchange_code == None or order_id == "" or order_id == None:
                 if exchange_code == "" or exchange_code == None:
-                    return self.validation_error_response(resp_message.BLANK_EXCHANGE_CODE)
+                    return self.validation_error_response(resp_message.BLANK_EXCHANGE_CODE.value)
                 elif order_id == "" or order_id == None:
-                    return self.validation_error_response(resp_message.BLANK_ORDER_ID)
+                    return self.validation_error_response(resp_message.BLANK_ORDER_ID.value)
 
             body = {
                 "exchange_code": exchange_code,
@@ -917,7 +1078,7 @@ class ApificationBreeze():
             }
             body = json.dumps(body, separators=(',', ':'))
             headers = self.generate_headers(body)
-            response = self.make_request(req_type.GET, api_endpoint.ORDER, body, headers)
+            response = self.make_request(req_type.GET, api_endpoint.ORDER.value, body, headers)
             response = response.json()
             return response
         except Exception as e:
@@ -927,11 +1088,11 @@ class ApificationBreeze():
         try:
             if exchange_code == "" or exchange_code == None or from_date == "" or from_date == None or to_date == "" or to_date == None:
                 if exchange_code == "" or exchange_code == None:
-                    return self.validation_error_response(resp_message.BLANK_EXCHANGE_CODE)
+                    return self.validation_error_response(resp_message.BLANK_EXCHANGE_CODE.value)
                 elif from_date == "" or from_date == None:
-                    return self.validation_error_response(resp_message.BLANK_FROM_DATE)
+                    return self.validation_error_response(resp_message.BLANK_FROM_DATE.value)
                 elif to_date == "" or to_date == None:
-                    return self.validation_error_response(resp_message.BLANK_TO_DATE)
+                    return self.validation_error_response(resp_message.BLANK_TO_DATE.value)
 
             body = {
                 "exchange_code": exchange_code,
@@ -940,7 +1101,7 @@ class ApificationBreeze():
             }
             body = json.dumps(body, separators=(',', ':'))
             headers = self.generate_headers(body)
-            response = self.make_request(req_type.GET, api_endpoint.ORDER, body, headers)
+            response = self.make_request(req_type.GET, api_endpoint.ORDER.value, body, headers)
             response = response.json()
             return response
         except Exception as e:
@@ -950,9 +1111,9 @@ class ApificationBreeze():
         try:
             if exchange_code == "" or exchange_code == None or order_id == "" or order_id == None:
                 if exchange_code == "" or exchange_code == None:
-                    return self.validation_error_response(resp_message.BLANK_EXCHANGE_CODE)
+                    return self.validation_error_response(resp_message.BLANK_EXCHANGE_CODE.value)
                 elif order_id == "" or order_id == None:
-                    return self.validation_error_response(resp_message.BLANK_ORDER_ID)
+                    return self.validation_error_response(resp_message.BLANK_ORDER_ID.value)
 
             body = {
                 "exchange_code": exchange_code,
@@ -960,7 +1121,7 @@ class ApificationBreeze():
             }
             body = json.dumps(body, separators=(',', ':'))
             headers = self.generate_headers(body)
-            response = self.make_request(req_type.DELETE, api_endpoint.ORDER, body, headers)
+            response = self.make_request(req_type.DELETE, api_endpoint.ORDER.value, body, headers)
             response = response.json()
             return response
         except Exception as e:
@@ -970,13 +1131,13 @@ class ApificationBreeze():
         try:
             if exchange_code == "" or exchange_code == None or order_id == "" or order_id == None:
                 if exchange_code == "" or exchange_code == None:
-                    return self.validation_error_response(resp_message.BLANK_EXCHANGE_CODE)
+                    return self.validation_error_response(resp_message.BLANK_EXCHANGE_CODE.value)
                 elif order_id == "" or order_id == None:
-                    return self.validation_error_response(resp_message.BLANK_ORDER_ID)
+                    return self.validation_error_response(resp_message.BLANK_ORDER_ID.value)
             elif order_type != "" and order_type != None and order_type.lower() not in config.ORDER_TYPES:
-                return self.validation_error_response(resp_message.ORDER_TYPE_ERROR)
+                return self.validation_error_response(resp_message.ORDER_TYPE_ERROR.value)
             elif validity != "" and validity != None and validity.lower() not in config.VALIDITY_TYPES:
-                return self.validation_error_response(resp_message.VALIDITY_TYPE_ERROR)
+                return self.validation_error_response(resp_message.VALIDITY_TYPE_ERROR.value)
 
             body = {
                 "order_id": order_id,
@@ -998,7 +1159,7 @@ class ApificationBreeze():
                 body["validity_date"] = validity_date
             body = json.dumps(body, separators=(',', ':'))
             headers = self.generate_headers(body)
-            response = self.make_request(req_type.PUT, api_endpoint.ORDER, body, headers)
+            response = self.make_request(req_type.PUT, api_endpoint.ORDER.value, body, headers)
             response = response.json()
             return response
         except Exception as e:
@@ -1007,7 +1168,7 @@ class ApificationBreeze():
     def get_portfolio_holdings(self, exchange_code, from_date, to_date, stock_code, portfolio_type):
         try:
             if exchange_code == "" or exchange_code == None:
-                return self.validation_error_response(resp_message.BLANK_EXCHANGE_CODE)
+                return self.validation_error_response(resp_message.BLANK_EXCHANGE_CODE.value)
 
             body = {
                 "exchange_code": exchange_code,
@@ -1023,7 +1184,7 @@ class ApificationBreeze():
             body = json.dumps(body, separators=(',', ':'))
             headers = self.generate_headers(body)
             response = self.make_request(
-                req_type.GET, api_endpoint.PORTFOLIO_HOLDING, body, headers)
+                req_type.GET, api_endpoint.PORTFOLIO_HOLDING.value, body, headers)
             response = response.json()
             return response
         except Exception as e:
@@ -1035,7 +1196,7 @@ class ApificationBreeze():
             body = json.dumps(body, separators=(',', ':'))
             headers = self.generate_headers(body)
             response = self.make_request(
-                req_type.GET, api_endpoint.PORTFOLIO_POSITION, body, headers)
+                req_type.GET, api_endpoint.PORTFOLIO_POSITION.value, body, headers)
             response = response.json()
             return response
         except Exception as e:
@@ -1045,13 +1206,13 @@ class ApificationBreeze():
         try:
             if exchange_code == "" or exchange_code == None or stock_code == "" or stock_code == None:
                 if exchange_code == "" or exchange_code == None:
-                    return self.validation_error_response(resp_message.BLANK_EXCHANGE_CODE)
+                    return self.validation_error_response(resp_message.BLANK_EXCHANGE_CODE.value)
                 if stock_code == "" or stock_code == None:
-                    return self.validation_error_response(resp_message.BLANK_STOCK_CODE)
+                    return self.validation_error_response(resp_message.BLANK_STOCK_CODE.value)
             elif product_type != "" and product_type != None and product_type.lower() not in config.PRODUCT_TYPES:
-                return self.validation_error_response(resp_message.PRODUCT_TYPE_ERROR)
+                return self.validation_error_response(resp_message.PRODUCT_TYPE_ERROR.value)
             elif right != "" and right != None and right.lower() not in config.RIGHT_TYPES:
-                return self.validation_error_response(resp_message.RIGHT_TYPE_ERROR)
+                return self.validation_error_response(resp_message.RIGHT_TYPE_ERROR.value)
 
             body = {
                 "stock_code": stock_code,
@@ -1067,7 +1228,7 @@ class ApificationBreeze():
                 body["strike_price"] = strike_price
             body = json.dumps(body, separators=(',', ':'))
             headers = self.generate_headers(body)
-            response = self.make_request(req_type.GET, api_endpoint.QUOTE, body, headers)
+            response = self.make_request(req_type.GET, api_endpoint.QUOTE.value, body, headers)
             response = response.json()
             return response
         except Exception as e:
@@ -1076,24 +1237,24 @@ class ApificationBreeze():
     def get_option_chain_quotes(self,stock_code, exchange_code, expiry_date, product_type, right, strike_price):
         try:
             if exchange_code == "" or exchange_code == None or  exchange_code.lower()!="nfo":
-                return self.validation_error_response(resp_message.OPT_CHAIN_EXCH_CODE_ERROR)
+                return self.validation_error_response(resp_message.OPT_CHAIN_EXCH_CODE_ERROR.value)
             elif product_type=="" or product_type== None:
-                return self.validation_error_response(resp_message.BLANK_PRODUCT_TYPE_NFO)
+                return self.validation_error_response(resp_message.BLANK_PRODUCT_TYPE_NFO.value)
             elif product_type.lower()!="futures" and product_type.lower()!="options":
-                return self.validation_error_response(resp_message.PRODUCT_TYPE_ERROR_NFO)
+                return self.validation_error_response(resp_message.PRODUCT_TYPE_ERROR_NFO.value)
             elif stock_code=="" or stock_code==None:
-                return self.validation_error_response(resp_message.BLANK_STOCK_CODE)
+                return self.validation_error_response(resp_message.BLANK_STOCK_CODE.value)
             elif product_type.lower() == 'options':
                 if((expiry_date=="" or expiry_date==None)  and (strike_price=="" or strike_price==None) and (right=="" or right==None)):
-                    return self.validation_error_response(resp_message.NFO_FIELDS_MISSING_ERROR)
+                    return self.validation_error_response(resp_message.NFO_FIELDS_MISSING_ERROR.value)
                 elif((expiry_date!="" and expiry_date!=None) and (strike_price=="" or  strike_price==None) and (right=="" or right==None)):
-                    return self.validation_error_response(resp_message.BLANK_RIGHT_STRIKE_PRICE)
+                    return self.validation_error_response(resp_message.BLANK_RIGHT_STRIKE_PRICE.value)
                 elif((expiry_date == "" or expiry_date == None) and (strike_price!="" or strike_price!=None) and (right=="" or right == None)):
-                    return self.validation_error_response(resp_message.BLANK_RIGHT_EXPIRY_DATE)
+                    return self.validation_error_response(resp_message.BLANK_RIGHT_EXPIRY_DATE.value)
                 elif((expiry_date=="" or expiry_date==None) and (strike_price=="" or strike_price==None) and (right!=None or right!="")):
-                    return self.validation_error_response(resp_message.BLANK_EXPIRY_DATE_STRIKE_PRICE)
+                    return self.validation_error_response(resp_message.BLANK_EXPIRY_DATE_STRIKE_PRICE.value)
                 elif((right!="" and right!=None) and (right.lower()!="call" and right.lower()!="put" and right.lower()!="others")):
-                    return self.validation_error_response(resp_message.RIGHT_TYPE_ERROR)
+                    return self.validation_error_response(resp_message.RIGHT_TYPE_ERROR.value)
 
             body = {
                 "stock_code": stock_code,
@@ -1109,7 +1270,7 @@ class ApificationBreeze():
                 body["strike_price"] = strike_price
             body = json.dumps(body, separators=(',', ':'))
             headers = self.generate_headers(body)
-            response = self.make_request(req_type.GET, api_endpoint.OPT_CHAIN, body, headers)
+            response = self.make_request(req_type.GET, api_endpoint.OPT_CHAIN.value, body, headers)
             response = response.json()
             return response
         except Exception as e:
@@ -1143,7 +1304,7 @@ class ApificationBreeze():
             }
             body = json.dumps(body, separators=(',', ':'))
             headers = self.generate_headers(body)
-            response = self.make_request(req_type.POST, api_endpoint.SQUARE_OFF, body, headers)
+            response = self.make_request(req_type.POST, api_endpoint.SQUARE_OFF.value, body, headers)
             response = response.json()
             return response
         except Exception as e:
@@ -1152,11 +1313,11 @@ class ApificationBreeze():
     def get_trade_list(self, from_date, to_date, exchange_code, product_type, action, stock_code):
         try:
             if exchange_code == "" or exchange_code == None:
-                return self.validation_error_response(resp_message.BLANK_EXCHANGE_CODE)
+                return self.validation_error_response(resp_message.BLANK_EXCHANGE_CODE.value)
             elif product_type != "" and product_type != None and product_type.lower() not in config.PRODUCT_TYPES:
-                return self.validation_error_response(resp_message.PRODUCT_TYPE_ERROR)
+                return self.validation_error_response(resp_message.PRODUCT_TYPE_ERROR.value)
             elif action != "" and action != None and action.lower() not in config.ACTION_TYPES:
-                return self.validation_error_response(resp_message.ACTION_TYPE_ERROR)
+                return self.validation_error_response(resp_message.ACTION_TYPE_ERROR.value)
 
             body = {
                 "exchange_code": exchange_code,
@@ -1173,7 +1334,7 @@ class ApificationBreeze():
                 body["stock_code"] = stock_code
             body = json.dumps(body, separators=(',', ':'))
             headers = self.generate_headers(body)
-            response = self.make_request(req_type.GET, api_endpoint.TRADE, body, headers)
+            response = self.make_request(req_type.GET, api_endpoint.TRADE.value, body, headers)
             response = response.json()
             return response
         except Exception as e:
@@ -1182,9 +1343,9 @@ class ApificationBreeze():
     def get_trade_detail(self, exchange_code, order_id):
         try:
             if exchange_code == "" or exchange_code == None:
-                return self.validation_error_response(resp_message.BLANK_EXCHANGE_CODE)
+                return self.validation_error_response(resp_message.BLANK_EXCHANGE_CODE.value)
             elif order_id == "" or order_id == None:
-                return self.validation_error_response(resp_message.BLANK_ORDER_ID)
+                return self.validation_error_response(resp_message.BLANK_ORDER_ID.value)
  
             body = {
                 "exchange_code": exchange_code,
@@ -1192,7 +1353,7 @@ class ApificationBreeze():
             }
             body = json.dumps(body, separators=(',', ':'))
             headers = self.generate_headers(body)
-            response = self.make_request(req_type.GET, api_endpoint.TRADE, body, headers)
+            response = self.make_request(req_type.GET, api_endpoint.TRADE.value, body, headers)
             response = response.json()
             return response
         except Exception as e:
@@ -1209,7 +1370,7 @@ class ApificationBreeze():
              
             df2 = dataframe[(dataframe[' "ExchangeCode"'] == stock_code) | (dataframe[' "ShortName"'] == stock_code)]
             if(len(df2)==0):
-                return self.validation_error_response(except_message.ISEC_NSE_STOCK_MAP_EXCEPTION)
+                return self.validation_error_response(except_message.ISEC_NSE_STOCK_MAP_EXCEPTION.value)
             requiredresult = df2[[' "ShortName"',' "ExchangeCode"','Token',' "CompanyName"']]
     
             isec_stock = requiredresult[' "ShortName"'].to_string().split()[1]
