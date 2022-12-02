@@ -178,7 +178,9 @@ strike_price can not be an empty string for product_type 'Options'.
 right can be either 'Put', 'Call' or an empty string. right can not be an empty string for product_type 'Options'.
 
 Either get_exchange_quotes must be True or get_market_depth must be True. 
+
 Both get_exchange_quotes and get_market_depth can be True, But both must not be False.
+
 For Streaming OHLCV, interval must not be empty and must be equal to either of the following "1second","1minute", "5minute", "30minute"
 
 ---
@@ -370,10 +372,15 @@ breeze.get_historical_data(interval="1minute",
 ```
 
 
-<p> Note : 
-    1)Get Historical Data (version 2) for specific stock-code by mentioned interval either as "1second","1minute", "5minute", "30minute" or as "1day". 
+<p> 
+    Note : 
+
+    1)Get Historical Data (version 2) for specific stock-code by mentioning interval either as "1second","1minute", "5minute", "30minute" or as "1day". 
+
     2)Maximum candle intervals in one single request is 1000
+
     3)From Date and To Date should be of format YYYY-MM-DD HH:MM:SS
+    
     4) Expiry Date should be of format YYYY-MM-DD
 </p>
 <br>
