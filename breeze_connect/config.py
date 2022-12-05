@@ -4,13 +4,16 @@ import enum
 API_URL = "https://api.icicidirect.com/breezeapi/api/v1/"
 
 #Breeze New Endpoint
-OHLC_HIST_V2_URL = "https://breezeapi.icicidirect.com"
+BREEZE_NEW_URL = "https://breezeapi.icicidirect.com/api/v2/"
 
 #Live Feeds URL
 LIVE_FEEDS_URL = "https://livefeeds.icicidirect.com"
 
 #Live Streams URL
 LIVE_STREAM_URL = "https://livestream.icicidirect.com"
+
+#Live OHLC Stream URL
+LIVE_OHLC_STREAM_URL = "https://breezeapi.icicidirect.com"
 
 #Security Master Download Link 
 SECURITY_MASTER_URL = "https://directlink.icicidirect.com/NewSecurityMaster/SecurityMaster.zip"
@@ -36,7 +39,6 @@ class APIEndPoint(enum.Enum):
     DEMAT_HOLDING = "dematholdings"
     FUND = "funds"
     HIST_CHART = "historicalcharts"
-    HIST_CHART_V2 = '/api/v2/historicalcharts'
     MARGIN = "margin"
     ORDER = "order"
     PORTFOLIO_HOLDING = "portfolioholdings"

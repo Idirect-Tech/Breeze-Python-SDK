@@ -92,7 +92,7 @@ class BreezeConnect():
         elif ohlcv_flag:
             if not self.sio_ohlcv_stream_handler:
                 self.sio_ohlcv_stream_handler = SocketEventBreeze("/", self)
-            self.sio_ohlcv_stream_handler.connect(config.OHLC_HIST_V2_URL,is_ohlc_stream=True)           
+            self.sio_ohlcv_stream_handler.connect(config.LIVE_OHLC_STREAM_URL,is_ohlc_stream=True)           
         else:
             if not self.sio_rate_refresh_handler: 
                 self.sio_rate_refresh_handler = SocketEventBreeze("/", self)
@@ -909,12 +909,6 @@ class ApificationBreeze():
                 elif expiry_date == "" or expiry_date == None:
                     return self.validation_error_response(resp_message.BLANK_EXPIRY_DATE.value)
 
-            if interval == '1minute':
-                interval = 'minute'
-            elif interval == '1second':
-                interval = 'second'
-            elif interval == '1day':
-                interval = 'day'
             url_params = {
                 "interval": interval,
                 "from_date": from_date,
@@ -935,7 +929,7 @@ class ApificationBreeze():
                 'X-SessionToken':self.base64_session_token,
                 'apikey':self.breeze.api_key
             }
-            url = config.OHLC_HIST_V2_URL + api_endpoint.HIST_CHART_V2.value
+            url = config.BREEZE_NEW_URL + api_endpoint.HIST_CHART.value
             response = requests.get(url=url, params=url_params, headers=headers)
             response = response.json()
             return response

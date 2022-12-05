@@ -329,12 +329,12 @@ breeze.get_historical_data(interval="1minute",
 
 ```python
 breeze.get_historical_data_v2(interval="1minute",
-                            from_date= "2022-08-15 07:00:00",
-                            to_date= "2022-08-17 07:00:00",
+                            from_date= "2022-08-15T07:00:00.00Z",
+                            to_date= "2022-08-17T07:00:00.00Z",
                             stock_code="ICIBAN",
                             exchange_code="NFO",
                             product_type="futures",
-                            expiry_date="2022-08-25",
+                            expiry_date="2022-08-25T07:00:00.00Z",
                             right="others",
                             strike_price="0")
                             
@@ -346,9 +346,9 @@ breeze.get_historical_data_v2(interval="1minute",
 
 
 ```python
-breeze.get_historical_data(interval="1minute",
-                            from_date= "2022-08-15 07:00:00",
-                            to_date= "2022-08-17 07:00:00",
+breeze.get_historical_data_v2(interval="1minute",
+                            from_date= "2022-08-15T07:00:00.00Z",
+                            to_date= "2022-08-17T07:00:00.00Z",
                             stock_code="ITC",
                             exchange_code="NSE",
                             product_type="cash")
@@ -360,13 +360,13 @@ breeze.get_historical_data(interval="1minute",
 
 ```python
 
-breeze.get_historical_data(interval="1minute",
-                            from_date= "2022-08-15 07:00:00",
-                            to_date= "2022-08-17 07:00:00",
+breeze.get_historical_data_v2(interval="1minute",
+                            from_date= "2022-08-15T07:00:00.00Z",
+                            to_date= "2022-08-17T07:00:00.00Z",
                             stock_code="CNXBAN",
                             exchange_code="NFO",
                             product_type="options",
-                            expiry_date="2022-09-29",
+                            expiry_date="2022-09-29T07:00:00.00Z",
                             right="call",
                             strike_price="38000")
 ```
@@ -379,9 +379,6 @@ Note :
 
 2) Maximum candle intervals in one single request is 1000
 
-3) From Date and To Date should be of format YYYY-MM-DD HH:MM:SS
-
-4) Expiry Date should be of format YYYY-MM-DD
 </p>
 <br>
 <a href="#index">Back to Index</a>
