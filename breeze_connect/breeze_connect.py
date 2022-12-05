@@ -9,7 +9,14 @@ from io import BytesIO
 from zipfile import ZipFile
 from urllib.request import urlopen
 import pandas as pd
+import os
+import sys
+
+dirs = os.path.dirname(os.path.abspath(__file__))
+
+sys.path.insert(1,dirs)
 import config
+
 
 requests.packages.urllib3.util.connection.HAS_IPV6 = False
 
