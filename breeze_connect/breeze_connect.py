@@ -909,12 +909,6 @@ class ApificationBreeze():
                 elif expiry_date == "" or expiry_date == None:
                     return self.validation_error_response(resp_message.BLANK_EXPIRY_DATE.value)
 
-            if interval == '1minute':
-                interval = 'minute'
-            elif interval == '1second':
-                interval = 'second'
-            elif interval == '1day':
-                interval = 'day'
             url_params = {
                 "interval": interval,
                 "from_date": from_date,
