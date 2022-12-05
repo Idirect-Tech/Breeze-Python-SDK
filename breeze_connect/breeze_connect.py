@@ -654,9 +654,9 @@ class BreezeConnect():
         if self.api_handler:
             return self.api_handler.get_margin(exchange_code)
 
-    def place_order(self, stock_code="", exchange_code="", product="", action="", order_type="", stoploss="", quantity="", price="", validity="", validity_date="", disclosed_quantity="", expiry_date="", right="", strike_price="", user_remark=""):
+    def place_order(self, stock_code="", exchange_code="", product="", action="", order_type="", stoploss="", quantity="", price="", validity="", validity_date="", disclosed_quantity="", expiry_date="", right="", strike_price="", user_remark="",order_type_fresh="",order_rate_fresh=""):
         if self.api_handler:
-            return self.api_handler.place_order(stock_code=stock_code, exchange_code=exchange_code, product=product, action=action, order_type=order_type, stoploss=stoploss, quantity=quantity, price=price, validity=validity, validity_date=validity_date, disclosed_quantity=disclosed_quantity, expiry_date=expiry_date, right=right, strike_price=strike_price, user_remark=user_remark)
+            return self.api_handler.place_order(stock_code=stock_code, exchange_code=exchange_code, product=product, action=action, order_type=order_type, stoploss=stoploss, quantity=quantity, price=price, validity=validity, validity_date=validity_date, disclosed_quantity=disclosed_quantity, expiry_date=expiry_date, right=right, strike_price=strike_price, user_remark=user_remark, order_type_fresh=order_type_fresh, order_rate_fresh=order_rate_fresh)
 
     def get_order_detail(self, exchange_code="", order_id=""):
         if self.api_handler:
@@ -998,7 +998,7 @@ class ApificationBreeze():
         except Exception as e:
             self.error_exception(self.get_margin.__name__,e)
 
-    def place_order(self, stock_code="", exchange_code="", product="", action="", order_type="", stoploss="", quantity="", price="", validity="", validity_date="", disclosed_quantity="", expiry_date="", right="", strike_price="", user_remark=""):
+    def place_order(self, stock_code="", exchange_code="", product="", action="", order_type="", stoploss="", quantity="", price="", validity="", validity_date="", disclosed_quantity="", expiry_date="", right="", strike_price="", user_remark="",order_type_fresh="",order_rate_fresh=""):
         try:
             if stock_code == "" or stock_code == None or exchange_code == "" or exchange_code == None or product == "" or product == None or action == "" or action == None or order_type == "" or order_type == None or quantity == "" or quantity == None or price == "" or price == None or action == "" or action == None:
                 if stock_code == "" or stock_code == None:
@@ -1050,6 +1050,11 @@ class ApificationBreeze():
                 body["strike_price"] = strike_price
             if user_remark != "" and user_remark != None:
                 body["user_remark"] = user_remark
+            if(order_type_fresh != "" and order_type_fresh != None):
+                body['order_type_fresh'] = order_type_fresh
+            if(order_rate_fresh != "" and order_rate_fresh != None):
+                body['order_rate_fresh'] = order_rate_fresh
+
             body = json.dumps(body, separators=(',', ':'))
             headers = self.generate_headers(body)
             response = self.make_request(req_type.POST, api_endpoint.ORDER.value, body, headers)

@@ -487,6 +487,32 @@ breeze.place_order(stock_code="ITC",
 
 <br>
 <a href="#index">Back to Index</a>
+
+<h4 id="place_order4">Place an optionplus order</h4>
+
+```python
+
+breeze.place_order(stock_code="NIFTY",
+                    exchange_code="NFO",
+                    product="optionplus",
+                    action="buy",
+                    order_type="limit",
+                    stoploss="15",
+                    quantity="50",
+                    price="11.25",
+                    validity="day",
+                    validity_date="2022-12-02T06:00:00.000Z",
+                    disclosed_quantity="0",
+                    expiry_date="2022-12-08T06:00:00.000Z",
+                    right="call",
+                    strike_price="19000",
+                    order_type_fresh = "Limit",
+                    order_rate_fresh = "20",
+                    user_remark="Test")
+```                
+<br>
+<a href="#index">Back to Index</a>
+
 <hr>
 
 <h4 id="order_detail">Get an order details by exchange-code and order-id from your account.</h4>
