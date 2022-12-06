@@ -1,7 +1,7 @@
 #intialize keys
-app_key = "K=89z83417URm)G9+362111V2M9z75dP"
-secret_key = "67751&2KNh482s6P&99~8^4w716N8j90"
-session_token = '2139838'
+api_key = "K=89+3621z83417URV2M9zm)G91175dP"
+api_secret = "67759~8^4w716N8j901&2s6P2KNh48&9"
+api_session = '2139838'
 
 
 import pandas as pd
