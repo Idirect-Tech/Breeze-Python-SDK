@@ -49,8 +49,7 @@ headers = {
     'apikey': api_key
 }
 
-
-conn.request("GET", "/api/v2/historicalcharts?stock_code=NIFTY&exch_code=NFO&from_date=2022-11-10%2009:15:00&to_date=2022-11-11%2009:16:00&interval=1second&product_type=Options&expiry_date=2022-11-24&right=Call&strike_price=18000", payload, headers)
+conn.request("GET", "/api/v2/historicalcharts?stock_code=NIFTY&exch_code=NFO&from_date=2022-11-10T00:00:00.000Z&to_date=2022-11-11T00:00:00.000Z&interval=1day&product_type=Options&expiry_date=2022-11-24T00:00:00.000Z&right=Call&strike_price=18000", payload, headers)
 res = conn.getresponse()
 data = res.read()
 print(data.decode("utf-8"))
