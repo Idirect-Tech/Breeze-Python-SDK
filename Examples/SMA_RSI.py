@@ -1,7 +1,8 @@
-#intialize keys (below keys are just for example)
-api_key = "K=89+3621z83417URV2M9zm)G91175dP"
-api_secret = "67759~8^4w716N8j901&2s6P2KNh48&9"
-api_session = '2139838'
+#intialize keys
+
+api_key = "INSERT_YOUR_APP_KEY_HERE"
+api_secret = "INSERT_YOUR_SECRET_KEY_HERE"
+api_session = 'INSERT_YOUR_API_SESSION_HERE'
 
 
 import pandas as pd
