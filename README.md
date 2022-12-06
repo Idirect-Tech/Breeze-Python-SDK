@@ -1,4 +1,18 @@
-# Breeze API Python Client
+# Table Of Content
+
+<ul>
+ <li><a href="#client">Breeze API Python Client</a></li>
+ <li><a href="#docslink">API Documentation</a></li>
+ <li><a href="#virtualenv">Set Up Virtual Environment</a></li>
+ <li><a href="#clientinstall">Installing Client</a></li>
+ <li><a href="#apiusage">API Usage</a></li>
+ <li><a href="#websocket">Websocket Usage</a></li>
+ <li><a href="#index_title">List Of Other SDK methods</a></li>
+</ul>
+
+
+<h4 id="client">Breeze API Python Client</h4>
+
 breezeapi@icicisecurities.com
 
 The official Python client library for the ICICI Securities trading APIs. BreezeConnect is a set of REST-like APIs that allows one to build a complete investment and trading platform. Following are some notable features of Breeze APIs:
@@ -10,16 +24,16 @@ The official Python client library for the ICICI Securities trading APIs. Breeze
 5. Option Chain API
 
 
-## API Documentation
+<h4 id="docslink">API Documentation</h4>
 
-<div class="sticky" id="docslink">
+<div class="sticky" >
 <ul>
  <li><a href="https://api.icicidirect.com/breezeapi/documents/index.html">Breeze HTTP API Documentation</a></li>
  <li><a href="https://pypi.org/project/breeze-connect/">Python client documentation</a></li>
 </ul>
 </div>
 
-## Setup virtual environment in your Machine
+<h4 id="virtualenv">Setup virtual environment in your Machine</h4>
 
 You must install the virtualenv package via pip
 ```
@@ -36,7 +50,7 @@ And then, You can activate virtual environment via source
 source breeze_venv/bin/activate
 ```
 
-## Installing the client
+<h4 id="clientinstall">Installing the client</h4>
 
 You can install the latest release via pip
 
@@ -50,7 +64,7 @@ Or, You can also install the specific release version via pip
 pip install breeze-connect==1.0.28
 ```
 
-## API Usage
+<h4 id="apiusage"> API Usage</h4>
 
 ```python
 from breeze_connect import BreezeConnect
@@ -74,7 +88,7 @@ iso_date_time_string = datetime.datetime.strptime("28/02/2021 23:59:59","%d/%m/%
 ```
 <br>
 
-## Websocket Usage
+<h4 id ="websocket"> Websocket Usage</h4>
 
 ```python
 from breeze_connect import BreezeConnect
@@ -185,9 +199,9 @@ For Streaming OHLCV, interval must not be empty and must be equal to either of t
 
 ---
 
-## List of other SDK Methods:
+<h4> List of other SDK Methods:</h4>
 
-<h4 id="index_title" >Index</h4>
+<h5 id="index_title" >Index</h5>
 
 <div class="sticky" id="index">
 <ul>
@@ -513,10 +527,30 @@ breeze.place_order(stock_code="NIFTY",
 <br>
 <a href="#index">Back to Index</a>
 
+<h4 id="place_order5">Place an future plus order</h4>
+
+```python
+
+breeze.place_order(stock_code= "NIFTY",
+                    exchange_code= "NFO",                                     
+                    product= "futureplus",                                    
+                    action= "Buy",                                            
+                    order_type= "limit",
+                    stoploss="18720",                                            
+                    quantity="50",                                          
+                    price= "18725",                                                                             
+                    validity="Day",       
+                    disclosed_quantity="0",                                  
+                    expiry_date="29-DEC-2022")
+
+```                
+<br>
+<p>Future plus - "Stop loss trigger price cannot be less than last traded price for Buy order" </p>
+<a href="#index">Back to Index</a>
+
 <hr>
 
 <h4 id="order_detail">Get an order details by exchange-code and order-id from your account.</h4>
-
 
 ```python
 breeze.get_order_detail(exchange_code="NSE",
