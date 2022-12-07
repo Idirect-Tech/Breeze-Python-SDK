@@ -4,9 +4,9 @@ api_key = "INSERT_YOUR_APP_KEY_HERE"
 api_secret = "INSERT_YOUR_SECRET_KEY_HERE"
 api_session = 'INSERT_YOUR_API_SESSION_HERE'
 
-
+#make sure to install latest library of Breeze using --> pip install --upgrade breeze-connect 
 import pandas as pd
-from breeze_connect import BreezeConnect // #make sure to install latest library of Breeze --> pip install --upgrade breeze-connect 
+from breeze_connect import BreezeConnect 
 
 # Create session object
 breeze = BreezeConnect(api_key=app_key)
@@ -69,6 +69,6 @@ def add_rsi(df, period):
 
 format_data(df)
 add_sma(df)
-add_RSI(df,14)
+add_rsi(df,14)
 
 print(df)
