@@ -1,5 +1,4 @@
 ### Enter your API Keys
-
 api_key = "INSERT_YOUR_APP_KEY_HERE"
 api_secret = "INSERT_YOUR_SECRET_KEY_HERE"
 api_session = 'INSERT_YOUR_API_SESSION_HERE'
@@ -18,19 +17,11 @@ breeze.generate_session(api_secret=api_secret,
                         session_token=api_session)
 
 # initialize user inputs
-STOCK = "SUZENE"
+STOCK = "BHEL"
 INTERVAL = '1day'
 SMA_PERIOD = float(20)
 DURATION_IN_SECONDS = 120
 
-today = datetime.now()
-MARKET_OPEN = today.replace(hour=9,minute=15,second=0, microsecond=0)
-MARKET_CLOSE = today.replace(hour=15,minute=30,second=0, microsecond=0)
-
-try:
-    assert (today > MARKET_OPEN) and (today < MARKET_CLOSE)
-except Exception as e:
-    print("Please re-check Time\nStart time should be between 09:45 to 15:00")
 
 def get_sma():
     global STOCK, INTERVAL, SMA_PERIOD
@@ -53,15 +44,15 @@ def get_sma():
 
     if(data['Status']==200):
 
-          # Calculate simple moving average of 'close' price
-          data = pd.DataFrame(data['Success'])
-          data.close = data.close.astype(float)
-          sma = round(data.close.mean(),2)
-          return sma
+        # Calculate simple moving average of 'close' price
+        data = pd.DataFrame(data['Success'])
+        data.close = data.close.astype(float)
+        sma = round(data.close.mean(),2)
+        return sma
 
-      elif(data['Status']==500):
-          print('Bad API request : ',data)
-          return False
+    elif(data['Status']==500):
+        print('Bad API request : ',data)
+        return False
 
 def get_current_price(stock):
     #This function fetches the last traded price (LTP) of stock
@@ -74,25 +65,32 @@ def get_current_price(stock):
 
 def start_strategy():
     # This function starts strategy for 'duration' seconds provided by user
-    global DURATION_IN_SECONDS
 
-    # Set time interval for which strategy will run
+    global DURATION_IN_SECONDS
     current_time = datetime.now()
     end_time = current_time + timedelta(seconds = DURATION_IN_SECONDS)
 
+    MARKET_OPEN = current_time.replace(hour=9,minute=15,second=0, microsecond=0)
+    MARKET_CLOSE = current_time.replace(hour=15,minute=30,second=0, microsecond=0)
+
+    try:
+        assert (current_time > MARKET_OPEN) and (current_time < MARKET_CLOSE)
+    except Exception as e:
+        print("Please re-check Time\nStart time should be between 09:45 to 15:00")
+        return    
+    
     # Start the loop
     while (current_time < end_time):
 
         #print current time in Hour:Minute:Second format
-        print(f'Time --> {current_time.time().strftime('%H:%M:%S')}')
+        print(f"Time --> {current_time.time().strftime('%H:%M:%S')}")
 
         #fetch current price of stock
-        try:
-            current_price = get_current_price(STOCK)
-            indicator = get_sma()
+        current_price = get_current_price(STOCK)
+        indicator = get_sma()
         
         #check condition for buy signal
-        if (current_price > indicator) :
+        if(current_price > indicator):
             print(f'BUY SIGNAL --> current price {current_price} is greater than SMA {indicator}!')
 
         else:
@@ -103,4 +101,4 @@ def start_strategy():
         current_time = datetime.now()
         
 if __name__ == "__main__":
-  start_strategy()
+    start_strategy()
