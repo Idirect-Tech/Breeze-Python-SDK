@@ -1,0 +1,11 @@
+LICENSE
+README.md
+setup.py
+breeze_connect/__init__.py
+breeze_connect/breeze_connect.py
+breeze_connect/config.py
+breeze_connect.egg-info/PKG-INFO
+breeze_connect.egg-info/SOURCES.txt
+breeze_connect.egg-info/dependency_links.txt
+breeze_connect.egg-info/requires.txt
+breeze_connect.egg-info/top_level.txt
