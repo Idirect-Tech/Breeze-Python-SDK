@@ -61,7 +61,7 @@ pip install --upgrade breeze-connect
 Or, You can also install the specific release version via pip
 
 ```
-pip install breeze-connect==1.0.29
+pip install breeze-connect==1.0.30
 ```
 
 <h4 id="apiusage"> API Usage</h4>
@@ -227,6 +227,7 @@ For Streaming OHLCV, interval must not be empty and must be equal to either of t
  <li><a href="#trade_list">get_trade_list</a></li>
  <li><a href="#trade_detail">get_trade_detail</a></li>
  <li><a href="#get_names"> get_names </a></li>
+ <li><a href="#preview_order"> preview_order </a></li>
 </ul>
 </div>
 
@@ -793,4 +794,26 @@ breeze.get_names(exchange_code = 'NSE',stock_code = 'RELIANCE')
 ```
 <p>Note: Use this method to find ICICI specific stock codes / token </p>
 
+<a href="#index">Back to Index</a>
+
+<hr>
+
+<h4 id="preview_order">Preview Order.</h4>
+
+
+```python
+
+breeze.preview_order(
+    stock_code = "ICIBAN",
+    exchange_code = "NSE",
+    product = "margin",
+    order_type = "limit",
+    price = "907.05",
+    action = "buy",
+    quantity = "1",
+    specialflag = "N"
+)
+```
+
+<br>
 <a href="#index">Back to Index</a>

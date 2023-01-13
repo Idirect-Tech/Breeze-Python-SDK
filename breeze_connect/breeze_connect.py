@@ -709,9 +709,14 @@ class BreezeConnect():
         if self.api_handler:
             return self.api_handler.get_trade_detail(exchange_code, order_id)
     
-    def get_names(self,exchange_code="",stock_code=""):
+    def get_names(self, exchange_code="",stock_code=""):
         if self.api_handler:
             return self.api_handler.get_names(exchange_code, stock_code)
+    
+    def preview_order(self, stock_code="",exchange_code="",product="",order_type="",price="",action="",quantity="",expiry_date="",right="",strike_price="",specialflag="",stoploss="",order_rate_fresh=""):
+        if self.api_handler:
+            return self.api_handler.preview_order(stock_code, exchange_code, product, order_type, price, action, quantity, expiry_date, right, strike_price, specialflag, stoploss, order_rate_fresh)
+    
 
 
 class ApificationBreeze():
@@ -1399,3 +1404,41 @@ class ApificationBreeze():
             return result
         except Exception as e:
             self.error_exception(self.get_names.__name__,e)
+
+    def preview_order(self,stock_code="",exchange_code="",product="",order_type="",price="",action="",quantity="",expiry_date="",right="",strike_price="",specialflag="",stoploss="",order_rate_fresh=""):
+        try:
+            if exchange_code == "" or exchange_code == None :
+                return self.validation_error_response(resp_message.BLANK_EXCHANGE_CODE.value)
+            elif product=="" or product == None:
+                return self.validation_error_response(resp_message.PRODUCT_TYPE_ERROR.value)
+            elif stock_code=="" or stock_code==None:
+                return self.validation_error_response(resp_message.BLANK_STOCK_CODE.value)
+            elif order_type == "" or order_type == None:
+                return self.validation_error_response(resp_message.BLANK_ORDER_TYPE.value)
+            elif action=="" or action == None:
+                return self.validation_error_response(resp_message.BLANK_ACTION.value)
+            elif right != "" and right != None and right.lower() not in config.RIGHT_TYPES:
+                return self.validation_error_response(resp_message.RIGHT_TYPE_ERROR.value)
+
+            body = {
+                "stock_code": stock_code,
+                "exchange_code": exchange_code,
+                "product": product,
+                "order_type": order_type,
+                "price": price,
+                "action": action,
+                "quantity": quantity,
+                "expiry_date": expiry_date,
+                "right": right,
+                "strike_price": strike_price,
+                "specialflag" : specialflag,
+                "stoploss": stoploss,
+                "order_rate_fresh": order_rate_fresh
+                }
+            body = json.dumps(body, separators=(',', ':'))
+            headers = self.generate_headers(body)
+            response = self.make_request("GET", "preview_order", body, headers)
+            response = response.json()
+            return response
+        except Exception as e:
+            self.error_exception(self.preview_order.__name__,e)
