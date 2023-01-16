@@ -1441,7 +1441,7 @@ class ApificationBreeze():
                 }
             body = json.dumps(body, separators=(',', ':'))
             headers = self.generate_headers(body)
-            response = self.make_request("GET", "preview_order", body, headers)
+            response = self.make_request(req_type.GET, "preview_order", body, headers)
             response = response.json()
             return response
         except Exception as e:
