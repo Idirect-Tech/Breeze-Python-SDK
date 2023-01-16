@@ -105,21 +105,14 @@ class BreezeConnect():
                 self.sio_rate_refresh_handler = SocketEventBreeze("/", self)
             self.sio_rate_refresh_handler.connect(config.LIVE_STREAM_URL)
     
-    def ws_disconnect(self,isOrder = False,is_ohlc_stream = False):
-        if(isOrder == False):    
+    def ws_disconnect(self,is_order = False):
+        if not is_order:    
             if not self.sio_rate_refresh_handler:
                 return self.socket_connection_response(resp_message.RATE_REFRESH_NOT_CONNECTED.value)
             else:
                 self.sio_rate_refresh_handler.on_disconnect()
                 self.sio_rate_refresh_handler = None
                 return self.socket_connection_response(resp_message.RATE_REFRESH_DISCONNECTED.value)
-        elif is_ohlc_stream:    
-            if not self.sio_ohlcv_stream_handler:
-                return self.socket_connection_response(resp_message.OHLCV_STREAM_NOT_CONNECTED.value)
-            else:
-                self.sio_ohlcv_stream_handler.on_disconnect()
-                self.sio_ohlcv_stream_handler = None
-                return self.socket_connection_response(resp_message.OHLCV_STREAM_DISCONNECTED.value)
         else:
             if not self.sio_order_refresh_handler:
                 return self.socket_connection_response(resp_message.ORDER_REFRESH_NOT_CONNECTED.value)
@@ -127,6 +120,17 @@ class BreezeConnect():
                 self.sio_order_refresh_handler.on_disconnect()
                 self.sio_order_refresh_handler = None
                 return self.socket_connection_response(resp_message.ORDER_REFRESH_DISCONNECTED.value)
+
+    def ws_disconnect_ohlc(self):
+        if self.sio_rate_refresh_handler:
+            self.sio_rate_refresh_handler.on_disconnect()
+            self.sio_rate_refresh_handler = None
+        if not self.sio_ohlcv_stream_handler:
+            return self.socket_connection_response(resp_message.OHLCV_STREAM_NOT_CONNECTED.value)
+        else:
+            self.sio_ohlcv_stream_handler.on_disconnect()
+            self.sio_ohlcv_stream_handler = None
+            return self.socket_connection_response(resp_message.OHLCV_STREAM_DISCONNECTED.value)
     
     def ws_connect(self):
         self._ws_connect(self.sio_rate_refresh_handler,False)

@@ -145,8 +145,15 @@ breeze.subscribe_feeds(get_order_notification=True)
 # unsubscribe order notification feeds(also it will disconnect the order streaming server)
 breeze.unsubscribe_feeds(get_order_notification=True)
 
-# ws_disconnect(it will disconnect from rate refresh server)
+# ws_disconnect (it will disconnect from rate refresh server)
 breeze.ws_disconnect()
+
+# ws_disconnect with is_order flag set (To disconnect from order refresh server)
+breeze.ws_disconnect(is_order = True)
+
+# ws_disconnect_ohlc (To disconnect from Real Time Streaming OHLCV)
+breeze.ws_disconnect_ohlc()
+
 ```
 <br>
 
