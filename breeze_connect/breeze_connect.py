@@ -911,7 +911,7 @@ class ApificationBreeze():
                 return self.validation_error_response(resp_message.BLANK_TO_DATE.value)
             elif stock_code == "" or stock_code == None:
                 return self.validation_error_response(resp_message.BLANK_STOCK_CODE.value)
-            elif exchange_code.lower() == "nfo":
+            elif exchange_code.lower() in config.FNO_EXCHANGE_TYPES:
                 if product_type == "" or product_type == None:
                     return self.validation_error_response(resp_message.BLANK_PRODUCT_TYPE_HIST_V2.value)
                 elif product_type.lower() not in config.PRODUCT_TYPES_HIST_V2:

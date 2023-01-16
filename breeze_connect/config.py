@@ -199,6 +199,7 @@ VALIDITY_TYPES = ["day", "ioc", "vtc"]
 TRANSACTION_TYPES = ["debit", "credit"]
 EXCHANGE_CODES_HIST = ["nse", "nfo"]
 EXCHANGE_CODES_HIST_V2 = ["nse","bse","nfo","ndx","mcx"]
+FNO_EXCHANGE_TYPES = ["nfo","mcx","ndx"]
 
 #Isec NSE Stockcode mapping file
 ISEC_NSE_CODE_MAP_FILE = {
