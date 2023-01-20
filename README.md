@@ -61,7 +61,7 @@ pip install --upgrade breeze-connect
 Or, You can also install the specific release version via pip
 
 ```
-pip install breeze-connect==1.0.31
+pip install breeze-connect==1.0.32
 ```
 
 <h4 id="apiusage"> API Usage</h4>
@@ -142,8 +142,16 @@ breeze.unsubscribe_feeds(stock_token="1.1!500780",interval="1second")
 # subscribe order notification feeds(it will connect to order streaming server)
 breeze.subscribe_feeds(get_order_notification=True)
 
+
+
 # unsubscribe order notification feeds(also it will disconnect the order streaming server)
 breeze.unsubscribe_feeds(get_order_notification=True)
+
+# subscribe oneclick strategy stream
+breeze.subscribe_feeds(stock_token = "one_click_fno")
+
+# unsubscribe oneclick strategy stream
+breeze.unsubscribe_feeds(stock_token = "one_click_fno")
 
 # ws_disconnect (it will disconnect from rate refresh server)
 breeze.ws_disconnect()
