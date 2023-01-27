@@ -34,7 +34,7 @@ class SocketEventBreeze(socketio.ClientNamespace):
         self.breeze = breeze_instance
         self.sio = socketio.Client()
 
-    def connect(self,hostname,is_ohlc_stream = False):
+    def connect(self,hostname,is_ohlc_stream = False,strategy_flag = False):
         auth = {"user": self.breeze.user_id, "token": self.breeze.session_key}
         if is_ohlc_stream:
             self.sio.connect(hostname,socketio_path='ohlcvstream' ,headers={"User-Agent": "python-socketio[client]/socket"},auth=auth,transports="websocket", wait_timeout=3)
@@ -46,7 +46,7 @@ class SocketEventBreeze(socketio.ClientNamespace):
         
     def notify(self):
         self.sio.on('order', self.on_message)
-
+    
     def on_message(self, data):
         data = self.breeze.parse_data(data)
         if 'symbol' in data and data['symbol'] != None and len(data['symbol'])>0:
@@ -64,7 +64,8 @@ class SocketEventBreeze(socketio.ClientNamespace):
     def watch(self, data):
         self.sio.emit('join', data)
         self.sio.on('stock', self.on_message)
-
+        
+        
     def unwatch(self, data):
         self.sio.emit("leave", data)
 
@@ -84,18 +85,22 @@ class BreezeConnect():
         self.stock_script_dict_list = []
         self.token_script_dict_list = []
         self.tux_to_user_value = config.TUX_TO_USER_MAP
-
+        self.orderconnect = 0
     def socket_connection_response(self,message):
         return {"message":message}
 
     def subscribe_exception(self,message):
         return Exception(message)
 
-    def _ws_connect(self,handler,order_flag=False,ohlcv_flag=False): 
-        if order_flag:
+    def _ws_connect(self,handler,order_flag=False,ohlcv_flag=False,strategy_flag = False): 
+        if order_flag or strategy_flag:
             if not self.sio_order_refresh_handler:
                 self.sio_order_refresh_handler = SocketEventBreeze("/", self)
-            self.sio_order_refresh_handler.connect(config.LIVE_FEEDS_URL)
+            if(self.orderconnect == 0):
+                self.sio_order_refresh_handler.connect(config.LIVE_FEEDS_URL)
+                self.orderconnect+=1
+            else:
+                pass
         elif ohlcv_flag:
             if not self.sio_ohlcv_stream_handler:
                 self.sio_ohlcv_stream_handler = SocketEventBreeze("/", self)
@@ -105,28 +110,33 @@ class BreezeConnect():
                 self.sio_rate_refresh_handler = SocketEventBreeze("/", self)
             self.sio_rate_refresh_handler.connect(config.LIVE_STREAM_URL)
     
-    def ws_disconnect(self,isOrder = False,is_ohlc_stream = False):
-        if(isOrder == False):    
+    def ws_disconnect(self,is_order = False):
+        if not is_order:    
             if not self.sio_rate_refresh_handler:
                 return self.socket_connection_response(resp_message.RATE_REFRESH_NOT_CONNECTED.value)
             else:
                 self.sio_rate_refresh_handler.on_disconnect()
                 self.sio_rate_refresh_handler = None
                 return self.socket_connection_response(resp_message.RATE_REFRESH_DISCONNECTED.value)
-        elif is_ohlc_stream:    
-            if not self.sio_ohlcv_stream_handler:
-                return self.socket_connection_response(resp_message.OHLCV_STREAM_NOT_CONNECTED.value)
-            else:
-                self.sio_ohlcv_stream_handler.on_disconnect()
-                self.sio_ohlcv_stream_handler = None
-                return self.socket_connection_response(resp_message.OHLCV_STREAM_DISCONNECTED.value)
         else:
             if not self.sio_order_refresh_handler:
                 return self.socket_connection_response(resp_message.ORDER_REFRESH_NOT_CONNECTED.value)
             else:    
                 self.sio_order_refresh_handler.on_disconnect()
                 self.sio_order_refresh_handler = None
+                self.orderconnect = 0
                 return self.socket_connection_response(resp_message.ORDER_REFRESH_DISCONNECTED.value)
+
+    def ws_disconnect_ohlc(self):
+        if self.sio_rate_refresh_handler:
+            self.sio_rate_refresh_handler.on_disconnect()
+            self.sio_rate_refresh_handler = None
+        if not self.sio_ohlcv_stream_handler:
+            return self.socket_connection_response(resp_message.OHLCV_STREAM_NOT_CONNECTED.value)
+        else:
+            self.sio_ohlcv_stream_handler.on_disconnect()
+            self.sio_ohlcv_stream_handler = None
+            return self.socket_connection_response(resp_message.OHLCV_STREAM_DISCONNECTED.value)
     
     def ws_connect(self):
         self._ws_connect(self.sio_rate_refresh_handler,False)
@@ -255,10 +265,16 @@ class BreezeConnect():
                 interval = config.channel_interval_map[interval]
         if self.sio_rate_refresh_handler:
             return_object = {}
+            if stock_token in config.STRATEGY_SUBSCRIPTION:
+                self._ws_connect(self.sio_order_refresh_handler,strategy_flag=True)
+                self.sio_order_refresh_handler.watch(stock_token)
+                return_object = self.socket_connection_response(resp_message.STRATEGY_STREAM_SUBSCRIBED.value.format(stock_token))
+                return return_object
             if get_order_notification == True:
                 self._ws_connect(self.sio_order_refresh_handler,order_flag=True)
                 self.sio_order_refresh_handler.notify()
                 return_object = self.socket_connection_response(resp_message.ORDER_NOTIFICATION_SUBSRIBED.value)
+                return return_object
             if stock_token != "":
                 if interval!="":
                     if self.sio_ohlcv_stream_handler is None:
@@ -289,13 +305,23 @@ class BreezeConnect():
                 raise Exception(except_message.STREAM_OHLC_INTERVAL_ERROR.value)
             else:
                 interval = config.channel_interval_map[interval]
+
         if(get_order_notification == True):
             if self.sio_order_refresh_handler:
                 self.sio_order_refresh_handler.on_disconnect()
                 self.sio_order_refresh_handler = None
+                self.orderconnect = 0
                 return self.socket_connection_response(resp_message.ORDER_REFRESH_DISCONNECTED.value)
             else:
                 return self.socket_connection_response(resp_message.ORDER_REFRESH_NOT_CONNECTED.value)
+
+        if(stock_token in config.STRATEGY_SUBSCRIPTION):
+            if self.sio_order_refresh_handler:
+                self.sio_order_refresh_handler.unwatch(stock_token)
+                return self.socket_connection_response(resp_message.STRATEGY_STREAM_UNSUBSCRIBED.value.format(stock_token))
+            else:
+                return self.socket_connection_response(resp_message.STRATEGY_STREAM_NOT_CONNECTED.value)
+
         if self.sio_rate_refresh_handler:
             if stock_token != "":
                 if interval != "":
@@ -388,6 +414,51 @@ class BreezeConnect():
         return depth
 
     def parse_data(self, data):
+        
+        if data and type(data) == list and len(data) > 0 and type(data[0]) == str and "!" not in data[0] and len(data) == 10:
+            iclick_data = dict()
+            iclick_data['stock_name'] = data[0]
+            iclick_data['stock_description'] = data[1]
+            iclick_data['recommended_price_and_date'] = data[2]
+            iclick_data['target_price'] = data[3]
+            iclick_data['sltp_price'] = data[4]
+            iclick_data['part_profit_percentage'] = data[5]
+            iclick_data['profit_price'] = data[6]
+            iclick_data['exit_price'] = data[7]
+            iclick_data['recommended_update'] = data[8]
+            iclick_data['iclick_status'] = data[9]
+            return(iclick_data)
+        if data and type(data) == list and len(data) > 0 and type(data[0]) == str and "!" not in data[0] and len(data) == 28:
+            strategy_dict = dict()
+            strategy_dict['strategy_date'] = data[0]
+            strategy_dict['modification_date'] = data[1]
+            strategy_dict['portfolio_id'] = data[2]
+            strategy_dict['call_action'] = data[3]
+            strategy_dict['portfolio_name'] = data[4]
+            strategy_dict['exchange_code'] = data[5]
+            strategy_dict['product_type'] = data[6]
+            #strategy_dict['INDEX/STOCK'] = data[7]
+            strategy_dict['underlying'] = data[8]
+            strategy_dict['expiry_date'] = data[9]
+            #strategy_dict['OCR_EXER_TYP'] = data[10]
+            strategy_dict['option_type'] = data[11]
+            strategy_dict['strike_price'] = data[12]
+            strategy_dict['action'] = data[13]
+            strategy_dict['recommended_price_from'] = data[14]
+            strategy_dict['recommended_price_to'] = data[15]
+            strategy_dict['minimum_lot_quantity'] = data[16]
+            strategy_dict['last_traded_price'] = data[17]
+            strategy_dict['best_bid_price'] = data[18]
+            strategy_dict['best_offer_price'] = data[19]
+            strategy_dict['last_traded_quantity'] = data[20]
+            strategy_dict['target_price'] = data[21]           
+            strategy_dict['expected_profit_per_lot'] = data[22]
+            strategy_dict['stop_loss_price'] = data[23]
+            strategy_dict['expected_loss_per_lot'] = data[24]
+            strategy_dict['total_margin'] = data[25]
+            strategy_dict['leg_no'] = data[26]
+            strategy_dict['status'] = data[27]
+            return(strategy_dict)
         if data and type(data) == list and len(data) > 0 and type(data[0]) == str and "!" not in data[0]:
             order_dict = {}
             order_dict["sourceNumber"] = data[0]                            #Source Number
@@ -911,7 +982,7 @@ class ApificationBreeze():
                 return self.validation_error_response(resp_message.BLANK_TO_DATE.value)
             elif stock_code == "" or stock_code == None:
                 return self.validation_error_response(resp_message.BLANK_STOCK_CODE.value)
-            elif exchange_code.lower() == "nfo":
+            elif exchange_code.lower() in config.FNO_EXCHANGE_TYPES:
                 if product_type == "" or product_type == None:
                     return self.validation_error_response(resp_message.BLANK_PRODUCT_TYPE_HIST_V2.value)
                 elif product_type.lower() not in config.PRODUCT_TYPES_HIST_V2:
@@ -1437,7 +1508,7 @@ class ApificationBreeze():
                 }
             body = json.dumps(body, separators=(',', ':'))
             headers = self.generate_headers(body)
-            response = self.make_request("GET", "preview_order", body, headers)
+            response = self.make_request(req_type.GET, "preview_order", body, headers)
             response = response.json()
             return response
         except Exception as e:

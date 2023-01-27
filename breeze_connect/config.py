@@ -153,6 +153,10 @@ class ResponseMessage(enum.Enum):
     ORDER_NOTIFICATION_SUBSRIBED = "Order Notification subscribed successfully"
     OHLCV_STREAM_NOT_CONNECTED = "socket server is not connected to OHLCV Stream."
     OHLCV_STREAM_DISCONNECTED = "socket server for OHLCV Streaming has been disconnected."
+    STRATEGY_STREAM_SUBSCRIBED = "{0} streaming subscribed successfully."
+    STRATEGY_STREAM_DISCONNECTED = "strategy stream disconnected."
+    STRATEGY_STREAM_NOT_CONNECTED = "socket server is not connected to strategy streaming."
+    STRATEGY_STREAM_UNSUBSCRIBED = "{0} streaming unsubscribed successfully."
 
     #Stock Subscription Message
     STOCK_SUBSCRIBE_MESSAGE = "Stock {0} subscribed successfully"
@@ -164,7 +168,6 @@ class ExceptionMessage(enum.Enum):
 
     #Authentication Error
     AUTHENICATION_EXCEPTION = "Could not authenticate credentials. Please check token and keys"
-
     #Subscribe Exception
     QUOTE_DEPTH_EXCEPTION = "Either getExchangeQuotes must be true or getMarketDepth must be true"
     EXCHANGE_CODE_EXCEPTION = "Exchange Code allowed are 'BSE', 'NSE', 'NDX', 'MCX' or 'NFO'."
@@ -199,6 +202,8 @@ VALIDITY_TYPES = ["day", "ioc", "vtc"]
 TRANSACTION_TYPES = ["debit", "credit"]
 EXCHANGE_CODES_HIST = ["nse", "nfo"]
 EXCHANGE_CODES_HIST_V2 = ["nse","bse","nfo","ndx","mcx"]
+FNO_EXCHANGE_TYPES = ["nfo","mcx","ndx"]
+STRATEGY_SUBSCRIPTION = ["one_click_fno","i_click_2_gain"]
 
 #Isec NSE Stockcode mapping file
 ISEC_NSE_CODE_MAP_FILE = {
