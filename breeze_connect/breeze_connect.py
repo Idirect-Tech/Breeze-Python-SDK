@@ -11,11 +11,13 @@ from urllib.request import urlopen
 import pandas as pd
 import os
 import sys
+import logging
+import config
 
 dirs = os.path.dirname(os.path.abspath(__file__))
 
 sys.path.insert(1,dirs)
-import config
+
 
 
 requests.packages.urllib3.util.connection.HAS_IPV6 = False
@@ -26,6 +28,9 @@ api_endpoint = config.APIEndPoint
 resp_message = config.ResponseMessage
 except_message = config.ExceptionMessage
 req_type = config.APIRequestType
+logger = logging.getLogger('engineio.client')
+logger.propagate = False
+logger.setLevel(logging.CRITICAL)
 
 class SocketEventBreeze(socketio.ClientNamespace):
     
@@ -33,6 +38,8 @@ class SocketEventBreeze(socketio.ClientNamespace):
         super().__init__(namespace)
         self.breeze = breeze_instance
         self.sio = socketio.Client()
+        self.tokenlist = set()
+        self.ohlcstate = set()
 
     def connect(self,hostname,is_ohlc_stream = False,strategy_flag = False):
         auth = {"user": self.breeze.user_id, "token": self.breeze.session_key}
@@ -56,19 +63,56 @@ class SocketEventBreeze(socketio.ClientNamespace):
     def on_ohlc_stream(self,data):
         data = self.breeze.parse_ohlc_data(data)
         self.breeze.on_ticks(data)
+
+    def rewatchohlc(self):
+        if(len(self.ohlcstate) > 0):
+            for room,channel in self.ohlcstate:
+                self.sio.emit('join',room)
+                self.sio.on(channel, self.on_ohlc_stream)
     
     def watch_stream_data(self,data,channel):
+        if((data,channel) not in self.ohlcstate):
+            self.ohlcstate.add((data,channel))
         self.sio.emit('join', data)
         self.sio.on(channel, self.on_ohlc_stream)
+        self.sio.on('connect',self.rewatchohlc)
+
+    def rewatch(self):
+        self.notify()
+        if(len(self.tokenlist) > 0):    
+            self.sio.emit('join', list(self.tokenlist))
+            self.sio.on('stock', self.on_message)
 
     def watch(self, data):
+        if isinstance(data, list):
+            for entry in data:   
+                self.tokenlist.add(entry)
+        else:
+            self.tokenlist.add(data)
+
         self.sio.emit('join', data)
         self.sio.on('stock', self.on_message)
-        
+        self.sio.on('connect',self.rewatch)
         
     def unwatch(self, data):
-        self.sio.emit("leave", data)
+        if isinstance(data, list):
+            for entry in data:
+                if(entry in self.tokenlist):
+                    self.tokenlist.discard(entry)
+        else:
+            if(data in self.tokenlist):
+                self.tokenlist.discard(data)
 
+        if(len(self.ohlcstate) > 0): 
+            to_be_removed = set()
+            for room,channel in self.ohlcstate:
+                if(room == data):
+                    to_be_removed.add((room,channel))
+            
+            for room,channel in to_be_removed:
+                self.ohlcstate.discard((room,channel))
+
+        self.sio.emit("leave", data)
 
 class BreezeConnect():
 
