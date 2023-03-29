@@ -154,21 +154,32 @@ class BreezeConnect():
                 self.sio_rate_refresh_handler = SocketEventBreeze("/", self)
             self.sio_rate_refresh_handler.connect(config.LIVE_STREAM_URL)
     
-    def ws_disconnect(self):          
+    def ws_disconnect(self):   
+        response = []       
         if not self.sio_rate_refresh_handler:
-            return self.socket_connection_response(resp_message.RATE_REFRESH_NOT_CONNECTED.value)
+            response.append(self.socket_connection_response(resp_message.RATE_REFRESH_NOT_CONNECTED.value))
         else:
             self.sio_rate_refresh_handler.on_disconnect()
             self.sio_rate_refresh_handler = None
-            return self.socket_connection_response(resp_message.RATE_REFRESH_DISCONNECTED.value)
+            response.append(self.socket_connection_response(resp_message.RATE_REFRESH_DISCONNECTED.value))
         
         if not self.sio_ohlcv_stream_handler:
-            return self.socket_connection_response(resp_message.OHLCV_STREAM_NOT_CONNECTED.value)
+            response.append(self.socket_connection_response(resp_message.OHLCV_STREAM_NOT_CONNECTED.value))
         else:
             self.sio_ohlcv_stream_handler.on_disconnect()
             self.sio_ohlcv_stream_handler = None
-            return self.socket_connection_response(resp_message.OHLCV_STREAM_DISCONNECTED.value)
+            response.append(self.socket_connection_response(resp_message.OHLCV_STREAM_DISCONNECTED.value))
         
+        if not self.sio_order_refresh_handler:
+            response.append(self.socket_connection_response(resp_message.ORDER_REFRESH_NOT_CONNECTED.value))
+        else:
+            self.orderconnect = 0
+            self.sio_order_refresh_handler.on_disconnect()
+            self.sio_order_refresh_handler = None
+            response.append(self.socket_connection_response(resp_message.ORDER_REFRESH_DISCONNECTED.value))
+        return(response)
+
+
     def ws_disconnect_ohlc(self):
         if self.sio_rate_refresh_handler:
             self.sio_rate_refresh_handler.on_disconnect()
