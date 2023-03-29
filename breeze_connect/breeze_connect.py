@@ -39,14 +39,22 @@ class SocketEventBreeze(socketio.ClientNamespace):
         self.sio = socketio.Client()
         self.tokenlist = set()
         self.ohlcstate = set()
+        self.authentication = True
+
+    def my_connect_error(self,error):
+        self.authentication = False
 
     def connect(self,hostname,is_ohlc_stream = False,strategy_flag = False):
-        auth = {"user": self.breeze.user_id, "token": self.breeze.session_key}
-        if is_ohlc_stream:
-            self.sio.connect(hostname,socketio_path='ohlcvstream' ,headers={"User-Agent": "python-socketio[client]/socket"},auth=auth,transports="websocket", wait_timeout=3)
-        else:
-            self.sio.connect(hostname, headers={"User-Agent": "python-socketio[client]/socket"},auth=auth,transports="websocket", wait_timeout=3)
-        
+        try:
+            auth = {"user": self.breeze.user_id, "token": self.breeze.session_key}
+            if is_ohlc_stream:
+                self.sio.connect(hostname,socketio_path='ohlcvstream' ,headers={"User-Agent": "python-socketio[client]/socket"},auth=auth,transports="websocket", wait_timeout=3)
+            else:
+                self.sio.connect(hostname, headers={"User-Agent": "python-socketio[client]/socket"},auth=auth,transports="websocket", wait_timeout=3)
+            self.sio.on("connect_error", self.my_connect_error)
+        except:
+            pass
+
     def on_disconnect(self):
         self.sio.emit("disconnect", "transport close")
         
@@ -311,6 +319,10 @@ class BreezeConnect():
                 return exchange_quotes_token_value, market_depth_token_value
 
     def subscribe_feeds(self, stock_token="", exchange_code="", stock_code="", product_type="", expiry_date="", strike_price="", right="", interval = "", get_exchange_quotes=True, get_market_depth=True, get_order_notification=False):
+        
+        if(self.sio_rate_refresh_handler and self.sio_rate_refresh_handler.authentication == False):
+            raise Exception(except_message.AUTHENICATION_EXCEPTION.value)
+        
         if interval != "":
             if interval not in config.INTERVAL_TYPES_STREAM_OHLC:
                 raise Exception(except_message.STREAM_OHLC_INTERVAL_ERROR.value)
@@ -318,7 +330,7 @@ class BreezeConnect():
                 interval = config.channel_interval_map[interval]
         if self.sio_rate_refresh_handler:
             return_object = {}
-            if stock_token in config.STRATEGY_SUBSCRIPTION:
+            if self.sio_order_refresh_handler and stock_token in config.STRATEGY_SUBSCRIPTION:
                 self._ws_connect(self.sio_order_refresh_handler,strategy_flag=True)
                 self.sio_order_refresh_handler.watch(stock_token)
                 return_object = self.socket_connection_response(resp_message.STRATEGY_STREAM_SUBSCRIBED.value.format(stock_token))
