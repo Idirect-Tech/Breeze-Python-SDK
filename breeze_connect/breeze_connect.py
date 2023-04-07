@@ -11,6 +11,7 @@ from urllib.request import urlopen
 import pandas as pd
 import os
 import sys
+import logging
 
 dirs = os.path.dirname(os.path.abspath(__file__))
 
@@ -26,6 +27,9 @@ api_endpoint = config.APIEndPoint
 resp_message = config.ResponseMessage
 except_message = config.ExceptionMessage
 req_type = config.APIRequestType
+logger = logging.getLogger('engineio.client')
+logger.propagate = False
+logger.setLevel(logging.CRITICAL)
 
 class SocketEventBreeze(socketio.ClientNamespace):
     
@@ -33,14 +37,24 @@ class SocketEventBreeze(socketio.ClientNamespace):
         super().__init__(namespace)
         self.breeze = breeze_instance
         self.sio = socketio.Client()
+        self.tokenlist = set()
+        self.ohlcstate = set()
+        self.authentication = True
+
+    def my_connect_error(self,error):
+        self.authentication = False
 
     def connect(self,hostname,is_ohlc_stream = False,strategy_flag = False):
-        auth = {"user": self.breeze.user_id, "token": self.breeze.session_key}
-        if is_ohlc_stream:
-            self.sio.connect(hostname,socketio_path='ohlcvstream' ,headers={"User-Agent": "python-socketio[client]/socket"},auth=auth,transports="websocket", wait_timeout=3)
-        else:
-            self.sio.connect(hostname, headers={"User-Agent": "python-socketio[client]/socket"},auth=auth,transports="websocket", wait_timeout=3)
-        
+        try:
+            auth = {"user": self.breeze.user_id, "token": self.breeze.session_key}
+            if is_ohlc_stream:
+                self.sio.connect(hostname,socketio_path='ohlcvstream' ,headers={"User-Agent": "python-socketio[client]/socket"},auth=auth,transports="websocket", wait_timeout=3)
+            else:
+                self.sio.connect(hostname, headers={"User-Agent": "python-socketio[client]/socket"},auth=auth,transports="websocket", wait_timeout=3)
+            self.sio.on("connect_error", self.my_connect_error)
+        except:
+            pass
+
     def on_disconnect(self):
         self.sio.emit("disconnect", "transport close")
         
@@ -56,19 +70,56 @@ class SocketEventBreeze(socketio.ClientNamespace):
     def on_ohlc_stream(self,data):
         data = self.breeze.parse_ohlc_data(data)
         self.breeze.on_ticks(data)
+
+    def rewatchohlc(self):
+        if(len(self.ohlcstate) > 0):
+            for room,channel in self.ohlcstate:
+                self.sio.emit('join',room)
+                self.sio.on(channel, self.on_ohlc_stream)
     
     def watch_stream_data(self,data,channel):
+        if((data,channel) not in self.ohlcstate):
+            self.ohlcstate.add((data,channel))
         self.sio.emit('join', data)
         self.sio.on(channel, self.on_ohlc_stream)
+        self.sio.on('connect',self.rewatchohlc)
+
+    def rewatch(self):
+        self.notify()
+        if(len(self.tokenlist) > 0):    
+            self.sio.emit('join', list(self.tokenlist))
+            self.sio.on('stock', self.on_message)
 
     def watch(self, data):
+        if isinstance(data, list):
+            for entry in data:   
+                self.tokenlist.add(entry)
+        else:
+            self.tokenlist.add(data)
+
         self.sio.emit('join', data)
         self.sio.on('stock', self.on_message)
-        
+        self.sio.on('connect',self.rewatch)
         
     def unwatch(self, data):
-        self.sio.emit("leave", data)
+        if isinstance(data, list):
+            for entry in data:
+                if(entry in self.tokenlist):
+                    self.tokenlist.discard(entry)
+        else:
+            if(data in self.tokenlist):
+                self.tokenlist.discard(data)
 
+        if(len(self.ohlcstate) > 0): 
+            to_be_removed = set()
+            for room,channel in self.ohlcstate:
+                if(room == data):
+                    to_be_removed.add((room,channel))
+            
+            for room,channel in to_be_removed:
+                self.ohlcstate.discard((room,channel))
+
+        self.sio.emit("leave", data)
 
 class BreezeConnect():
 
@@ -86,6 +137,7 @@ class BreezeConnect():
         self.token_script_dict_list = []
         self.tux_to_user_value = config.TUX_TO_USER_MAP
         self.orderconnect = 0
+
     def socket_connection_response(self,message):
         return {"message":message}
 
@@ -110,22 +162,31 @@ class BreezeConnect():
                 self.sio_rate_refresh_handler = SocketEventBreeze("/", self)
             self.sio_rate_refresh_handler.connect(config.LIVE_STREAM_URL)
     
-    def ws_disconnect(self,is_order = False):
-        if not is_order:    
-            if not self.sio_rate_refresh_handler:
-                return self.socket_connection_response(resp_message.RATE_REFRESH_NOT_CONNECTED.value)
-            else:
-                self.sio_rate_refresh_handler.on_disconnect()
-                self.sio_rate_refresh_handler = None
-                return self.socket_connection_response(resp_message.RATE_REFRESH_DISCONNECTED.value)
+    def ws_disconnect(self):   
+        response = []       
+        if not self.sio_rate_refresh_handler:
+            response.append(self.socket_connection_response(resp_message.RATE_REFRESH_NOT_CONNECTED.value))
         else:
-            if not self.sio_order_refresh_handler:
-                return self.socket_connection_response(resp_message.ORDER_REFRESH_NOT_CONNECTED.value)
-            else:    
-                self.sio_order_refresh_handler.on_disconnect()
-                self.sio_order_refresh_handler = None
-                self.orderconnect = 0
-                return self.socket_connection_response(resp_message.ORDER_REFRESH_DISCONNECTED.value)
+            self.sio_rate_refresh_handler.on_disconnect()
+            self.sio_rate_refresh_handler = None
+            response.append(self.socket_connection_response(resp_message.RATE_REFRESH_DISCONNECTED.value))
+        
+        if not self.sio_ohlcv_stream_handler:
+            response.append(self.socket_connection_response(resp_message.OHLCV_STREAM_NOT_CONNECTED.value))
+        else:
+            self.sio_ohlcv_stream_handler.on_disconnect()
+            self.sio_ohlcv_stream_handler = None
+            response.append(self.socket_connection_response(resp_message.OHLCV_STREAM_DISCONNECTED.value))
+        
+        if not self.sio_order_refresh_handler:
+            response.append(self.socket_connection_response(resp_message.ORDER_REFRESH_NOT_CONNECTED.value))
+        else:
+            self.orderconnect = 0
+            self.sio_order_refresh_handler.on_disconnect()
+            self.sio_order_refresh_handler = None
+            response.append(self.socket_connection_response(resp_message.ORDER_REFRESH_DISCONNECTED.value))
+        return(response)
+
 
     def ws_disconnect_ohlc(self):
         if self.sio_rate_refresh_handler:
@@ -258,6 +319,10 @@ class BreezeConnect():
                 return exchange_quotes_token_value, market_depth_token_value
 
     def subscribe_feeds(self, stock_token="", exchange_code="", stock_code="", product_type="", expiry_date="", strike_price="", right="", interval = "", get_exchange_quotes=True, get_market_depth=True, get_order_notification=False):
+        
+        if(self.sio_rate_refresh_handler and self.sio_rate_refresh_handler.authentication == False):
+            raise Exception(except_message.AUTHENICATION_EXCEPTION.value)
+        
         if interval != "":
             if interval not in config.INTERVAL_TYPES_STREAM_OHLC:
                 raise Exception(except_message.STREAM_OHLC_INTERVAL_ERROR.value)
@@ -265,7 +330,7 @@ class BreezeConnect():
                 interval = config.channel_interval_map[interval]
         if self.sio_rate_refresh_handler:
             return_object = {}
-            if stock_token in config.STRATEGY_SUBSCRIPTION:
+            if self.sio_order_refresh_handler and stock_token in config.STRATEGY_SUBSCRIPTION:
                 self._ws_connect(self.sio_order_refresh_handler,strategy_flag=True)
                 self.sio_order_refresh_handler.watch(stock_token)
                 return_object = self.socket_connection_response(resp_message.STRATEGY_STREAM_SUBSCRIBED.value.format(stock_token))

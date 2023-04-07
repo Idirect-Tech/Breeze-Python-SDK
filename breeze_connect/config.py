@@ -164,6 +164,7 @@ class ResponseMessage(enum.Enum):
 
     def __str__(self):
         return str(self.value)
+        
 class ExceptionMessage(enum.Enum):
 
     #Authentication Error
