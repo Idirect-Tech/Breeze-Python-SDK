@@ -478,20 +478,30 @@ class BreezeConnect():
                 depth.append(dict)
         return depth
 
-    def parse_data(self, data):
-        
-        if data and type(data) == list and len(data) > 0 and type(data[0]) == str and "!" not in data[0] and len(data) == 10:
+    def parse_data(self, data):    
+        if data and type(data) == list and len(data) > 0 and type(data[0]) == str and "!" not in data[0] and len(data) == 19:
+            #if data and type(data) == list and len(data) > 0 and type(data[0]) == str and "!" not in data[0] and len(data) == 19:
             iclick_data = dict()
+            #iclick_data['sequence_number'] = data[0]
             iclick_data['stock_name'] = data[0]
-            iclick_data['stock_description'] = data[1]
-            iclick_data['recommended_price_and_date'] = data[2]
-            iclick_data['target_price'] = data[3]
-            iclick_data['sltp_price'] = data[4]
-            iclick_data['part_profit_percentage'] = data[5]
-            iclick_data['profit_price'] = data[6]
-            iclick_data['exit_price'] = data[7]
-            iclick_data['recommended_update'] = data[8]
-            iclick_data['iclick_status'] = data[9]
+            iclick_data['stock_code'] = data[1]
+            iclick_data['action_type'] = data[2]
+            iclick_data['expiry_date'] = data[3]
+            iclick_data['strike_price'] = data[4]
+            iclick_data['option_type'] = data[5]
+            iclick_data['stock_description'] = data[6]
+            iclick_data['recommended_price_and_date'] = data[7]
+            iclick_data['recommended_price_from'] = data[8]
+            iclick_data['recommended_price_to'] = data[9]
+            iclick_data['recommended_date'] = data[10]
+            iclick_data['target_price'] = data[11]
+            iclick_data['sltp_price'] = data[12]
+            iclick_data['part_profit_percentage'] = data[13]
+            iclick_data['profit_price'] = data[14]
+            iclick_data['exit_price'] = data[15]
+            iclick_data['recommended_update'] = data[16]
+            iclick_data['iclick_status'] = data[17]
+            iclick_data['subscription_type'] = data[18]
             return(iclick_data)
         if data and type(data) == list and len(data) > 0 and type(data[0]) == str and "!" not in data[0] and len(data) == 28:
             strategy_dict = dict()

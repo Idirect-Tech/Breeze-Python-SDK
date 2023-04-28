@@ -61,7 +61,7 @@ pip install --upgrade breeze-connect
 Or, You can also install the specific release version via pip
 
 ```
-pip install breeze-connect==1.0.35
+pip install breeze-connect==1.0.36
 ```
 
 <h4 id="apiusage"> API Usage</h4>
@@ -150,6 +150,13 @@ breeze.subscribe_feeds(stock_token = "one_click_fno")
 
 # unsubscribe oneclick strategy stream
 breeze.unsubscribe_feeds(stock_token = "one_click_fno")
+
+# subscribe oneclick equity strategy stream(i_click_2_gain)
+breeze.subscribe_feeds(stock_token = "i_click_2_gain")
+
+# unsubscribe oneclick equity strategy stream(i_click_2_gain)
+breeze.unsubscribe_feeds(stock_token = "i_click_2_gain")
+
 
 # ws_disconnect (it will disconnect from all actively connected servers)
 breeze.ws_disconnect()
@@ -681,8 +688,7 @@ breeze.get_option_chain_quotes(stock_code="ICIBAN",
                     exchange_code="NFO",
                     product_type="options",
                     expiry_date="2022-08-25T06:00:00.000Z",
-                    right="call",
-                    strike_price="16850")
+                    right="call")
 ```
 
 <br>
