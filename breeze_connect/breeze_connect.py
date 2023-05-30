@@ -36,7 +36,7 @@ class SocketEventBreeze(socketio.ClientNamespace):
     def __init__(self, namespace, breeze_instance):
         super().__init__(namespace)
         self.breeze = breeze_instance
-        self.sio = socketio.Client(reconnection_attempts = 10)
+        self.sio = socketio.Client()
         self.tokenlist = set()
         self.ohlcstate = set()
         self.authentication = True
