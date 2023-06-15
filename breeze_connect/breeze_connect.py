@@ -65,7 +65,10 @@ class SocketEventBreeze(socketio.ClientNamespace):
         data = self.breeze.parse_data(data)
         if 'symbol' in data and data['symbol'] != None and len(data['symbol'])>0:
             data.update(self.breeze.get_data_from_stock_token_value(data['symbol']))
-        self.breeze.on_ticks(data)
+        if(self.breeze.on_ticks!=None):
+            self.breeze.on_ticks(data)
+        if(self.breeze.on_ticks2!=None):
+            self.breeze.on_ticks2(data)
 
     def on_ohlc_stream(self,data):
         data = self.breeze.parse_ohlc_data(data)
@@ -133,6 +136,7 @@ class BreezeConnect():
         self.sio_ohlcv_stream_handler = None
         self.api_handler = None
         self.on_ticks = None
+        self.on_ticks2 = None #for strategy algo, not to expose to users
         self.stock_script_dict_list = []
         self.token_script_dict_list = []
         self.tux_to_user_value = config.TUX_TO_USER_MAP
