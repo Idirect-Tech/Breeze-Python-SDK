@@ -1606,6 +1606,7 @@ class ApificationBreeze():
             response = self.make_request(req_type.POST, api_endpoint.LIMIT_CALCULATOR, body, headers)
             response = response.json()
             return response
+            
         except Exception as e:
             self.error_exception(self.limit_calculator.__name__, e)
 

@@ -61,7 +61,7 @@ pip install --upgrade breeze-connect
 Or, You can also install the specific release version via pip
 
 ```
-pip install breeze-connect==1.0.37
+pip install breeze-connect==1.0.38
 ```
 
 <h4 id="apiusage"> API Usage</h4>
