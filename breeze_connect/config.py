@@ -47,6 +47,7 @@ class APIEndPoint(enum.Enum):
     TRADE = "trades"
     OPT_CHAIN = "optionchain"
     SQUARE_OFF = "squareoff"
+    LIMIT_CALCULATOR = "fnolmtpriceandqtycal"
 
     def __str__(self):
         return str(self.value)
@@ -144,6 +145,14 @@ class ResponseMessage(enum.Enum):
     API_SESSION_ERROR = "API Session cannot be empty"
     OPT_CHAIN_EXCH_CODE_ERROR = "Exchange code should be nfo"
     NFO_FIELDS_MISSING_ERROR = "Atleast two inputs are required out of Expiry-Date, Right & Strike-Price. All three cannot be empty'."
+    UNDER_LYING_ERROR = "underlying cant be empty"
+    ORDER_FLOW = "order_flow cant be empty"
+    STOP_LOSS_TRIGGER = "stop_loss_trigger cant be empty"
+    OPTION_TYPE = "option_type cant be empty,its either CALL or PUT"
+    SOURCE_FLAG = "source_flag cant be empty, it should be either P or M"
+    MARKET_TYPE = "market_type cant be empty"
+    FRESH_ORDER_LIMIT = "fresh_order_limit cant be empty"
+
 
     #Socket Connectivity Response
     RATE_REFRESH_NOT_CONNECTED = "socket server is not connected to rate refresh."

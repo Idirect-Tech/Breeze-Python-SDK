@@ -65,7 +65,10 @@ class SocketEventBreeze(socketio.ClientNamespace):
         data = self.breeze.parse_data(data)
         if 'symbol' in data and data['symbol'] != None and len(data['symbol'])>0:
             data.update(self.breeze.get_data_from_stock_token_value(data['symbol']))
-        self.breeze.on_ticks(data)
+        if(self.breeze.on_ticks!=None):
+            self.breeze.on_ticks(data)
+        if(self.breeze.on_ticks2!=None):
+            self.breeze.on_ticks2(data)
 
     def on_ohlc_stream(self,data):
         data = self.breeze.parse_ohlc_data(data)
@@ -133,6 +136,7 @@ class BreezeConnect():
         self.sio_ohlcv_stream_handler = None
         self.api_handler = None
         self.on_ticks = None
+        self.on_ticks2 = None #for strategy algo, not to expose to users
         self.stock_script_dict_list = []
         self.token_script_dict_list = []
         self.tux_to_user_value = config.TUX_TO_USER_MAP
@@ -864,6 +868,10 @@ class BreezeConnect():
             return self.api_handler.preview_order(stock_code, exchange_code, product, order_type, price, action, quantity, expiry_date, right, strike_price, specialflag, stoploss, order_rate_fresh)
     
 
+    def limit_calculator(self,strike_price,product_type,expiry_date,underlying,exchange_code,order_flow,stop_loss_trigger,option_type,source_flag,limit_rate,order_reference,available_quantity,market_type,fresh_order_limit):
+        if self.api_handler:
+            return self.api_handler.limit_calculator(strike_price,product_type,expiry_date,underlying,exchange_code,order_flow,stop_loss_trigger,option_type,source_flag,limit_rate,order_reference,available_quantity,market_type,fresh_order_limit)
+
 
 class ApificationBreeze():
 
@@ -1550,6 +1558,57 @@ class ApificationBreeze():
             return result
         except Exception as e:
             self.error_exception(self.get_names.__name__,e)
+
+    def limit_calculator(self,strike_price,product_type,expiry_date,underlying,exchange_code,order_flow,stop_loss_trigger,option_type,source_flag,limit_rate,order_reference,available_quantity,market_type,fresh_order_limit):
+        try:
+            if exchange_code == "" or exchange_code == None:
+                return self.validation_error_response(resp_message.BLANK_EXCHANGE_CODE.value)
+            elif strike_price == "" or strike_price == None:
+                return self.validation_error_response(resp_message.BLANK_STRIKE_PRICE.value)
+            elif product_type == "" or product_type == None:
+                return self.validation_error_response(resp_message.BLANK_PRODUCT_TYPE_NFO.value)
+            elif underlying == "" or underlying == None:
+                return self.validation_error_response(resp_message.UNDER_LYING_ERROR.value)
+            elif order_flow == "" or order_flow == None:
+                return self.validation_error_response(resp_message.ORDER_FLOW.value)
+            
+            elif stop_loss_trigger == "" or stop_loss_trigger == None:
+                return self.validation_error_response(resp_message.STOP_LOSS_TRIGGER.value)
+                
+            elif option_type == "" or option_type == None:
+                return self.validation_error_response(resp_message.OPTION_TYPE.value)
+            elif source_flag == "" or source_flag == None:
+                return self.validation_error_response(resp_message.SOURCE_FLAG.value)
+            
+            elif market_type == "" or market_type == None:
+                return self.validation_error_response(resp_message.MARKET_TYPE.value)
+                
+            elif fresh_order_limit == "" or fresh_order_limit == None:
+                return self.validation_error_response(resp_message.FRESH_ORDER_LIMIT.value)
+            body = {                                                                                     
+                "strike_price": strike_price,                                    
+                "product_type":product_type,                 
+                "expiry_date": expiry_date,
+                "underlying" : underlying,
+                "exchange_code":exchange_code,
+                "order_flow" :order_flow,
+                "stop_loss_trigger":stop_loss_trigger,
+                "option_type":option_type,
+                "source_flag" : source_flag,
+                "limit_rate" : limit_rate,
+                "order_reference": order_reference,
+                "available_quantity":available_quantity,
+                "market_type": market_type,
+                "fresh_order_limit":fresh_order_limit
+            }
+            body = json.dumps(body, separators=(',', ':'))
+            headers = self.generate_headers(body)
+            response = self.make_request(req_type.POST, api_endpoint.LIMIT_CALCULATOR, body, headers)
+            response = response.json()
+            return response
+            
+        except Exception as e:
+            self.error_exception(self.limit_calculator.__name__, e)
 
     def preview_order(self,stock_code="",exchange_code="",product="",order_type="",price="",action="",quantity="",expiry_date="",right="",strike_price="",specialflag="",stoploss="",order_rate_fresh=""):
         try:
