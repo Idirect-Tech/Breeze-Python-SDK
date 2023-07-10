@@ -242,6 +242,7 @@ For Streaming OHLCV, interval must not be empty and must be equal to either of t
  <li><a href="#trade_detail">get_trade_detail</a></li>
  <li><a href="#get_names"> get_names </a></li>
  <li><a href="#preview_order"> preview_order </a></li>
+ <li><a href="#limit_calculator"> limit calculator </a></li>
 </ul>
 </div>
 
@@ -797,6 +798,28 @@ breeze.get_trade_detail(exchange_code="NSE",
 <a href="#index">Back to Index</a>
 <hr>
 
+
+<h4 id = "limit_calculator"> Get Limit Value. </h4>
+```python
+breeze.limit_calculator(strike_price =  "19200",                                    
+    product_type = "optionplus",                 
+    expiry_date  = "06-JUL-2023",
+    underlying = "NIFTY",
+    exchange_code = "NFO",
+    order_flow = "Buy",
+    stop_loss_trigger = "200.00",
+    option_type = "Call",
+    source_flag = "P",
+    limit_rate = "",
+    order_reference = "",
+    available_quantity = "",
+    market_type = "limit",
+    fresh_order_limit = "177.70")
+```
+
+<br>
+<a href="#index">Back to Index</a>
+<hr>
 
 <h4 id = "get_names">Get Names </h4>
 
