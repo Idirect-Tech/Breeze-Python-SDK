@@ -61,7 +61,7 @@ pip install --upgrade breeze-connect
 Or, You can also install the specific release version via pip
 
 ```
-pip install breeze-connect==1.0.38
+pip install breeze-connect==1.0.39
 ```
 
 <h4 id="apiusage"> API Usage</h4>
@@ -562,6 +562,35 @@ breeze.place_order(stock_code= "NIFTY",
 ```                
 <br>
 <p>Future plus - "Stop loss trigger price cannot be less than last traded price for Buy order" </p>
+<a href="#index">Back to Index</a>
+
+<hr>
+
+<h4> Place btst order </h4>
+
+```python
+
+breeze.place_order(stock_code = "RELIND",
+    exchange_code= "NSE",
+    product = "btst",
+    action = "buy",
+    order_type = "limit",
+    quantity = "1",
+    price = "2450",
+    validity = "day",
+    stoploss  = "",
+    order_type_fresh = "",
+    order_rate_fresh = "",
+    validity_date = "",
+    disclosed_quantity = "",
+    expiry_date =  "",
+    right = "",
+    strike_price = "",
+    user_remark = "",
+    settlement_id = "2023008",
+    order_segment_code = "N")
+
+```
 <a href="#index">Back to Index</a>
 
 <hr>
