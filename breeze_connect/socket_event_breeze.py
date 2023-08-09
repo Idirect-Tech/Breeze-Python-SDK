@@ -13,6 +13,7 @@ class TestSocketEventBreeze(unittest.TestCase):
         self.breeze_instance = BreezeConnect("dummy appkey")
         self.namespace = '/test'
         self.socket_event = SocketEventBreeze(self.namespace, self.breeze_instance)
+        #self.mockobject = ApificationBreeze()
 
     def test_connect(self):
         self.socket_event.sio = Mock()
@@ -274,6 +275,25 @@ class TestSocketEventBreeze(unittest.TestCase):
         expected = {'sourceNumber': '1', 'group': '*', 'userId': 'AA034655', 'key': '*', 'messageLength': '\x19254', 'requestType': '5', 'messageSequence': '2023080700000981', 'messageDate': '07-08-2023', 'messageTime': '14:43:56', 'messageCategory': 'Intraday Calls', 'messagePriority': 'N', 'messageType': '6', 'orderMatchAccount': '8509017275', 'orderExchangeCode': 'NFO', 'stockCode': 'TCS', 'productType': 'OptionPlus', 'optionType': 'Call', 'exerciseType': 'E', 'strikePrice': '330000', 'expiryDate': '31-Aug-2023', 'orderValidDate': '07-Aug-2023', 'orderFlow': 'Buy', 'limitMarketFlag': 'StopLoss', 'orderType': 'Day', 'limitRate': '23140', 'orderStatus': 'Requested', 'orderReference': '202308071300000054', 'orderTotalQuantity': '350', 'executedQuantity': '0', 'cancelledQuantity': '0', 'expiredQuantity': '0', 'stopLossTrigger': '17800', 'specialFlag': 'N', 'pipeId': '13', 'channel': 'WEB', 'modificationOrCancelFlag': 'N', 'tradeDate': '07-Aug-2023', 'acknowledgeNumber': '*', 'stopLossOrderReference': '*', 'totalAmountBlocked': '202308071300000053', 'averageExecutedRate': '0.000000', 'cancelFlag': '0.000000', 'squareOffMarket': 'N', 'quickExitFlag': 'N', 'stopValidTillDateFlag': 'N', 'priceImprovementFlag': 'N', 'conversionImprovementFlag': 'N', 'trailUpdateCondition': 'N', 'systemPartnerCode': 'N'}
         self.socket_event.breeze.on_ticks.assert_called_once_with(expected)
         self.assertEqual(expected, received, "parsed data incorrect in order streaming")
+        
+    def test_on_get_stock_token(self):
+        
+        exchange_code="NFO" 
+        stock_code="NIFTY" 
+        product_type="options" 
+        expiry_date="31-Aug-2023" 
+        strike_price="19000"
+        right="Call"
+        get_exchange_quotes=True 
+        get_market_depth=False
+        self.socket_event.breeze.get_stock_script_list()
+        received = self.socket_event.breeze.get_stock_token_value(exchange_code=exchange_code, stock_code=stock_code, product_type=product_type, expiry_date=expiry_date, strike_price=strike_price, right=right, get_exchange_quotes=True, get_market_depth=False)
+        #print("--->",received)
+        expected = ('4.1!61531', False)
+        self.assertEqual(expected, received, "parsed data incorrect in get_stock_token value")
+        
+    
+    
 
 if __name__ == '__main__':
     unittest.main()
