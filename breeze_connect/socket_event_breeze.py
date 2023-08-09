@@ -40,6 +40,16 @@ class TestSocketEventBreeze(unittest.TestCase):
         expected = {'symbol': '4.1!47869', 'open': 53.35, 'last': 43.05, 'high': 53.35, 'low': 31.7, 'change': -24.21, 'bPrice': 42.9, 'bQty': 5250, 'sPrice': 43.05, 'sQty': 3400, 'ltq': 100, 'avgPrice': 40.43, 'quotes': 'Quotes Data', 'OI': '', 'CHNGOI': '', 'ttq': 36079750, 'totalBuyQt': 393050, 'totalSellQ': 613650, 'ttv': '145.87C', 'trend': '', 'lowerCktLm': 0.05, 'upperCktLm': 321.8, 'ltt': 'Mon Aug  7 11:18:15 2023', 'close': 56.8, 'exchange': 'NSE Futures & Options'}
         self.assertEqual(expected, received, "parsed data incorrect in NSE exchange quote")
         
+    def test_on_message_nse_currency(self):
+        mock_data = ["4.1!10604",885,893.75,894.75,884,0.94,893.65,15,893.75,561,2,891.46,786772,280490,296628,"70.14C","",796.9,973.9,1691559630,885.4]
+        received = self.socket_event.breeze.parse_data(mock_data)
+        self.socket_event.breeze.on_ticks = Mock()
+        self.socket_event.on_message(mock_data)
+        #self.socket_event.breeze.on_ticks2 = Mock()
+        #print("------------>>>>>>>>>",received)
+        expected = {'symbol': '4.1!10604', 'open': 885, 'last': 893.75, 'high': 894.75, 'low': 884, 'change': 0.94, 'bPrice': 893.65, 'bQty': 15, 'sPrice': 893.75, 'sQty': 561, 'ltq': 2, 'avgPrice': 891.46, 'quotes': 'Quotes Data', 'ttq': 786772, 'totalBuyQt': 280490, 'totalSellQ': 296628, 'ttv': '70.14C', 'trend': '', 'lowerCktLm': 796.9, 'upperCktLm': 973.9, 'ltt': 'Wed Aug  9 11:10:30 2023', 'close': 885.4, 'exchange': 'NSE Equity'}
+        self.assertEqual(expected, received, "parsed data incorrect in NSE exchange currency")
+        
     def test_on_message_nse_market_depth(self):
         mock_data = ["4.2!95826",1691390811,[[14.6,375,1,"",15.1,375,1,""],[14.55,375,1,"",15.15,375,1,""],[14.4,750,1,"",15.45,375,1,""],[14.3,750,1,"",15.5,1875,1,""],[14.2,375,1,"",15.6,750,1,""]]]
         received = self.socket_event.breeze.parse_data(mock_data)
