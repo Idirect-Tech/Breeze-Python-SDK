@@ -48,7 +48,8 @@ class APIEndPoint(enum.Enum):
     OPT_CHAIN = "optionchain"
     SQUARE_OFF = "squareoff"
     LIMIT_CALCULATOR = "fnolmtpriceandqtycal"
-
+    MARGIN_CALULATOR = "margincalculator"
+    
     def __str__(self):
         return str(self.value)
 

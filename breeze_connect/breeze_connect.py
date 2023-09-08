@@ -872,7 +872,11 @@ class BreezeConnect():
         if self.api_handler:
             return self.api_handler.limit_calculator(strike_price,product_type,expiry_date,underlying,exchange_code,order_flow,stop_loss_trigger,option_type,source_flag,limit_rate,order_reference,available_quantity,market_type,fresh_order_limit)
 
-
+    def margin_calculator(self,lists,exchange_code):
+        if self.api_handler:
+            return self.api_handler.margin_calculator(lists,exchange_code)
+    
+    
 class ApificationBreeze():
 
     def __init__(self, breeze_instance):
@@ -1612,7 +1616,21 @@ class ApificationBreeze():
             
         except Exception as e:
             self.error_exception(self.limit_calculator.__name__, e)
-
+        
+    def margin_calculator(self,lists,exchange_code):
+        try:
+            body = {
+                "list_of_positions" : lists,
+                "exchange_code" : exchange_code
+            }
+            body = json.dumps(body, separators=(',', ':'))
+            headers = self.generate_headers(body)
+            response = self.make_request(req_type.POST, api_endpoint.MARGIN_CALULATOR , body, headers)
+            response = response.json()
+            return response
+        except Exception as e:
+            self.error_exception(self.margin_calculator.__name__, e)
+            
     def preview_order(self,stock_code="",exchange_code="",product="",order_type="",price="",action="",quantity="",expiry_date="",right="",strike_price="",specialflag="",stoploss="",order_rate_fresh=""):
         try:
             if exchange_code == "" or exchange_code == None :
