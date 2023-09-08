@@ -36,8 +36,7 @@ class TestSocketEventBreeze(unittest.TestCase):
         received = self.socket_event.breeze.parse_data(mock_data)
         self.socket_event.breeze.on_ticks = Mock()
         self.socket_event.on_message(mock_data)
-        #self.socket_event.breeze.on_ticks2 = Mock()
-        #print("------------>>>>>>>>>",received)
+        
         expected = {'symbol': '4.1!47869', 'open': 53.35, 'last': 43.05, 'high': 53.35, 'low': 31.7, 'change': -24.21, 'bPrice': 42.9, 'bQty': 5250, 'sPrice': 43.05, 'sQty': 3400, 'ltq': 100, 'avgPrice': 40.43, 'quotes': 'Quotes Data', 'OI': '', 'CHNGOI': '', 'ttq': 36079750, 'totalBuyQt': 393050, 'totalSellQ': 613650, 'ttv': '145.87C', 'trend': '', 'lowerCktLm': 0.05, 'upperCktLm': 321.8, 'ltt': 'Mon Aug  7 11:18:15 2023', 'close': 56.8, 'exchange': 'NSE Futures & Options'}
         self.assertEqual(expected, received, "parsed data incorrect in NSE exchange quote")
         
@@ -46,8 +45,7 @@ class TestSocketEventBreeze(unittest.TestCase):
         received = self.socket_event.breeze.parse_data(mock_data)
         self.socket_event.breeze.on_ticks = Mock()
         self.socket_event.on_message(mock_data)
-        #self.socket_event.breeze.on_ticks2 = Mock()
-        #print("------------>>>>>>>>>",received)
+        
         expected = {'symbol': '4.1!10604', 'open': 885, 'last': 893.75, 'high': 894.75, 'low': 884, 'change': 0.94, 'bPrice': 893.65, 'bQty': 15, 'sPrice': 893.75, 'sQty': 561, 'ltq': 2, 'avgPrice': 891.46, 'quotes': 'Quotes Data', 'ttq': 786772, 'totalBuyQt': 280490, 'totalSellQ': 296628, 'ttv': '70.14C', 'trend': '', 'lowerCktLm': 796.9, 'upperCktLm': 973.9, 'ltt': 'Wed Aug  9 11:10:30 2023', 'close': 885.4, 'exchange': 'NSE Equity'}
         self.assertEqual(expected, received, "parsed data incorrect in NSE exchange currency")
         
@@ -129,7 +127,7 @@ class TestSocketEventBreeze(unittest.TestCase):
         received = self.socket_event.breeze.parse_ohlc_data(mock_data)
         #print("------------>>>>>>>>>",received)
         expected = {'interval': '1second', 'exchange_code': 'NSE', 'stock_code': 'NIFTY', 'low': '18687.95', 'high': '18687.95', 'open': '18687.95', 'close': '18687.95', 'volume': '0', 'datetime': '2022-12-02 14:13:53'}
-        #self.socket_event.breeze.on_ticks.assert_called_once_with(expected)
+        
         self.assertEqual(expected, received, "difference in expected and actual in ohlc data,test failed")
         
     def test_on_ohlc_stream_options(self):
@@ -265,13 +263,13 @@ class TestSocketEventBreeze(unittest.TestCase):
         '82',
         '',
         '' ]
-        #received = self.socket_event.breeze.parse_data(mock_data)
+        
         self.socket_event.breeze.on_ticks = Mock()
         self.socket_event.on_message(mock_data)
         
         received = self.socket_event.breeze.parse_data(mock_data)
         
-        #self.socket_event.on_message(mock_data)
+        
         expected = {'sourceNumber': '1', 'group': '*', 'userId': 'AA034655', 'key': '*', 'messageLength': '\x19254', 'requestType': '5', 'messageSequence': '2023080700000981', 'messageDate': '07-08-2023', 'messageTime': '14:43:56', 'messageCategory': 'Intraday Calls', 'messagePriority': 'N', 'messageType': '6', 'orderMatchAccount': '8509017275', 'orderExchangeCode': 'NFO', 'stockCode': 'TCS', 'productType': 'OptionPlus', 'optionType': 'Call', 'exerciseType': 'E', 'strikePrice': '330000', 'expiryDate': '31-Aug-2023', 'orderValidDate': '07-Aug-2023', 'orderFlow': 'Buy', 'limitMarketFlag': 'StopLoss', 'orderType': 'Day', 'limitRate': '23140', 'orderStatus': 'Requested', 'orderReference': '202308071300000054', 'orderTotalQuantity': '350', 'executedQuantity': '0', 'cancelledQuantity': '0', 'expiredQuantity': '0', 'stopLossTrigger': '17800', 'specialFlag': 'N', 'pipeId': '13', 'channel': 'WEB', 'modificationOrCancelFlag': 'N', 'tradeDate': '07-Aug-2023', 'acknowledgeNumber': '*', 'stopLossOrderReference': '*', 'totalAmountBlocked': '202308071300000053', 'averageExecutedRate': '0.000000', 'cancelFlag': '0.000000', 'squareOffMarket': 'N', 'quickExitFlag': 'N', 'stopValidTillDateFlag': 'N', 'priceImprovementFlag': 'N', 'conversionImprovementFlag': 'N', 'trailUpdateCondition': 'N', 'systemPartnerCode': 'N'}
         self.socket_event.breeze.on_ticks.assert_called_once_with(expected)
         self.assertEqual(expected, received, "parsed data incorrect in order streaming")
