@@ -23,6 +23,7 @@ The official Python client library for the ICICI Securities trading APIs. Breeze
 4. Streaming live OHLC (websockets)
 5. Option Chain API
 
+To install breeze strategies:<a href="https://pypi.org/project/breeze-strategies/">click here</a>
 
 <h4 id="docslink">API Documentation</h4>
 
@@ -61,7 +62,7 @@ pip install --upgrade breeze-connect
 Or, You can also install the specific release version via pip
 
 ```
-pip install breeze-connect==1.0.39
+pip install breeze-connect==1.0.40
 ```
 
 <h4 id="apiusage"> API Usage</h4>
@@ -242,6 +243,8 @@ For Streaming OHLCV, interval must not be empty and must be equal to either of t
  <li><a href="#trade_detail">get_trade_detail</a></li>
  <li><a href="#get_names"> get_names </a></li>
  <li><a href="#preview_order"> preview_order </a></li>
+ <li><a href="#limit_calculator"> limit_calculator </a></li>
+ <li><a href="#margin_calculator"> margin_calculator </a></li>
  <!--<li><a href="#limit_calculator"> limit calculator </a></li>-->
 </ul>
 </div>
@@ -879,6 +882,110 @@ breeze.preview_order(
     quantity = "1",
     specialflag = "N"
 )
+```
+
+<br>
+<a href="#index">Back to Index</a>
+
+<hr>
+
+<h4 id="limit_calculator">Limit Calculator.</h4>
+
+
+```python
+
+breeze.limit_calculator(strike_price = "19200",                                    
+    product_type = "optionplus",                 
+    expiry_date  = "06-JUL-2023",
+    underlying = "NIFTY",
+    exchange_code = "NFO",
+    order_flow = "Buy",
+    stop_loss_trigger = "200.00",
+    option_type = "Call",
+    source_flag = "P",
+    limit_rate = "",
+    order_reference = "",
+    available_quantity = "",
+    market_type = "limit",
+    fresh_order_limit = "177.70")
+
+```
+
+<br>
+<a href="#index">Back to Index</a>
+
+<hr>
+
+<h4 id="margin_calculator">Margin Calculator.</h4>
+
+
+```python
+
+breeze.margin_calculator([{
+            "strike_price": "0",
+            "quantity": "15",
+            "right": "others",
+            "product": "futures",
+            "action": "buy",
+            "price": "46230.85",
+            "expiry_date": "31-Aug-2023",
+            "stock_code": "CNXBAN",
+            "cover_order_flow": "N",
+            "fresh_order_type": "N",
+            "cover_limit_rate": "0",
+            "cover_sltp_price": "0",
+            "fresh_limit_rate": "0",
+            "open_quantity": "0"
+        },
+        {
+            "strike_price": "37000",
+            "quantity": "15",
+            "right": "Call",
+            "product": "options",
+            "action": "buy",
+            "price": "9100",
+            "expiry_date": "27-Jul-2023",
+            "stock_code": "CNXBAN",
+            "cover_order_flow": "N",
+            "fresh_order_type": "N",
+            "cover_limit_rate": "0",
+            "cover_sltp_price": "0",
+            "fresh_limit_rate": "0",
+            "open_quantity": "0"
+        },
+        {
+            "strike_price": "0",
+            "quantity": "50",
+            "right": "others",
+            "product": "futureplus",
+            "action": "buy",
+            "price": "19800",
+            "expiry_date": "27-Jul-2023",
+            "stock_code": "NIFTY",
+            "cover_order_flow": "N",
+            "fresh_order_type": "N",
+            "cover_limit_rate": "0",
+            "cover_sltp_price": "0",
+            "fresh_limit_rate": "0",
+            "open_quantity": "0"
+        },
+        {
+            "strike_price": "19600",
+            "quantity": "50",
+            "right": "call",
+            "product": "optionplus",
+            "action": "buy",
+            "price": "245.05",
+            "expiry_date": "27-Jul-2023",
+            "stock_code": "NIFTY",
+            "cover_order_flow": "sell",
+            "fresh_order_type": "limit",
+            "cover_limit_rate": "180.00",
+            "cover_sltp_price": "200.00",
+            "fresh_limit_rate": "245.05",
+            "open_quantity": "50"
+        }],exchange_code = "NFO")
+
 ```
 
 <br>
