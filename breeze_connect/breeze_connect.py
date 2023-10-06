@@ -1610,7 +1610,7 @@ class ApificationBreeze():
             }
             body = json.dumps(body, separators=(',', ':'))
             headers = self.generate_headers(body)
-            response = self.make_request(req_type.POST, api_endpoint.LIMIT_CALCULATOR, body, headers)
+            response = self.make_request(req_type.POST, api_endpoint.LIMIT_CALCULATOR.value, body, headers)
             response = response.json()
             return response
             
@@ -1625,7 +1625,7 @@ class ApificationBreeze():
             }
             body = json.dumps(body, separators=(',', ':'))
             headers = self.generate_headers(body)
-            response = self.make_request(req_type.POST, api_endpoint.MARGIN_CALULATOR , body, headers)
+            response = self.make_request(req_type.POST, api_endpoint.MARGIN_CALULATOR.value , body, headers)
             response = response.json()
             return response
         except Exception as e:
