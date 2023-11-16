@@ -17,6 +17,8 @@ dirs = os.path.dirname(os.path.abspath(__file__))
 
 sys.path.insert(1,dirs)
 import config
+import socket
+
 
 
 requests.packages.urllib3.util.connection.HAS_IPV6 = False
@@ -30,6 +32,7 @@ req_type = config.APIRequestType
 logger = logging.getLogger('engineio.client')
 logger.propagate = False
 logger.setLevel(logging.CRITICAL)
+
 
 class SocketEventBreeze(socketio.ClientNamespace):
     
@@ -847,9 +850,9 @@ class BreezeConnect():
         if(self.api_handler):
             return self.api_handler.get_option_chain_quotes(stock_code, exchange_code, expiry_date, product_type, right, strike_price)
 
-    def square_off(self, source_flag="", stock_code="", exchange_code="", quantity="", price="", action="", order_type="", validity="", stoploss="", disclosed_quantity="", protection_percentage="", settlement_id="", margin_amount="", open_quantity="", cover_quantity="", product="", expiry_date="", right="", strike_price="", validity_date="", trade_password="", alias_name=""):
+    def square_off(self, source_flag="", stock_code="", exchange_code="", quantity="", price="", action="", order_type="", validity="", stoploss="", disclosed_quantity="", protection_percentage="", settlement_id="", margin_amount="", open_quantity="", cover_quantity="", product="", expiry_date="", right="", strike_price="", validity_date="", trade_password="", alias_name="",order_reference = ""):
         if self.api_handler:
-            return self.api_handler.square_off(source_flag, stock_code, exchange_code, quantity, price, action, order_type, validity, stoploss, disclosed_quantity, protection_percentage, settlement_id, margin_amount, open_quantity, cover_quantity, product, expiry_date, right, strike_price, validity_date, trade_password, alias_name)
+            return self.api_handler.square_off(source_flag, stock_code, exchange_code, quantity, price, action, order_type, validity, stoploss, disclosed_quantity, protection_percentage, settlement_id, margin_amount, open_quantity, cover_quantity, product, expiry_date, right, strike_price, validity_date, trade_password, alias_name,order_reference)
 
     def get_trade_list(self, from_date="", to_date="", exchange_code="", product_type="", action="", stock_code=""):
         if self.api_handler:
@@ -906,7 +909,8 @@ class ApificationBreeze():
                 'X-Checksum': "token "+checksum,
                 'X-Timestamp': current_date,
                 'X-AppKey': self.breeze.api_key,
-                'X-SessionToken': self.base64_session_token
+                'X-SessionToken': self.base64_session_token,
+                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_5_8) AppleWebKit/534.50.2 (KHTML, like Gecko) Version/5.0.6 Safari/533.22.3'
             }
             return headers
         except Exception as e:
@@ -1668,3 +1672,5 @@ class ApificationBreeze():
             return response
         except Exception as e:
             self.error_exception(self.preview_order.__name__,e)
+
+    

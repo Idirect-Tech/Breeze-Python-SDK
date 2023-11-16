@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: breeze-connect
-Version: 1.0.41
+Version: 1.0.43
 Summary: ICICI Direct Breeze
 Home-page: https://github.com/Idirect-Tech/Breeze-Python-SDK/
 Author: ICICI Direct Breeze
@@ -78,7 +78,7 @@ pip install --upgrade breeze-connect
 Or, You can also install the specific release version via pip
 
 ```
-pip install breeze-connect==1.0.41
+pip install breeze-connect==1.0.43
 ```
 
 <h4 id="apiusage"> API Usage</h4>
