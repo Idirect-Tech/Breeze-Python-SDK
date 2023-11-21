@@ -17,6 +17,8 @@ dirs = os.path.dirname(os.path.abspath(__file__))
 
 sys.path.insert(1,dirs)
 import config
+import socket
+
 
 
 requests.packages.urllib3.util.connection.HAS_IPV6 = False
@@ -30,6 +32,7 @@ req_type = config.APIRequestType
 logger = logging.getLogger('engineio.client')
 logger.propagate = False
 logger.setLevel(logging.CRITICAL)
+
 
 class SocketEventBreeze(socketio.ClientNamespace):
     
@@ -811,9 +814,9 @@ class BreezeConnect():
         if self.api_handler:
             return self.api_handler.get_margin(exchange_code)
 
-    def place_order(self, stock_code="", exchange_code="", product="", action="", order_type="", stoploss="", quantity="", price="", validity="", validity_date="", disclosed_quantity="", expiry_date="", right="", strike_price="", user_remark="",order_type_fresh="",order_rate_fresh=""):
+    def place_order(self, stock_code="", exchange_code="", product="", action="", order_type="", stoploss="", quantity="", price="", validity="", validity_date="", disclosed_quantity="", expiry_date="", right="", strike_price="", user_remark="",order_type_fresh="",order_rate_fresh="",settlement_id = "",order_segment_code = ""):
         if self.api_handler:
-            return self.api_handler.place_order(stock_code=stock_code, exchange_code=exchange_code, product=product, action=action, order_type=order_type, stoploss=stoploss, quantity=quantity, price=price, validity=validity, validity_date=validity_date, disclosed_quantity=disclosed_quantity, expiry_date=expiry_date, right=right, strike_price=strike_price, user_remark=user_remark, order_type_fresh=order_type_fresh, order_rate_fresh=order_rate_fresh)
+            return self.api_handler.place_order(stock_code=stock_code, exchange_code=exchange_code, product=product, action=action, order_type=order_type, stoploss=stoploss, quantity=quantity, price=price, validity=validity, validity_date=validity_date, disclosed_quantity=disclosed_quantity, expiry_date=expiry_date, right=right, strike_price=strike_price, user_remark=user_remark, order_type_fresh=order_type_fresh, order_rate_fresh=order_rate_fresh,settlement_id = settlement_id,order_segment_code = order_segment_code)
 
     def get_order_detail(self, exchange_code="", order_id=""):
         if self.api_handler:
@@ -847,9 +850,9 @@ class BreezeConnect():
         if(self.api_handler):
             return self.api_handler.get_option_chain_quotes(stock_code, exchange_code, expiry_date, product_type, right, strike_price)
 
-    def square_off(self, source_flag="", stock_code="", exchange_code="", quantity="", price="", action="", order_type="", validity="", stoploss="", disclosed_quantity="", protection_percentage="", settlement_id="", margin_amount="", open_quantity="", cover_quantity="", product="", expiry_date="", right="", strike_price="", validity_date="", trade_password="", alias_name=""):
+    def square_off(self, source_flag="", stock_code="", exchange_code="", quantity="", price="", action="", order_type="", validity="", stoploss="", disclosed_quantity="", protection_percentage="", settlement_id="", margin_amount="", open_quantity="", cover_quantity="", product="", expiry_date="", right="", strike_price="", validity_date="", trade_password="", alias_name="",order_reference = ""):
         if self.api_handler:
-            return self.api_handler.square_off(source_flag, stock_code, exchange_code, quantity, price, action, order_type, validity, stoploss, disclosed_quantity, protection_percentage, settlement_id, margin_amount, open_quantity, cover_quantity, product, expiry_date, right, strike_price, validity_date, trade_password, alias_name)
+            return self.api_handler.square_off(source_flag, stock_code, exchange_code, quantity, price, action, order_type, validity, stoploss, disclosed_quantity, protection_percentage, settlement_id, margin_amount, open_quantity, cover_quantity, product, expiry_date, right, strike_price, validity_date, trade_password, alias_name,order_reference)
 
     def get_trade_list(self, from_date="", to_date="", exchange_code="", product_type="", action="", stock_code=""):
         if self.api_handler:
@@ -872,7 +875,11 @@ class BreezeConnect():
         if self.api_handler:
             return self.api_handler.limit_calculator(strike_price,product_type,expiry_date,underlying,exchange_code,order_flow,stop_loss_trigger,option_type,source_flag,limit_rate,order_reference,available_quantity,market_type,fresh_order_limit)
 
-
+    def margin_calculator(self,lists,exchange_code):
+        if self.api_handler:
+            return self.api_handler.margin_calculator(lists,exchange_code)
+    
+    
 class ApificationBreeze():
 
     def __init__(self, breeze_instance):
@@ -902,7 +909,8 @@ class ApificationBreeze():
                 'X-Checksum': "token "+checksum,
                 'X-Timestamp': current_date,
                 'X-AppKey': self.breeze.api_key,
-                'X-SessionToken': self.base64_session_token
+                'X-SessionToken': self.base64_session_token,
+                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_5_8) AppleWebKit/534.50.2 (KHTML, like Gecko) Version/5.0.6 Safari/533.22.3'
             }
             return headers
         except Exception as e:
@@ -1164,7 +1172,7 @@ class ApificationBreeze():
         except Exception as e:
             self.error_exception(self.get_margin.__name__,e)
 
-    def place_order(self, stock_code="", exchange_code="", product="", action="", order_type="", stoploss="", quantity="", price="", validity="", validity_date="", disclosed_quantity="", expiry_date="", right="", strike_price="", user_remark="",order_type_fresh="",order_rate_fresh=""):
+    def place_order(self, stock_code="", exchange_code="", product="", action="", order_type="", stoploss="", quantity="", price="", validity="", validity_date="", disclosed_quantity="", expiry_date="", right="", strike_price="", user_remark="",order_type_fresh="",order_rate_fresh="",settlement_id = "",order_segment_code = ""):
         try:
             if stock_code == "" or stock_code == None or exchange_code == "" or exchange_code == None or product == "" or product == None or action == "" or action == None or order_type == "" or order_type == None or quantity == "" or quantity == None or price == "" or price == None or action == "" or action == None:
                 if stock_code == "" or stock_code == None:
@@ -1194,14 +1202,17 @@ class ApificationBreeze():
 
             body = {
                 "stock_code": stock_code,
-                "exchange_code": exchange_code,
+                "exchange_code": exchange_code.upper(),
                 "product": product,
                 "action": action,
                 "order_type": order_type,
                 "quantity": quantity,
                 "price": price,
                 "validity": validity,
+                "settlement_id" : settlement_id,
+                "order_segment_code" : order_segment_code 
             }
+
             if stoploss != "" and stoploss != None:
                 body["stoploss"] = stoploss
             if validity_date != "" and validity_date != None:
@@ -1603,13 +1614,27 @@ class ApificationBreeze():
             }
             body = json.dumps(body, separators=(',', ':'))
             headers = self.generate_headers(body)
-            response = self.make_request(req_type.POST, api_endpoint.LIMIT_CALCULATOR, body, headers)
+            response = self.make_request(req_type.POST, api_endpoint.LIMIT_CALCULATOR.value, body, headers)
             response = response.json()
             return response
             
         except Exception as e:
             self.error_exception(self.limit_calculator.__name__, e)
-
+        
+    def margin_calculator(self,lists,exchange_code):
+        try:
+            body = {
+                "list_of_positions" : lists,
+                "exchange_code" : exchange_code
+            }
+            body = json.dumps(body, separators=(',', ':'))
+            headers = self.generate_headers(body)
+            response = self.make_request(req_type.POST, api_endpoint.MARGIN_CALULATOR.value , body, headers)
+            response = response.json()
+            return response
+        except Exception as e:
+            self.error_exception(self.margin_calculator.__name__, e)
+            
     def preview_order(self,stock_code="",exchange_code="",product="",order_type="",price="",action="",quantity="",expiry_date="",right="",strike_price="",specialflag="",stoploss="",order_rate_fresh=""):
         try:
             if exchange_code == "" or exchange_code == None :
@@ -1647,3 +1672,5 @@ class ApificationBreeze():
             return response
         except Exception as e:
             self.error_exception(self.preview_order.__name__,e)
+
+    

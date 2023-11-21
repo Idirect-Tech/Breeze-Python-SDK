@@ -1,0 +1,3 @@
+python-socketio[client]
+requests
+pandas

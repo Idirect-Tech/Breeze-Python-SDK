@@ -48,7 +48,8 @@ class APIEndPoint(enum.Enum):
     OPT_CHAIN = "optionchain"
     SQUARE_OFF = "squareoff"
     LIMIT_CALCULATOR = "fnolmtpriceandqtycal"
-
+    MARGIN_CALULATOR = "margincalculator"
+    
     def __str__(self):
         return str(self.value)
 
@@ -131,7 +132,7 @@ class ResponseMessage(enum.Enum):
     #Validation Errors
     EXCHANGE_CODE_ERROR = "Exchange-Code should be either 'nse', or 'nfo'"
     EXCHANGE_CODE_HIST_V2_ERROR = "Exchange-Code should be either 'nse', 'bse' ,'nfo', 'ndx' or 'mcx'"
-    PRODUCT_TYPE_ERROR = "Product should be either 'futures', 'options', 'futureplus', 'optionplus', 'cash', 'eatm', or 'margin'"
+    PRODUCT_TYPE_ERROR = "Product should be either 'futures', 'options', 'futureplus', 'optionplus', 'cash', 'eatm','btst','mtf' or 'margin'"
     PRODUCT_TYPE_ERROR_NFO = "Product-type should be either 'futures', 'options', 'futureplus', or 'optionplus' for Exchange-Code 'NFO'"
     PRODUCT_TYPE_ERROR_HIST_V2 = "Product-type should be either 'futures', 'options' for Exchange-Code 'NFO','NDX' or 'MCX'"
     ACTION_TYPE_ERROR = "Action should be either 'buy', or 'sell'"
@@ -202,7 +203,7 @@ class ExceptionMessage(enum.Enum):
 INTERVAL_TYPES = ["1minute", "5minute", "30minute", "1day"]
 INTERVAL_TYPES_HIST_V2 = ["1second","1minute", "5minute", "30minute", "1day"]
 INTERVAL_TYPES_STREAM_OHLC = ["1second","1minute", "5minute", "30minute"]
-PRODUCT_TYPES = ["futures", "options", "futureplus", "optionplus", "cash", "eatm", "margin"]
+PRODUCT_TYPES = ["futures", "options", "futureplus", "optionplus", "cash", "eatm", "margin","mtf","btst"]
 PRODUCT_TYPES_HIST = ["futures", "options", "futureplus", "optionplus"]
 PRODUCT_TYPES_HIST_V2 = ["futures", "options","cash"]
 RIGHT_TYPES = ["call", "put", "others"]
