@@ -1,0 +1,174 @@
+# YOU NEED TO PUT THESE CODES IN THREE SEPARATE BLOCKS IN JUPYTER NOTEBOOK.
+# THE BLOCKS ARE SEPERATED WITH # xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+# 1ST BLOCK RUN INITIALLY THEN NO NEED TO RUN IT AGAIN.
+
+#initalize keys input your keys inside this single quote marks api_session is nothing but the token key
+api_key = 'xxxxxxxxxxxxxxxxxxxxxxxxxxx'
+api_secret = 'xxxxxxxxxxxxxxxxxxxxxxxxxx'
+api_session = 'xxxxxxxxx'
+
+from datetime import datetime
+from breeze_connect import BreezeConnect
+
+api = BreezeConnect(api_key=api_key)
+api.generate_session(api_secret=api_secret,session_token=api_session)
+
+#Enter Expiry Date Here - THIS EXPIRY DATE CHANGES IN THE COVER ORDER & PLACE ORDER BLOCK AND NOT THE CONTRACT HENCE YOU NEED TO MANUALLY ENTER THE STRIKE PRICE AND EXPIRY IN LINE 65 & 66.
+Expiry_Date = "30-11-2023"
+if isinstance(Expiry_Date, str):
+    Expiry_Date = datetime.strptime(Expiry_Date, "%d-%m-%Y")
+
+#FOR DD/NOV/YYYY FORMAT
+expiryU = Expiry_Date.strftime('%d-%b-%Y').upper() 
+#FOR YYYY-11-DDT06:00:00:000Z FORMAT
+expiry = Expiry_Date.strftime('%Y-%m-%dT06:00:00:000Z') 
+
+Validity_Date = datetime.now()
+if isinstance(Validity_Date, str):
+    Validity_Date = datetime.strptime(Validity_Date, "%d-%m-%Y")
+validity = Validity_Date.strftime('%Y-%m-%dT06:00:00:000Z')
+
+# xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+ 
+#ORDER EXECUTION BLOCK
+#CHANGE LINE 65 & 66 : COMMENT OUT THE LINE WHICH SIDE YOU WANT TO BUY ** CE / PE ** HERE ENTER THE STRIKE PRICE & CHANGE THE EXPIRY DATE AS WELL.
+#CHANGE LINE 132 & 133 : COMMENT OUT THE LINE WHICH SIDE YOU WANT TO BUY ** CE / PE **.
+# WHEN YOU RUN THIS CODE YOU WILL BE PROMPTED 
+      # TO ENTER THE LIMIT PRICE OF YOUR BUY ORDER 
+      # YOUR STOP LOSS OF COVER ORDER
+      # QUANTITY YOU WANT TO BUY
+
+if __name__ == "__main__":
+    print("Starting Execution \n")
+
+# ==============================================================================================================
+# Entering Order Price, SL
+Order_Price = input("Enter Price to Buy : ")
+SL = input("Enter SL Price : ")
+# ==============================================================================================================
+
+# Function to create a contract
+
+def get_contract(name, action):
+    name = name.upper()
+    details = name.split('-')
+    details[-1] = 'call' if (details[-1] == 'CE') else 'put'
+    
+    if (details[2].split("/")[1] in ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC']):
+    	expiry = datetime.strptime(details[2], "%d/%b/%Y")
+    else :
+    	expiry = datetime.strptime(details[2], "%d/%m/%Y")
+
+    contract = {'stock':details[0],
+                'strike':details[1],
+                'expiry': expiry.strftime('%Y-%m-%dT06:00:00.000Z'),
+        		'expiry_date':expiry.strftime('%d-%m-%Y'),
+                'right': details[-1],
+                'name': name,
+                'action': action
+    }
+
+    return contract
+
+# Enter Contract details
+#cx1 = get_contract("CNXBAN-44500-30/NOV/2023-CE", 'buy')
+# cx2 = get_contract("CNXBAN-44500-30/NOV/2023-PE", 'buy')
+
+# ==============================================================================================================
+
+# Function to Place Option Plus Order
+
+def place_order(each_leg):
+
+    today = datetime.now().strftime('%Y-%m-%dT06:00:00.000Z')
+    print(f"\nPlacing {each_leg['right']} {each_leg['action']} limit order")
+
+   
+    try:   
+        # Calculate Selling Price for Cover Order
+        cover_order = api.limit_calculator(strike_price = each_leg['strike'],
+                                product_type = "optionplus",
+                                expiry_date  = expiryU,
+                                underlying = "CNXBAN",
+                                exchange_code = "NFO",
+                                order_flow = "sell",
+                                stop_loss_trigger = SL,
+                                option_type = each_leg['right'],
+                                source_flag = "P",
+                                limit_rate = "",
+                                order_reference = "",
+                                available_quantity = "",
+                                market_type = "limit",
+                                fresh_order_limit = Order_Price)["Success"]["limit_rate"]
+        print(cover_order)
+# ==============================================================================================================
+        # Place optionplus order
+        buy_order = api.place_order(stock_code=each_leg['stock'],
+                                    exchange_code="NFO",
+                                    product="optionplus",
+                                    action=each_leg['action'],
+                                    order_type="limit",
+                                    stoploss=SL,
+                                    quantity=input("Enter Order Qty : "),
+                                    price= cover_order,
+                                    validity="day",
+                                    validity_date=validity, #"2023-11-28T06:00:00.000Z",
+                                    disclosed_quantity="0",
+                                    expiry_date=expiry, #"2023-11-30T06:00:00.000Z",
+                                    right=each_leg['right'],
+                                    strike_price=each_leg['strike'],
+                                    order_type_fresh = "Limit",
+                                    order_rate_fresh = Order_Price,
+                                    user_remark="Orders Executed with Breeze_API")
+        
+        if(buy_order['Status']==200) :
+           order_id = buy_order['Success']['order_id']
+           print(f'Successfully placed limit order !\nOrder ID is {order_id}')
+           return order_id
+
+        else :
+            print('/nFailed to place order !\n', buy_order['Error'])
+            return False
+        
+    except Exception as error:
+        print('Place Order API Error!', error)
+        return False
+
+# ==============================================================================================================
+
+# Place Orders
+# call_order = place_order(cx1)
+# put_order = place_order(cx2)
+
+# xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+# Function to modify FOR TRAILING STOP LOSS
+
+def modify_option_order(order_id, stop_loss_value):
+    stop_loss_order_id = str(int(order_id) + 1)
+    print(f'Stop Loss Order ID: {stop_loss_order_id}')
+
+    # Modify the order
+    modify_order = api.modify_order(order_id=stop_loss_order_id,
+                                    exchange_code="NFO",
+                                    order_type="limit",
+                                    stoploss=stop_loss_value,
+                                    quantity="",
+                                    price="0",
+                                    validity="Day",
+                                    disclosed_quantity="0",
+                                    validity_date=validity)
+    
+    if modify_order['Status'] == 200:
+        modified_order_id = modify_order['Success']['order_id']
+        print(f'Successfully modified limit order!\nOrder ID is {modified_order_id}')
+        return modified_order_id
+    else:
+        print('\nFailed to modify order!\n', modify_order['Error'])
+        return False
+
+# To modify call_order
+modified_call_order_id = modify_option_order(call_order, input("Enter Trailing SL for Call Order: "))
+
+# To modify put_order
+# modified_put_order_id = modify_option_order(put_order, input("Enter Trailing SL for Put Order: "))
