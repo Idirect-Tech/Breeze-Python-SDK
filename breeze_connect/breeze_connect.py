@@ -56,7 +56,15 @@ class SocketEventBreeze(socketio.ClientNamespace):
                 self.sio.connect(hostname, headers={"User-Agent": "python-socketio[client]/socket"},auth=auth,transports="websocket", wait_timeout=3)
             self.sio.on("connect_error", self.my_connect_error)
         except:
-            pass
+            if self.sio.connected:
+                pass
+            else:
+                if hostname == config.LIVE_OHLC_STREAM_URL:
+                    raise Exception(except_message.OHLC_SOCKET_CONNECTION_DISCONNECTED.value)
+                elif hostname == config.LIVE_STREAM_URL:
+                    raise Exception(except_message.RATEREFRESH_SOCKET_CONNECTION_DISCONNECTED.value)
+                else:
+                    raise Exception(except_message.ORDERNOTIFY_SOCKET_CONNECTION_DISCONNECTED.value)            
 
     def on_disconnect(self):
         self.sio.emit("disconnect", "transport close")
@@ -84,11 +92,17 @@ class SocketEventBreeze(socketio.ClientNamespace):
                 self.sio.on(channel, self.on_ohlc_stream)
     
     def watch_stream_data(self,data,channel):
-        if((data,channel) not in self.ohlcstate):
-            self.ohlcstate.add((data,channel))
-        self.sio.emit('join', data)
-        self.sio.on(channel, self.on_ohlc_stream)
-        self.sio.on('connect',self.rewatchohlc)
+        try:
+            if self.sio.connected:
+                if((data,channel) not in self.ohlcstate):
+                    self.ohlcstate.add((data,channel))
+                self.sio.emit('join', data)
+                self.sio.on(channel, self.on_ohlc_stream)
+                self.sio.on('connect',self.rewatchohlc)
+            else:
+                raise Exception(except_message.STREAMING_SOCKET_CONNECTION_DISCONNECTED.value)
+        except Exception as e:
+            raise Exception(except_message.STREAMING_SOCKET_CONNECTION_DISCONNECTED.value)
 
     def rewatch(self):
         self.notify()
@@ -97,15 +111,21 @@ class SocketEventBreeze(socketio.ClientNamespace):
             self.sio.on('stock', self.on_message)
 
     def watch(self, data):
-        if isinstance(data, list):
-            for entry in data:   
-                self.tokenlist.add(entry)
-        else:
-            self.tokenlist.add(data)
+        try:
+            if self.sio.connected:
+                if isinstance(data, list):
+                    for entry in data:   
+                        self.tokenlist.add(entry)
+                else:
+                    self.tokenlist.add(data)
 
-        self.sio.emit('join', data)
-        self.sio.on('stock', self.on_message)
-        self.sio.on('connect',self.rewatch)
+                self.sio.emit('join', data)
+                self.sio.on('stock', self.on_message)
+                self.sio.on('connect',self.rewatch)
+            else:
+                raise Exception(except_message.STREAMING_SOCKET_CONNECTION_DISCONNECTED.value)
+        except Exception as e:
+            raise Exception(except_message.STREAMING_SOCKET_CONNECTION_DISCONNECTED.value)
         
     def unwatch(self, data):
         if isinstance(data, list):
@@ -737,15 +757,32 @@ class BreezeConnect():
             body = json.dumps(body, separators=(',', ':'))
             url = config.API_URL + api_endpoint.CUST_DETAILS.value
             response = requests.get(url=url, data=body, headers=headers)
-            if response.json()['Success'] != None:
-                base64_session_token = response.json()['Success']['session_token']
+            json_data = response.json()
+            if 'Success' in json_data and json_data['Success'] is not None:
+                base64_session_token = json_data['Success']['session_token']
                 result = base64.b64decode(base64_session_token.encode('ascii')).decode('ascii')
                 self.user_id = result.split(":")[0]
                 self.session_key = result.split(":")[1]
+            elif 'Status' in json_data and 'Error' in json_data and json_data['Status'] != 200:
+                if json_data['Error'] == 'Invalid session.':
+                    raise Exception(except_message.SESSIONKEY_INCORRECT.value)
+                elif json_data['Error'] == 'Public Key does not exist.':
+                    raise Exception(except_message.APPKEY_INCORRECT.value)
+                elif json_data['Error'] == 'Resource not available.':
+                    raise Exception(except_message.SESSIONKEY_EXPIRED.value)
+                else:
+                    raise Exception(except_message.CUSTOMERDETAILS_API_EXCEPTION.value)
             else:
-                raise Exception(except_message.AUTHENICATION_EXCEPTION.value)
+                raise Exception("Unexpected format in API response")
+        except json.decoder.JSONDecodeError:
+            # Handle JSON decoding error
+            raise Exception("Invalid JSON format in API response")
+        except KeyError as e:
+            # Handle missing key error
+            raise Exception(f"KeyError: {e} not found in API response")
         except Exception as e:
-            raise Exception(except_message.AUTHENICATION_EXCEPTION.value)
+            # Handle other exceptions
+            raise Exception(f"Unexpected error: {str(e)}")
 
     def get_stock_script_list(self):
         try:
