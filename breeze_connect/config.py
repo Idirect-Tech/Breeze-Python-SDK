@@ -201,7 +201,7 @@ class ExceptionMessage(enum.Enum):
 
     #SOCKET EXCEPTION
     OHLC_SOCKET_CONNECTION_DISCONNECTED = "Failed to connect to OHLC stream"
-    RATEREFRESH_SOCKET_CONNECTION_DISCONNECTED = "Failed to connect to live stream"
+    LIVESTREAM_SOCKET_CONNECTION_DISCONNECTED = "Failed to connect to live stream"
     ORDERNOTIFY_SOCKET_CONNECTION_DISCONNECTED = "Failed to connect to order stream"
     STREAMING_SOCKET_CONNECTION_DISCONNECTED = "Connection Disconnected"    
 

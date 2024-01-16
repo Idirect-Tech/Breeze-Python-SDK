@@ -55,14 +55,14 @@ class SocketEventBreeze(socketio.ClientNamespace):
             else:
                 self.sio.connect(hostname, headers={"User-Agent": "python-socketio[client]/socket"},auth=auth,transports="websocket", wait_timeout=3)
             self.sio.on("connect_error", self.my_connect_error)
-        except:
+        except Exception as e:
             if self.sio.connected:
                 pass
             else:
                 if hostname == config.LIVE_OHLC_STREAM_URL:
                     raise Exception(except_message.OHLC_SOCKET_CONNECTION_DISCONNECTED.value)
                 elif hostname == config.LIVE_STREAM_URL:
-                    raise Exception(except_message.RATEREFRESH_SOCKET_CONNECTION_DISCONNECTED.value)
+                    raise Exception(except_message.LIVESTREAM_SOCKET_CONNECTION_DISCONNECTED.value)
                 else:
                     raise Exception(except_message.ORDERNOTIFY_SOCKET_CONNECTION_DISCONNECTED.value)            
 
@@ -100,9 +100,9 @@ class SocketEventBreeze(socketio.ClientNamespace):
                 self.sio.on(channel, self.on_ohlc_stream)
                 self.sio.on('connect',self.rewatchohlc)
             else:
-                raise Exception(except_message.STREAMING_SOCKET_CONNECTION_DISCONNECTED.value)
+                raise Exception(except_message.OHLC_SOCKET_CONNECTION_DISCONNECTED.value)
         except Exception as e:
-            raise Exception(except_message.STREAMING_SOCKET_CONNECTION_DISCONNECTED.value)
+            raise Exception(except_message.OHLC_SOCKET_CONNECTION_DISCONNECTED.value)
 
     def rewatch(self):
         self.notify()
@@ -123,9 +123,9 @@ class SocketEventBreeze(socketio.ClientNamespace):
                 self.sio.on('stock', self.on_message)
                 self.sio.on('connect',self.rewatch)
             else:
-                raise Exception(except_message.STREAMING_SOCKET_CONNECTION_DISCONNECTED.value)
+                raise Exception(except_message.LIVESTREAM_SOCKET_CONNECTION_DISCONNECTED.value)
         except Exception as e:
-            raise Exception(except_message.STREAMING_SOCKET_CONNECTION_DISCONNECTED.value)
+            raise Exception(except_message.LIVESTREAM_SOCKET_CONNECTION_DISCONNECTED.value)
         
     def unwatch(self, data):
         if isinstance(data, list):
