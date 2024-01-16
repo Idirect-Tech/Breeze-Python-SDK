@@ -193,6 +193,18 @@ class ExceptionMessage(enum.Enum):
     ISEC_NSE_STOCK_MAP_EXCEPTION = "Result Not Found"
     STREAM_OHLC_INTERVAL_ERROR = "Interval should be either '1second','1minute', '5minute', '30minute'"
 
+    #CUSTOMER_DETAILS_API
+    SESSIONKEY_INCORRECT = "Could not authenticate credentials. Please check session key."
+    APPKEY_INCORRECT = "Could not authenticate credentials. Please check api key."
+    SESSIONKEY_EXPIRED = "Session key is expired."
+    CUSTOMERDETAILS_API_EXCEPTION = "Unable to retrieve customer details at the moment. Please try again later."
+
+    #SOCKET EXCEPTION
+    OHLC_SOCKET_CONNECTION_DISCONNECTED = "Failed to connect to OHLC stream"
+    LIVESTREAM_SOCKET_CONNECTION_DISCONNECTED = "Failed to connect to live stream"
+    ORDERNOTIFY_SOCKET_CONNECTION_DISCONNECTED = "Failed to connect to order stream"
+    STREAMING_SOCKET_CONNECTION_DISCONNECTED = "Connection Disconnected"    
+
     #API Call Exception
     API_REQUEST_EXCEPTION = "Error while trying to make request {0} {1}"
 
