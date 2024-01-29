@@ -1489,7 +1489,7 @@ class ApificationBreeze():
         except Exception as e:
             self.error_exception(self.get_option_chain_quotes.__name__,e)
 
-    def square_off(self, source_flag, stock_code, exchange_code, quantity, price, action, order_type, validity, stoploss, disclosed_quantity, protection_percentage, settlement_id, margin_amount, open_quantity, cover_quantity, product, expiry_date, right, strike_price, validity_date, trade_password, alias_name):
+    def square_off(self, source_flag, stock_code, exchange_code, quantity, price, action, order_type, validity, stoploss, disclosed_quantity, protection_percentage, settlement_id, margin_amount, open_quantity, cover_quantity, product, expiry_date, right, strike_price, validity_date, trade_password, alias_name,order_reference):
         try:
             body = {
                 "source_flag": source_flag,
@@ -1513,7 +1513,8 @@ class ApificationBreeze():
                 "strike_price": strike_price,
                 "validity_date": validity_date,
                 "alias_name": alias_name,
-                "trade_password": trade_password
+                "trade_password": trade_password,
+                "order_reference": order_reference,
             }
             body = json.dumps(body, separators=(',', ':'))
             headers = self.generate_headers(body)
