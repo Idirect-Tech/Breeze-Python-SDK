@@ -115,6 +115,7 @@ class ResponseMessage(enum.Enum):
     BLANK_ACTION = "Action cannot be empty"
     BLANK_ORDER_TYPE = "Order-type cannot be empty"
     BLANK_QUANTITY = "Quantity cannot be empty"
+    BLANK_LOTS = "Lots cannot be empty"
     BLANK_VALIDITY = "Validity cannot be empty"
     BLANK_ORDER_ID  = "Order-Id cannot be empty"
     BLANK_FROM_DATE = "From-Date cannot be empty"
@@ -130,7 +131,7 @@ class ResponseMessage(enum.Enum):
     BLANK_EXPIRY_DATE_STRIKE_PRICE = "Either Expiry-Date or Strike-Price cannot be empty."
 
     #Validation Errors
-    EXCHANGE_CODE_ERROR = "Exchange-Code should be either 'nse', or 'nfo'"
+    EXCHANGE_CODE_ERROR = "Exchange-Code should be either 'nse', or 'nfo' or 'ndx' or 'mcx'"
     EXCHANGE_CODE_HIST_V2_ERROR = "Exchange-Code should be either 'nse', 'bse' ,'nfo', 'ndx' or 'mcx'"
     PRODUCT_TYPE_ERROR = "Product should be either 'futures', 'options', 'futureplus', 'optionplus', 'cash', 'eatm','btst','mtf' or 'margin'"
     PRODUCT_TYPE_ERROR_NFO = "Product-type should be either 'futures', 'options', 'futureplus', or 'optionplus' for Exchange-Code 'NFO'"
@@ -141,6 +142,7 @@ class ResponseMessage(enum.Enum):
     RIGHT_TYPE_ERROR = "Right should be either 'call', 'put', or 'others'"
     TRANSACTION_TYPE_ERROR = "Transaction-Type should be either 'debit' or 'credit'"
     ZERO_AMOUNT_ERROR = "Amount should be more than 0"
+    AMOUNT_DIGIT_ERROR = "Amount should only contain digits"
     INTERVAL_TYPE_ERROR = "Interval should be either '1minute', '5minute', '30minute', or '1day'"
     INTERVAL_TYPE_ERROR_HIST_V2 = "Interval should be either '1second','1minute', '5minute', '30minute', or '1day'"
     API_SESSION_ERROR = "API Session cannot be empty"
@@ -223,7 +225,7 @@ ACTION_TYPES = ["buy", "sell"]
 ORDER_TYPES = ["limit", "market", "stoploss"]
 VALIDITY_TYPES = ["day", "ioc", "vtc"]
 TRANSACTION_TYPES = ["debit", "credit"]
-EXCHANGE_CODES_HIST = ["nse", "nfo"]
+EXCHANGE_CODES_HIST = ["nse", "nfo", "ndx", "mcx"]
 EXCHANGE_CODES_HIST_V2 = ["nse","bse","nfo","ndx","mcx"]
 FNO_EXCHANGE_TYPES = ["nfo","mcx","ndx"]
 STRATEGY_SUBSCRIPTION = ["one_click_fno","i_click_2_gain"]

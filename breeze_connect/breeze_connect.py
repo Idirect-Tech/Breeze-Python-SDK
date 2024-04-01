@@ -851,9 +851,9 @@ class BreezeConnect():
         if self.api_handler:
             return self.api_handler.get_margin(exchange_code)
 
-    def place_order(self, stock_code="", exchange_code="", product="", action="", order_type="", stoploss="", quantity="", price="", validity="", validity_date="", disclosed_quantity="", expiry_date="", right="", strike_price="", user_remark="",order_type_fresh="",order_rate_fresh="",settlement_id = "",order_segment_code = ""):
+    def place_order(self, stock_code="", exchange_code="", product="", action="", order_type="", stoploss="", quantity="", price="", validity="", validity_date="", disclosed_quantity="", expiry_date="", right="", strike_price="", user_remark="",order_type_fresh="",order_rate_fresh="",settlement_id = "",order_segment_code = "",lots=""):
         if self.api_handler:
-            return self.api_handler.place_order(stock_code=stock_code, exchange_code=exchange_code, product=product, action=action, order_type=order_type, stoploss=stoploss, quantity=quantity, price=price, validity=validity, validity_date=validity_date, disclosed_quantity=disclosed_quantity, expiry_date=expiry_date, right=right, strike_price=strike_price, user_remark=user_remark, order_type_fresh=order_type_fresh, order_rate_fresh=order_rate_fresh,settlement_id = settlement_id,order_segment_code = order_segment_code)
+            return self.api_handler.place_order(stock_code=stock_code, exchange_code=exchange_code, product=product, action=action, order_type=order_type, stoploss=stoploss, quantity=quantity, price=price, validity=validity, validity_date=validity_date, disclosed_quantity=disclosed_quantity, expiry_date=expiry_date, right=right, strike_price=strike_price, user_remark=user_remark, order_type_fresh=order_type_fresh, order_rate_fresh=order_rate_fresh,settlement_id = settlement_id,order_segment_code = order_segment_code, lots=lots,)
 
     def get_order_detail(self, exchange_code="", order_id=""):
         if self.api_handler:
@@ -887,9 +887,9 @@ class BreezeConnect():
         if(self.api_handler):
             return self.api_handler.get_option_chain_quotes(stock_code, exchange_code, expiry_date, product_type, right, strike_price)
 
-    def square_off(self, source_flag="", stock_code="", exchange_code="", quantity="", price="", action="", order_type="", validity="", stoploss="", disclosed_quantity="", protection_percentage="", settlement_id="", margin_amount="", open_quantity="", cover_quantity="", product="", expiry_date="", right="", strike_price="", validity_date="", trade_password="", alias_name="", order_reference = "", position_exchange_code = ""):
+    def square_off(self, source_flag="", stock_code="", exchange_code="", quantity="", price="", action="", order_type="", validity="", stoploss="", disclosed_quantity="", protection_percentage="", settlement_id="", margin_amount="", open_quantity="", cover_quantity="", product="", expiry_date="", right="", strike_price="", validity_date="", trade_password="", alias_name="", order_reference = "", position_exchange_code = "", lots="",):
         if self.api_handler:
-            return self.api_handler.square_off(source_flag, stock_code, exchange_code, quantity, price, action, order_type, validity, stoploss, disclosed_quantity, protection_percentage, settlement_id, margin_amount, open_quantity, cover_quantity, product, expiry_date, right, strike_price, validity_date, trade_password, alias_name, order_reference, position_exchange_code)
+            return self.api_handler.square_off(source_flag, stock_code, exchange_code, quantity, price, action, order_type, validity, stoploss, disclosed_quantity, protection_percentage, settlement_id, margin_amount, open_quantity, cover_quantity, product, expiry_date, right, strike_price, validity_date, trade_password, alias_name, order_reference, position_exchange_code, lots,)
 
     def get_trade_list(self, from_date="", to_date="", exchange_code="", product_type="", action="", stock_code=""):
         if self.api_handler:
@@ -1025,8 +1025,14 @@ class ApificationBreeze():
                     return self.validation_error_response(resp_message.BLANK_SEGMENT.value)
             elif transaction_type.lower() not in config.TRANSACTION_TYPES:
                 return self.validation_error_response(resp_message.TRANSACTION_TYPE_ERROR.value)
-            elif not int(amount) > 0:
-                return self.validation_error_response(resp_message.ZERO_AMOUNT_ERROR.value)
+            # elif not int(amount) > 0:
+            #     return self.validation_error_response(resp_message.ZERO_AMOUNT_ERROR.value)
+            if amount.isdigit():  # Check if the input does not consist only of digits
+                if not int(amount) > 0:
+                    return self.validation_error_response(resp_message.ZERO_AMOUNT_ERROR.value)
+            else:
+                return self.validation_error_response(resp_message.AMOUNT_DIGIT_ERROR.value)
+
             body = {
                 "transaction_type": transaction_type,
                 "amount": amount,
@@ -1209,9 +1215,9 @@ class ApificationBreeze():
         except Exception as e:
             self.error_exception(self.get_margin.__name__,e)
 
-    def place_order(self, stock_code="", exchange_code="", product="", action="", order_type="", stoploss="", quantity="", price="", validity="", validity_date="", disclosed_quantity="", expiry_date="", right="", strike_price="", user_remark="",order_type_fresh="",order_rate_fresh="",settlement_id = "",order_segment_code = ""):
+    def place_order(self, stock_code="", exchange_code="", product="", action="", order_type="", stoploss="", quantity="", price="", validity="", validity_date="", disclosed_quantity="", expiry_date="", right="", strike_price="", user_remark="",order_type_fresh="",order_rate_fresh="",settlement_id = "",order_segment_code = "",lots="",):
         try:
-            if stock_code == "" or stock_code == None or exchange_code == "" or exchange_code == None or product == "" or product == None or action == "" or action == None or order_type == "" or order_type == None or quantity == "" or quantity == None or price == "" or price == None or action == "" or action == None:
+            if stock_code == "" or stock_code == None or exchange_code == "" or exchange_code == None or product == "" or product == None or action == "" or action == None or order_type == "" or order_type == None or price == "" or price == None or action == "" or action == None:
                 if stock_code == "" or stock_code == None:
                     return self.validation_error_response(resp_message.BLANK_STOCK_CODE.value)
                 elif exchange_code == "" or exchange_code == None:
@@ -1222,8 +1228,8 @@ class ApificationBreeze():
                     return self.validation_error_response(resp_message.BLANK_ACTION.value)
                 elif order_type == "" or order_type == None:
                     return self.validation_error_response(resp_message.BLANK_ORDER_TYPE.value)
-                elif quantity == "" or quantity == None:
-                    return self.validation_error_response(resp_message.BLANK_QUANTITY.value)
+                # elif quantity == "" or quantity == None:
+                #     return self.validation_error_response(resp_message.BLANK_QUANTITY.value)
                 elif validity == "" or validity == None:
                     return self.validation_error_response(resp_message.BLANK_VALIDITY.value)
             elif product.lower() not in config.PRODUCT_TYPES:
@@ -1236,6 +1242,12 @@ class ApificationBreeze():
                 return self.validation_error_response(resp_message.VALIDITY_TYPE_ERROR.value)
             elif right != "" and right != None and right.lower() not in config.RIGHT_TYPES:
                 return self.validation_error_response(resp_message.RIGHT_TYPE_ERROR.value)
+            if exchange_code.lower() in ["mcx", "ndx"]:
+                if lots == "" or lots == None:
+                    return self.validation_error_response(resp_message.BLANK_LOTS.value)
+            else:
+                if quantity == "" or quantity == None:
+                    return self.validation_error_response(resp_message.BLANK_QUANTITY.value)
 
             body = {
                 "stock_code": stock_code,
@@ -1247,7 +1259,8 @@ class ApificationBreeze():
                 "price": price,
                 "validity": validity,
                 "settlement_id" : settlement_id,
-                "order_segment_code" : order_segment_code 
+                "order_segment_code" : order_segment_code,
+                "lots": lots, 
             }
 
             if stoploss != "" and stoploss != None:
