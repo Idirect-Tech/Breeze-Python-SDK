@@ -106,6 +106,9 @@ TUX_TO_USER_MAP = {
 #Response Message
 class ResponseMessage(enum.Enum):
 
+    #Currency not allowed
+    CURRENCY_NOT_ALLOWED = "NDX as Exchange-Code not allowed"
+
     #Empty Details Errors
     BLANK_EXCHANGE_CODE = "Exchange-Code cannot be empty"
     BLANK_STOCK_CODE = "Stock-Code cannot be empty"
