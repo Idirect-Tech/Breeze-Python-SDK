@@ -1242,9 +1242,11 @@ class ApificationBreeze():
                 return self.validation_error_response(resp_message.VALIDITY_TYPE_ERROR.value)
             elif right != "" and right != None and right.lower() not in config.RIGHT_TYPES:
                 return self.validation_error_response(resp_message.RIGHT_TYPE_ERROR.value)
-            if exchange_code.lower() in ["mcx", "ndx"]:
+            if exchange_code.lower() in ["mcx"]:
                 if lots == "" or lots == None:
                     return self.validation_error_response(resp_message.BLANK_LOTS.value)
+            elif exchange_code.lower() in ["ndx"]:
+                return self.validation_error_response(resp_message.CURRENCY_NOT_ALLOWED.value)
             else:
                 if quantity == "" or quantity == None:
                     return self.validation_error_response(resp_message.BLANK_QUANTITY.value)
