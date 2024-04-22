@@ -10,7 +10,7 @@ BREEZE_NEW_URL = "https://breezeapi.icicidirect.com/api/v2/"
 LIVE_FEEDS_URL = "https://livefeeds.icicidirect.com"
 
 #Live Streams URL
-LIVE_STREAM_URL = "https://streams.icicidirect.com"
+LIVE_STREAM_URL = "https://livestream.icicidirect.com"
 
 #Live OHLC Stream URL
 LIVE_OHLC_STREAM_URL = "https://breezeapi.icicidirect.com"
