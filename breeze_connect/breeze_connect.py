@@ -296,6 +296,7 @@ class BreezeConnect():
                 "NDX": "13.",
                 "MCX": "6.",
                 "NFO": "4.",
+                "BFO": "2.",
             }
             exchange_code_name = exchange_code_list.get(exchange_code, False)
             if exchange_code_name == False:
@@ -335,6 +336,8 @@ class BreezeConnect():
                         token_value = self.stock_script_dict_list[3].get(contract_detail_value, False)
                     elif exchange_code.lower() == "nfo":
                         token_value = self.stock_script_dict_list[4].get(contract_detail_value, False)
+                    elif exchange_code.lower() == "bfo":
+                        token_value = self.stock_script_dict_list[5].get(contract_detail_value, False)
                 if token_value == False:
                     self.subscribe_exception(except_message.STOCK_INVALID_EXCEPTION.value)
                 exchange_quotes_token_value = False
@@ -786,8 +789,8 @@ class BreezeConnect():
 
     def get_stock_script_list(self):
         try:
-            self.stock_script_dict_list = [{}, {}, {}, {}, {}]
-            self.token_script_dict_list = [{}, {}, {}, {}, {}]
+            self.stock_script_dict_list = [{}, {}, {}, {}, {}, {}]
+            self.token_script_dict_list = [{}, {}, {}, {}, {}, {}]
             with requests.Session() as s:
                 download = s.get(config.STOCK_SCRIPT_CSV_URL)
                 decoded_content = download.content.decode('utf-8')
@@ -809,6 +812,9 @@ class BreezeConnect():
                     elif row[2] == "NFO":
                         self.stock_script_dict_list[4][row[7]] = row[5]
                         self.token_script_dict_list[4][row[5]] = [row[7], row[1]]
+                    elif row[2] == "BFO":
+                        self.stock_script_dict_list[5][row[7]] = row[5]
+                        self.token_script_dict_list[5][row[5]] = [row[7], row[1]]
         except Exception as e:
             pass
 
