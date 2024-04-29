@@ -186,7 +186,7 @@ class ExceptionMessage(enum.Enum):
     AUTHENICATION_EXCEPTION = "Could not authenticate credentials. Please check token and keys"
     #Subscribe Exception
     QUOTE_DEPTH_EXCEPTION = "Either getExchangeQuotes must be true or getMarketDepth must be true"
-    EXCHANGE_CODE_EXCEPTION = "Exchange Code allowed are 'BSE', 'NSE', 'NDX', 'MCX' or 'NFO'."
+    EXCHANGE_CODE_EXCEPTION = "Exchange Code allowed are 'BSE', 'NSE', 'NDX', 'MCX', 'NFO', 'BFO'."
     STOCK_CODE_EXCEPTION = "Stock-Code cannot be empty."
     EXPIRY_DATE_EXCEPTION = "Expiry-Date cannot be empty for given Exchange-Code."
     PRODUCT_TYPE_EXCEPTION = "Product-Type should either be Futures or Options for given Exchange-Code."
