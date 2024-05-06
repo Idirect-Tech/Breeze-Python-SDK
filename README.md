@@ -62,7 +62,7 @@ pip install --upgrade breeze-connect
 Or, You can also install the specific release version via pip
 
 ```
-pip install breeze-connect==1.0.54
+pip install breeze-connect==1.0.55
 ```
 
 <h4 id="apiusage"> API Usage</h4>
@@ -322,17 +322,7 @@ breeze.get_historical_data(interval="1minute",
                             strike_price="0")
                             
 ```
-```python
-breeze.get_historical_data(interval="1minute",
-                            from_date= "2024-02-29T07:00:00.000Z",
-                            to_date= "2024-03-02T07:00:00.000Z",
-                            stock_code="GOLDPE",
-                            exchange_code="MCX",
-                            product_type="futures",
-                            expiry_date="2024-04-03T07:00:00.000Z",
-                            right="others",
-                            strike_price="0")
-```
+
 
 <a href="#index">Back to Index</a>
 
@@ -366,17 +356,7 @@ breeze.get_historical_data(interval="1minute",
                             right="call",
                             strike_price="38000")
 ```
-```python
-breeze.get_historical_data(interval="1minute",
-                            from_date= "2024-02-29T07:00:00.000Z",
-                            to_date= "2024-03-02T07:00:00.000Z",
-                            stock_code="GOLD",
-                            exchange_code="MCX",
-                            product_type="options",
-                            expiry_date="2024-05-27T07:00:00.000Z",
-                            right="put",
-                            strike_price="65500")
-```
+
 
 
 <p> Note : Get Historical Data for specific stock-code by mentioned interval either as "1minute", "5minute", "30minute" or as "1day"</p>
@@ -399,17 +379,7 @@ breeze.get_historical_data_v2(interval="1minute",
                             strike_price="0")
                             
 ```
-```python
-breeze.get_historical_data_v2(interval="1minute",
-                            from_date= "2024-02-29T07:00:00.000Z",
-                            to_date= "2024-03-02T07:00:00.000Z",
-                            stock_code="GOLDPE",
-                            exchange_code="MCX",
-                            product_type="futures",
-                            expiry_date="2024-04-03T07:00:00.000Z",
-                            right="others",
-                            strike_price="0")
-```
+
 
 <a href="#index">Back to Index</a>
 
@@ -441,17 +411,7 @@ breeze.get_historical_data_v2(interval="1minute",
                             right="call",
                             strike_price="38000")
 ```
-```python
-breeze.get_historical_data_v2(interval="1minute",
-                            from_date= "2024-02-29T07:00:00.000Z",
-                            to_date= "2024-03-02T07:00:00.000Z",
-                            stock_code="GOLD",
-                            exchange_code="MCX",
-                            product_type="options",
-                            expiry_date="2024-05-27T07:00:00.000Z",
-                            right="put",
-                            strike_price="65500")
-```
+
 
 <p> 
 Note : 
@@ -498,9 +458,7 @@ breeze.add_margin(product_type="margin",
 breeze.get_margin(exchange_code="NSE")
 
 ```
-```python
-breeze.get_margin(exchange_code="MCX")
-```
+
 
 <p> Note: Please change exchange_code=“NFO” to get F&O margin details </p>
 <br>
@@ -527,24 +485,7 @@ breeze.place_order(stock_code="ICIBAN",
                     strike_price="0",
                     user_remark="Test")
 ```                    
-```python
-breeze.place_order(stock_code="CRUDE",
-                    exchange_code="MCX",
-                    product="futures",
-                    action="buy",
-                    order_type="market",
-                    stoploss="",
-                    quantity="100",
-		            lots="1",
-                    price="200",
-                    validity="day",
-                    validity_date="2024-02-14T06:00:00.000Z",
-                    disclosed_quantity="0",
-                    expiry_date="2024-02-16T06:00:00.000Z",
-                    right="others",
-                    strike_price="0",
-                    user_remark="Test")
-```
+
 
 <h4 id="place_order2">Placing an Option Order from your account.</h4>
 
@@ -565,24 +506,7 @@ breeze.place_order(stock_code="NIFTY",
                     right="call",
                     strike_price="16600")
 ```
-```python
-breeze.place_order(stock_code="GOLD",
-                    exchange_code="MCX",
-                    product="options",
-                    action="buy",
-                    order_type="market",
-                    stoploss="",
-                    quantity="1",
-                    lots="1",
-                    price="",
-                    validity="day",
-                    validity_date="2024-04-15T06:00:00.000Z",
-                    disclosed_quantity="0",
-                    expiry_date="2024-05-27T06:00:00.000Z",
-                    right="put",
-                    strike_price="65500")
-
-```
+=
 
 <br>
 <a href="#index">Back to Index</a>
@@ -689,10 +613,7 @@ breeze.place_order(stock_code = "RELIND",
 breeze.get_order_detail(exchange_code="NSE",
                         order_id="20220819N100000001")
 ```
-```python
-breeze.get_order_detail(exchange_code="MCX",
-                        order_id="20220819N100000001")
-```                        
+
 
 <p> Note: Please change exchange_code=“NFO” to get details about F&O</p>
 <br>
@@ -707,12 +628,7 @@ breeze.get_order_list(exchange_code="NSE",
                         from_date="2022-08-01T10:00:00.000Z",
                         to_date="2022-08-19T10:00:00.000Z")
 ```
-```python
-breeze.get_order_list(exchange_code="MCX",
-                        from_date="2022-08-01T10:00:00.000Z",
-                        to_date="2022-08-19T10:00:00.000Z")
-
-```    
+  
 
 <p> Note: Please change exchange_code=“NFO” to get details about F&O</p>
 <br>
@@ -727,10 +643,7 @@ breeze.get_order_list(exchange_code="MCX",
 breeze.cancel_order(exchange_code="NSE",
                     order_id="20220819N100000001")
 ```      
-```python
-breeze.cancel_order(exchange_code="MCX",
-                    order_id="20220819N100000001")
-```                  
+=               
 
 <br>
 <a href="#index">Back to Index</a>
@@ -750,18 +663,7 @@ breeze.modify_order(order_id="202208191100000001",
                     disclosed_quantity="0",
                     validity_date="2022-08-22T06:00:00.000Z")
 ```
-```python
-breeze.modify_order(order_id="202208191100000001",
-                    exchange_code="MCX",
-                    order_type="market",
-                    stoploss="0",
-                    quantity="200",
-		            lots="2",
-                    price="",
-                    validity="day",
-                    disclosed_quantity="0",
-                    validity_date="2024-01-15T06:00:00.000Z")
-```  
+
 
 <br>
 <a href="#index">Back to Index</a>
@@ -777,13 +679,7 @@ breeze.get_portfolio_holdings(exchange_code="NFO",
                                 stock_code="",
                                 portfolio_type="")
 ```
-```python
-breeze.get_portfolio_holdings(exchange_code="MCX",
-                                from_date="2022-08-01T06:00:00.000Z",
-                                to_date="2022-08-19T06:00:00.000Z",
-                                stock_code="",
-                                portfolio_type="")
-```  
+
 
 <p> Note: Please change exchange_code=“NSE” to get Equity Portfolio Holdings</p>
 <br>
@@ -813,14 +709,7 @@ breeze.get_quotes(stock_code="ICIBAN",
                     right="others",
                     strike_price="0")
 ```
-```python
-breeze.get_quotes(stock_code="GOLD",
-                    exchange_code="MCX",
-                    expiry_date="2024-02-05T06:00:00.000Z",
-                    product_type="futures",
-                    right="others",
-                    strike_price="0")
-```
+
 
 <br>
 <a href="#index">Back to Index</a>
@@ -896,22 +785,7 @@ breeze.square_off(exchange_code="NFO",
                     trade_password="",
                     disclosed_quantity="0")
 ```
-```python
-breeze.square_off(exchange_code="MCX",
-                    product="futures",
-                    stock_code="CRUDE",
-                    expiry_date="2024-02-16T06:00:00.000Z",
-                    action="sell",
-                    order_type="market",
-                    validity="day",
-                    stoploss="0",
-                    quantity="100",
-		            lots="100",
-                    price="0",
-                    validity_date="2024-04-12T06:00:00.000Z",
-                    trade_password="",
-                    disclosed_quantity="0")
-```
+
 
 <br>
 <a href="#index">Back to Index</a>
@@ -936,24 +810,7 @@ breeze.square_off(exchange_code="NFO",
                     trade_password="",
                     disclosed_quantity="0")
 ```                
-```python
-breeze.square_off(exchange_code="MCX",
-                    product="options",
-                    stock_code="GOLD",
-                    expiry_date="2024-05-27T06:00:00.000Z",
-                    right="put",
-                    strike_price="65500",
-                    action="sell",
-                    order_type="market",
-                    validity="day",
-                    stoploss="0",
-                    quantity="100",
-                    lots="100",
-                    price="",
-                    validity_date="2024-04-15T06:00:00.000Z",
-                    trade_password="",
-                    disclosed_quantity="0")
-```    
+  
 
 <br>
 <a href="#index">Back to Index</a>
@@ -970,14 +827,7 @@ breeze.get_trade_list(from_date="2022-08-01T06:00:00.000Z",
                         action="",
                         stock_code="")
 ``` 
-```python
-breeze.get_trade_list(from_date="2022-08-01T06:00:00.000Z",
-                        to_date="2022-08-19T06:00:00.000Z",
-                        exchange_code="MCX",
-                        product_type="",
-                        action="",
-                        stock_code="")
-```                        
+                     
 
 <p> Note: Please change exchange_code=“NFO” to get details about F&O</p>
 <br>
@@ -991,10 +841,7 @@ breeze.get_trade_list(from_date="2022-08-01T06:00:00.000Z",
 breeze.get_trade_detail(exchange_code="NSE",
                         order_id="20220819N100000005")
 ```
-```python
-breeze.get_trade_detail(exchange_code="MCX",
-                        order_id="20220819N100000005")
-```
+
 
 <p> Note: Please change exchange_code=“NFO” to get details about F&O</p>
 <br>
@@ -1031,7 +878,6 @@ breeze.limit_calculator(strike_price =  "19200",
 ```python
 breeze.get_names(exchange_code = 'NSE',stock_code = 'TATASTEEL')
 breeze.get_names(exchange_code = 'NSE',stock_code = 'RELIANCE')
-breeze.get_names(exchange_code = 'MCX',stock_code = 'GOLD')
 ```
 <p>Note: Use this method to find ICICI specific stock codes / token </p>
 
