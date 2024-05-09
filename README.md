@@ -93,6 +93,9 @@ iso_date_time_string = datetime.datetime.strptime("28/02/2021 23:59:59","%d/%m/%
 
 ```python
 from breeze_connect import BreezeConnect
+import time
+import asyncio
+import threading
 
 # Initialize SDK
 breeze = BreezeConnect(api_key="your_api_key")
@@ -102,12 +105,29 @@ breeze = BreezeConnect(api_key="your_api_key")
 import urllib
 print("https://api.icicidirect.com/apiuser/login?api_key="+urllib.parse.quote_plus("your_api_key"))
 
+def start_async():
+    loop = asyncio.new_event_loop()
+    threading.Thread(target=loop.run_forever).start()
+    return loop
+
+# Start event loop
+_loop = start_async()
+
+def submit_async(awaitable):
+    return asyncio.run_coroutine_threadsafe(awaitable, _loop)
+
+def stop_async():
+    _loop.call_soon_threadsafe(_loop.stop)
+
 # Generate Session
 breeze.generate_session(api_secret="your_secret_key",
                         session_token="your_api_session")
 
 # Connect to websocket(it will connect to tick-by-tick data server)
-breeze.ws_connect()
+submit_async(breeze.ws_connect())
+
+# Wait for connection to be established.
+time.sleep(2)
 
 # Callback to receive ticks.
 def on_ticks(ticks):
@@ -117,50 +137,68 @@ def on_ticks(ticks):
 breeze.on_ticks = on_ticks
 
 # subscribe stocks feeds
-breeze.subscribe_feeds(exchange_code="NFO", stock_code="ZEEENT", product_type="options", expiry_date="31-Mar-2022", strike_price="350", right="Call", get_exchange_quotes=True, get_market_depth=False)
+submit_async(breeze.subscribe_feeds(exchange_code="NFO", stock_code="ZEEENT", product_type="options", expiry_date="31-Mar-2022", strike_price="350", right="Call", get_exchange_quotes=True, get_market_depth=False))
 
 # subscribe stocks feeds by stock-token
-breeze.subscribe_feeds(stock_token="1.1!500780")
+submit_async(breeze.subscribe_feeds(stock_token="1.1!500780"))
+
+# Wait for some data
+time.sleep(2)
 
 # unsubscribe stocks feeds
-breeze.unsubscribe_feeds(exchange_code="NFO", stock_code="ZEEENT", product_type="options", expiry_date="31-Mar-2022", strike_price="350", right="Call", get_exchange_quotes=True, get_market_depth=False)
+submit_async(breeze.unsubscribe_feeds(exchange_code="NFO", stock_code="ZEEENT", product_type="options", expiry_date="31-Mar-2022", strike_price="350", right="Call", get_exchange_quotes=True, get_market_depth=False))
 
 # unsubscribe stocks feeds by stock-token
-breeze.unsubscribe_feeds(stock_token="1.1!500780")
+submit_async(breeze.unsubscribe_feeds(stock_token="1.1!500780"))
+
+# Wait
+time.sleep(2)
 
 # subscribe to Real Time Streaming OHLCV Data of stocks
-breeze.subscribe_feeds(exchange_code="NFO", stock_code="ZEEENT", product_type="options", expiry_date="31-Mar-2022", strike_price="350", right="Call", interval="1minute")
+submit_async(breeze.subscribe_feeds(exchange_code="NFO", stock_code="ZEEENT", product_type="options", expiry_date="31-Mar-2022", strike_price="350", right="Call", interval="1minute"))
 
 # subscribe to Real Time Streaming OHLCV Data of stocks by stock-token
-breeze.subscribe_feeds(stock_token="1.1!500780",interval="1second")
+submit_async(breeze.subscribe_feeds(stock_token="1.1!500780",interval="1second"))
+
+# Wait for some data
+time.sleep(2)
 
 # unsubscribe to Real Time Streaming OHLCV Data of stocks
-breeze.unsubscribe_feeds(exchange_code="NFO", stock_code="ZEEENT", product_type="options", expiry_date="31-Mar-2022", strike_price="350", right="Call", interval="1minute")
+submit_async(breeze.unsubscribe_feeds(exchange_code="NFO", stock_code="ZEEENT", product_type="options", expiry_date="31-Mar-2022", strike_price="350", right="Call", interval="1minute"))
 
 # unsubscribe to Real Time Streaming OHLCV Data of stocks by stock-token
-breeze.unsubscribe_feeds(stock_token="1.1!500780",interval="1second")
+submit_async(breeze.unsubscribe_feeds(stock_token="1.1!500780",interval="1second"))
 
 # subscribe order notification feeds(it will connect to order streaming server)
-breeze.subscribe_feeds(get_order_notification=True)
+submit_async(breeze.subscribe_feeds(get_order_notification=True))
+
+# Wait
+time.sleep(2)
 
 # unsubscribe order notification feeds(also it will disconnect the order streaming server)
-breeze.unsubscribe_feeds(get_order_notification=True)
+submit_async(breeze.unsubscribe_feeds(get_order_notification=True))
 
 # subscribe oneclick strategy stream
-breeze.subscribe_feeds(stock_token = "one_click_fno")
+submit_async(breeze.subscribe_feeds(stock_token = "one_click_fno"))
+
+# Wait
+time.sleep(2)
 
 # unsubscribe oneclick strategy stream
-breeze.unsubscribe_feeds(stock_token = "one_click_fno")
+submit_async(breeze.unsubscribe_feeds(stock_token = "one_click_fno"))
 
 # subscribe oneclick equity strategy stream(i_click_2_gain)
-breeze.subscribe_feeds(stock_token = "i_click_2_gain")
+submit_async(breeze.subscribe_feeds(stock_token = "i_click_2_gain"))
+
+# Wait
+time.sleep(2)
 
 # unsubscribe oneclick equity strategy stream(i_click_2_gain)
-breeze.unsubscribe_feeds(stock_token = "i_click_2_gain")
+submit_async(breeze.unsubscribe_feeds(stock_token = "i_click_2_gain"))
 
 
 # ws_disconnect (it will disconnect from all actively connected servers)
-breeze.ws_disconnect()
+submit_async(breeze.ws_disconnect())
 
 ```
 <br>

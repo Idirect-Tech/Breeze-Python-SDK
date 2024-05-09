@@ -12,6 +12,7 @@ import pandas as pd
 import os
 import sys
 import logging
+import asyncio
 
 dirs = os.path.dirname(os.path.abspath(__file__))
 
@@ -34,26 +35,24 @@ logger.propagate = False
 logger.setLevel(logging.CRITICAL)
 
 
-class SocketEventBreeze(socketio.ClientNamespace):
+class SocketEventBreeze(socketio.AsyncClientNamespace):
     
     def __init__(self, namespace, breeze_instance):
         super().__init__(namespace)
         self.breeze = breeze_instance
-        self.sio = socketio.Client()
+        self.sio = socketio.AsyncClient()
         self.tokenlist = set()
         self.ohlcstate = set()
         self.authentication = True
 
-    def my_connect_error(self,error):
-        self.authentication = False
-
-    def connect(self,hostname,is_ohlc_stream = False,strategy_flag = False):
+    async def connect(self, hostname, is_ohlc_stream = False, strategy_flag = False):
+        auth = {"user": self.breeze.user_id, "token": self.breeze.session_key}
+        print(auth)
         try:
-            auth = {"user": self.breeze.user_id, "token": self.breeze.session_key}
             if is_ohlc_stream:
-                self.sio.connect(hostname,socketio_path='ohlcvstream' ,headers={"User-Agent": "python-socketio[client]/socket"},auth=auth,transports="websocket", wait_timeout=3)
+                await self.sio.connect(hostname, socketio_path='ohlcvstream' ,headers={"User-Agent": "python-socketio[client]/socket"},auth=auth,transports="websocket", wait_timeout=3)
             else:
-                self.sio.connect(hostname, headers={"User-Agent": "python-socketio[client]/socket"},auth=auth,transports="websocket", wait_timeout=3)
+                await self.sio.connect(hostname, headers={"User-Agent": "python-socketio[client]/socket"},auth=auth,transports="websocket", wait_timeout=3)
             self.sio.on("connect_error", self.my_connect_error)
         except Exception as e:
             if self.sio.connected:
@@ -66,13 +65,13 @@ class SocketEventBreeze(socketio.ClientNamespace):
                 else:
                     raise Exception(except_message.ORDERNOTIFY_SOCKET_CONNECTION_DISCONNECTED.value)            
 
-    def on_disconnect(self):
-        self.sio.emit("disconnect", "transport close")
+    async def on_disconnect(self):
+        await self.sio.emit("disconnect", "transport close")
         
-    def notify(self):
+    async def notify(self):
         self.sio.on('order', self.on_message)
-    
-    def on_message(self, data):
+
+    async def on_message(self, data):
         data = self.breeze.parse_data(data)
         if 'symbol' in data and data['symbol'] != None and len(data['symbol'])>0:
             data.update(self.breeze.get_data_from_stock_token_value(data['symbol']))
@@ -81,22 +80,22 @@ class SocketEventBreeze(socketio.ClientNamespace):
         if(self.breeze.on_ticks2!=None):
             self.breeze.on_ticks2(data)
 
-    def on_ohlc_stream(self,data):
+    async def on_ohlc_stream(self, data):
         data = self.breeze.parse_ohlc_data(data)
         self.breeze.on_ticks(data)
 
-    def rewatchohlc(self):
+    async def rewatchohlc(self):
         if(len(self.ohlcstate) > 0):
             for room,channel in self.ohlcstate:
-                self.sio.emit('join',room)
+                await self.sio.emit('join',room)
                 self.sio.on(channel, self.on_ohlc_stream)
     
-    def watch_stream_data(self,data,channel):
+    async def watch_stream_data(self,data,channel):
         try:
             if self.sio.connected:
                 if((data,channel) not in self.ohlcstate):
                     self.ohlcstate.add((data,channel))
-                self.sio.emit('join', data)
+                await self.sio.emit('join', data)
                 self.sio.on(channel, self.on_ohlc_stream)
                 self.sio.on('connect',self.rewatchohlc)
             else:
@@ -104,13 +103,14 @@ class SocketEventBreeze(socketio.ClientNamespace):
         except Exception as e:
             raise Exception(except_message.OHLC_SOCKET_CONNECTION_DISCONNECTED.value)
 
-    def rewatch(self):
-        self.notify()
+    async def rewatch(self):
+        await self.notify()
         if(len(self.tokenlist) > 0):    
-            self.sio.emit('join', list(self.tokenlist))
+            await self.sio.emit('join', list(self.tokenlist))
             self.sio.on('stock', self.on_message)
 
-    def watch(self, data):
+
+    async def watch(self, data):
         try:
             if self.sio.connected:
                 if isinstance(data, list):
@@ -119,7 +119,7 @@ class SocketEventBreeze(socketio.ClientNamespace):
                 else:
                     self.tokenlist.add(data)
 
-                self.sio.emit('join', data)
+                await self.sio.emit('join', data)
                 self.sio.on('stock', self.on_message)
                 self.sio.on('connect',self.rewatch)
             else:
@@ -127,7 +127,7 @@ class SocketEventBreeze(socketio.ClientNamespace):
         except Exception as e:
             raise Exception(except_message.LIVESTREAM_SOCKET_CONNECTION_DISCONNECTED.value)
         
-    def unwatch(self, data):
+    async def unwatch(self, data):
         if isinstance(data, list):
             for entry in data:
                 if(entry in self.tokenlist):
@@ -145,7 +145,7 @@ class SocketEventBreeze(socketio.ClientNamespace):
             for room,channel in to_be_removed:
                 self.ohlcstate.discard((room,channel))
 
-        self.sio.emit("leave", data)
+        await self.sio.emit("leave", data)
 
 class BreezeConnect():
 
@@ -171,7 +171,7 @@ class BreezeConnect():
     def subscribe_exception(self,message):
         return Exception(message)
 
-    def _ws_connect(self,handler,order_flag=False,ohlcv_flag=False,strategy_flag = False): 
+    async def _ws_connect(self,handler,order_flag=False,ohlcv_flag=False,strategy_flag = False): 
         if order_flag or strategy_flag:
             if not self.sio_order_refresh_handler:
                 self.sio_order_refresh_handler = SocketEventBreeze("/", self)
@@ -183,25 +183,25 @@ class BreezeConnect():
         elif ohlcv_flag:
             if not self.sio_ohlcv_stream_handler:
                 self.sio_ohlcv_stream_handler = SocketEventBreeze("/", self)
-            self.sio_ohlcv_stream_handler.connect(config.LIVE_OHLC_STREAM_URL,is_ohlc_stream=True)           
+            await self.sio_ohlcv_stream_handler.connect(config.LIVE_OHLC_STREAM_URL,is_ohlc_stream=True)           
         else:
             if not self.sio_rate_refresh_handler: 
                 self.sio_rate_refresh_handler = SocketEventBreeze("/", self)
-            self.sio_rate_refresh_handler.connect(config.LIVE_STREAM_URL)
+            await self.sio_rate_refresh_handler.connect(config.LIVE_STREAM_URL)
     
-    def ws_disconnect(self):   
+    async def ws_disconnect(self):   
         response = []       
         if not self.sio_rate_refresh_handler:
             response.append(self.socket_connection_response(resp_message.RATE_REFRESH_NOT_CONNECTED.value))
         else:
-            self.sio_rate_refresh_handler.on_disconnect()
+            await self.sio_rate_refresh_handler.on_disconnect()
             self.sio_rate_refresh_handler = None
             response.append(self.socket_connection_response(resp_message.RATE_REFRESH_DISCONNECTED.value))
         
         if not self.sio_ohlcv_stream_handler:
             response.append(self.socket_connection_response(resp_message.OHLCV_STREAM_NOT_CONNECTED.value))
         else:
-            self.sio_ohlcv_stream_handler.on_disconnect()
+            await self.sio_ohlcv_stream_handler.on_disconnect()
             self.sio_ohlcv_stream_handler = None
             response.append(self.socket_connection_response(resp_message.OHLCV_STREAM_DISCONNECTED.value))
         
@@ -209,25 +209,25 @@ class BreezeConnect():
             response.append(self.socket_connection_response(resp_message.ORDER_REFRESH_NOT_CONNECTED.value))
         else:
             self.orderconnect = 0
-            self.sio_order_refresh_handler.on_disconnect()
+            await self.sio_order_refresh_handler.on_disconnect()
             self.sio_order_refresh_handler = None
             response.append(self.socket_connection_response(resp_message.ORDER_REFRESH_DISCONNECTED.value))
         return(response)
 
 
-    def ws_disconnect_ohlc(self):
+    async def ws_disconnect_ohlc(self):
         if self.sio_rate_refresh_handler:
-            self.sio_rate_refresh_handler.on_disconnect()
+            await self.sio_rate_refresh_handler.on_disconnect()
             self.sio_rate_refresh_handler = None
         if not self.sio_ohlcv_stream_handler:
             return self.socket_connection_response(resp_message.OHLCV_STREAM_NOT_CONNECTED.value)
         else:
-            self.sio_ohlcv_stream_handler.on_disconnect()
+            await self.sio_ohlcv_stream_handler.on_disconnect()
             self.sio_ohlcv_stream_handler = None
             return self.socket_connection_response(resp_message.OHLCV_STREAM_DISCONNECTED.value)
     
-    def ws_connect(self):
-        self._ws_connect(self.sio_rate_refresh_handler,False)
+    async def ws_connect(self):
+        await self._ws_connect(self.sio_rate_refresh_handler,False)
         
     def get_data_from_stock_token_value(self, input_stock_token):
         try:
@@ -288,6 +288,7 @@ class BreezeConnect():
     def get_stock_token_value(self, exchange_code="", stock_code="", product_type="", expiry_date="", strike_price="", right="", get_exchange_quotes=True, get_market_depth=True):
         if get_exchange_quotes == False and get_market_depth == False:
             self.subscribe_exception(except_message.QUOTE_DEPTH_EXCEPTION.value)
+            return False, False
         else:
             exchange_code_name = ""
             exchange_code_list = {
@@ -301,8 +302,10 @@ class BreezeConnect():
             exchange_code_name = exchange_code_list.get(exchange_code, False)
             if exchange_code_name == False:
                 self.subscribe_exception(except_message.EXCHANGE_CODE_EXCEPTION.value)
+                return False, False
             elif stock_code == "":
                 self.subscribe_exception(except_message.STOCK_CODE_EXCEPTION.value)
+                return False, False
             else:
                 token_value = False
                 if exchange_code.lower() == "bse":
@@ -312,16 +315,19 @@ class BreezeConnect():
                 else:
                     if expiry_date == "":
                         self.subscribe_exception(except_message.EXPIRY_DATE_EXCEPTION.value)
+                        return False, False
                     if product_type.lower() == "futures":
                         contract_detail_value = "FUT"
                     elif product_type.lower() == "options":
                         contract_detail_value = "OPT"
                     else:
                         self.subscribe_exception(except_message.PRODUCT_TYPE_EXCEPTION.value)
+                        return False, False
                     contract_detail_value = contract_detail_value + "-" + stock_code + "-" + expiry_date
                     if product_type.lower() == "options":
                         if strike_price == "":
                             self.subscribe_exception(except_message.STRIKE_PRICE_EXCEPTION.value)
+                            return False, False
                         else:
                             contract_detail_value = contract_detail_value + "-" + strike_price
                         if right.lower() == "put":
@@ -330,6 +336,7 @@ class BreezeConnect():
                             contract_detail_value = contract_detail_value + "-" + "CE"
                         else:
                             self.subscribe_exception(except_message.RIGHT_EXCEPTION.value)
+                            return False, False
                     if exchange_code.lower() == "ndx":
                         token_value = self.stock_script_dict_list[2].get(contract_detail_value, False)
                     elif exchange_code.lower() == "mcx":
@@ -340,6 +347,7 @@ class BreezeConnect():
                         token_value = self.stock_script_dict_list[5].get(contract_detail_value, False)
                 if token_value == False:
                     self.subscribe_exception(except_message.STOCK_INVALID_EXCEPTION.value)
+                    return False, False
                 exchange_quotes_token_value = False
                 if get_exchange_quotes != False:
                     exchange_quotes_token_value = exchange_code_name + "1!" + token_value
@@ -348,8 +356,7 @@ class BreezeConnect():
                     market_depth_token_value = exchange_code_name + "2!" + token_value
                 return exchange_quotes_token_value, market_depth_token_value
 
-    def subscribe_feeds(self, stock_token="", exchange_code="", stock_code="", product_type="", expiry_date="", strike_price="", right="", interval = "", get_exchange_quotes=True, get_market_depth=True, get_order_notification=False):
-        
+    async def subscribe_feeds(self, stock_token="", exchange_code="", stock_code="", product_type="", expiry_date="", strike_price="", right="", interval = "", get_exchange_quotes=True, get_market_depth=True, get_order_notification=False):
         if(self.sio_rate_refresh_handler and self.sio_rate_refresh_handler.authentication == False):
             raise Exception(except_message.AUTHENICATION_EXCEPTION.value)
         
@@ -361,22 +368,22 @@ class BreezeConnect():
         if self.sio_rate_refresh_handler:
             return_object = {}
             if self.sio_order_refresh_handler and stock_token in config.STRATEGY_SUBSCRIPTION:
-                self._ws_connect(self.sio_order_refresh_handler,strategy_flag=True)
-                self.sio_order_refresh_handler.watch(stock_token)
+                await self._ws_connect(self.sio_order_refresh_handler,strategy_flag=True)
+                await self.sio_order_refresh_handler.watch(stock_token)
                 return_object = self.socket_connection_response(resp_message.STRATEGY_STREAM_SUBSCRIBED.value.format(stock_token))
                 return return_object
             if get_order_notification == True:
-                self._ws_connect(self.sio_order_refresh_handler,order_flag=True)
-                self.sio_order_refresh_handler.notify()
+                await self._ws_connect(self.sio_order_refresh_handler,order_flag=True)
+                await self.sio_order_refresh_handler.notify()
                 return_object = self.socket_connection_response(resp_message.ORDER_NOTIFICATION_SUBSRIBED.value)
                 return return_object
             if stock_token != "":
                 if interval!="":
                     if self.sio_ohlcv_stream_handler is None:
-                        self._ws_connect(self.sio_ohlcv_stream_handler,ohlcv_flag=True)
-                    self.sio_ohlcv_stream_handler.watch_stream_data(stock_token,interval)
+                        await self._ws_connect(self.sio_ohlcv_stream_handler,ohlcv_flag=True)
+                    await self.sio_ohlcv_stream_handler.watch_stream_data(stock_token,interval)
                 else:
-                    self.sio_rate_refresh_handler.watch(stock_token)
+                    await self.sio_rate_refresh_handler.watch(stock_token)
                 return_object = self.socket_connection_response(resp_message.STOCK_SUBSCRIBE_MESSAGE.value.format(stock_token))
             elif get_order_notification == True and exchange_code == "":
                 return return_object
@@ -384,17 +391,17 @@ class BreezeConnect():
                 exchange_quotes_token, market_depth_token = self.get_stock_token_value(exchange_code=exchange_code, stock_code=stock_code, product_type=product_type, expiry_date=expiry_date, strike_price=strike_price, right=right, get_exchange_quotes=get_exchange_quotes, get_market_depth=get_market_depth)
                 if interval!="":
                     if self.sio_ohlcv_stream_handler is None:
-                        self._ws_connect(self.sio_ohlcv_stream_handler,ohlcv_flag=True)
-                    self.sio_ohlcv_stream_handler.watch_stream_data(exchange_quotes_token,interval)
+                        await self._ws_connect(self.sio_ohlcv_stream_handler,ohlcv_flag=True)
+                    await self.sio_ohlcv_stream_handler.watch_stream_data(exchange_quotes_token,interval)
                 else:
                     if exchange_quotes_token != False:
-                        self.sio_rate_refresh_handler.watch(exchange_quotes_token)
+                        await self.sio_rate_refresh_handler.watch(exchange_quotes_token)
                     if market_depth_token != False:
-                        self.sio_rate_refresh_handler.watch(market_depth_token)
+                        await self.sio_rate_refresh_handler.watch(market_depth_token)
                 return_object =  self.socket_connection_response(resp_message.STOCK_SUBSCRIBE_MESSAGE.value.format(stock_code))
             return return_object
         
-    def unsubscribe_feeds(self, stock_token="", exchange_code="", stock_code="", product_type="", expiry_date="", strike_price="", right="",interval = "",get_exchange_quotes=True, get_market_depth=True,get_order_notification=False):
+    async def unsubscribe_feeds(self, stock_token="", exchange_code="", stock_code="", product_type="", expiry_date="", strike_price="", right="",interval = "",get_exchange_quotes=True, get_market_depth=True,get_order_notification=False):
         if interval != "":
             if interval not in config.INTERVAL_TYPES_STREAM_OHLC:
                 raise Exception(except_message.STREAM_OHLC_INTERVAL_ERROR.value)
@@ -403,7 +410,7 @@ class BreezeConnect():
 
         if(get_order_notification == True):
             if self.sio_order_refresh_handler:
-                self.sio_order_refresh_handler.on_disconnect()
+                await self.sio_order_refresh_handler.on_disconnect()
                 self.sio_order_refresh_handler = None
                 self.orderconnect = 0
                 return self.socket_connection_response(resp_message.ORDER_REFRESH_DISCONNECTED.value)
@@ -412,7 +419,7 @@ class BreezeConnect():
 
         if(stock_token in config.STRATEGY_SUBSCRIPTION):
             if self.sio_order_refresh_handler:
-                self.sio_order_refresh_handler.unwatch(stock_token)
+                await self.sio_order_refresh_handler.unwatch(stock_token)
                 return self.socket_connection_response(resp_message.STRATEGY_STREAM_UNSUBSCRIBED.value.format(stock_token))
             else:
                 return self.socket_connection_response(resp_message.STRATEGY_STREAM_NOT_CONNECTED.value)
@@ -421,20 +428,20 @@ class BreezeConnect():
             if stock_token != "":
                 if interval != "":
                     if self.sio_ohlcv_stream_handler is not None:
-                        self.sio_ohlcv_stream_handler.unwatch(stock_token)
+                        await self.sio_ohlcv_stream_handler.unwatch(stock_token)
                 else:
-                    self.sio_rate_refresh_handler.unwatch(stock_token)
+                    await self.sio_rate_refresh_handler.unwatch(stock_token)
                 return self.socket_connection_response(resp_message.STOCK_UNSUBSCRIBE_MESSAGE.value.format(stock_token))
             else:
                 exchange_quotes_token, market_depth_token = self.get_stock_token_value(exchange_code=exchange_code, stock_code=stock_code, product_type=product_type, expiry_date=expiry_date, strike_price=strike_price, right=right, get_exchange_quotes=get_exchange_quotes, get_market_depth=get_market_depth)
                 if interval != "":
                     if self.sio_ohlcv_stream_handler is not None:
-                        self.sio_ohlcv_stream_handler.unwatch(exchange_quotes_token)
+                        await self.sio_ohlcv_stream_handler.unwatch(exchange_quotes_token)
                 else:
                     if exchange_quotes_token != False:
-                        self.sio_rate_refresh_handler.unwatch(exchange_quotes_token)
+                        await self.sio_rate_refresh_handler.unwatch(exchange_quotes_token)
                     if market_depth_token != False:
-                        self.sio_rate_refresh_handler.unwatch(market_depth_token)
+                        await self.sio_rate_refresh_handler.unwatch(market_depth_token)
                 return self.socket_connection_response(resp_message.STOCK_UNSUBSCRIBE_MESSAGE.value.format(stock_code))
 
     def parse_ohlc_data(self,data):
