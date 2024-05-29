@@ -298,6 +298,11 @@ class BreezeConnect():
                 "NFO": "4.",
                 "BFO": "2.",
             }
+
+            #only for rate refresh live feeds
+            if self.interval == "" or self.interval == None:
+                exchange_code_list["BFO"] = "8."
+
             exchange_code_name = exchange_code_list.get(exchange_code, False)
             if exchange_code_name == False:
                 self.subscribe_exception(except_message.EXCHANGE_CODE_EXCEPTION.value)
@@ -349,7 +354,7 @@ class BreezeConnect():
                 return exchange_quotes_token_value, market_depth_token_value
 
     def subscribe_feeds(self, stock_token="", exchange_code="", stock_code="", product_type="", expiry_date="", strike_price="", right="", interval = "", get_exchange_quotes=True, get_market_depth=True, get_order_notification=False):
-        
+        self.interval = interval
         if(self.sio_rate_refresh_handler and self.sio_rate_refresh_handler.authentication == False):
             raise Exception(except_message.AUTHENICATION_EXCEPTION.value)
         
@@ -451,7 +456,7 @@ class BreezeConnect():
                 "volume":split_data[6],
                 "datetime":split_data[7]
             }
-        elif split_data[0] in ["NFO","NDX","MCX"]:
+        elif split_data[0] in ["BFO","NFO","NDX","MCX"]:
             if len(split_data) == 13:
                 parsed_data = {
                     "interval":config.feed_interval_map[split_data[12]],
@@ -495,6 +500,14 @@ class BreezeConnect():
                 dict["BestBuyQty-"+str(counter)] = lis[1]
                 dict["BestSellRate-"+str(counter)] = lis[2]
                 dict["BestSellQty-"+str(counter)] = lis[3]
+                depth.append(dict)
+            elif exchange == '8':
+                dict["BestBuyRate-"+str(counter)] = lis[0]
+                dict["BestBuyQty-"+str(counter)] = lis[1]
+                dict["BuyNoOfOrders-"+str(counter)] = lis[2]
+                dict["BestSellRate-"+str(counter)] = lis[3]
+                dict["BestSellQty-"+str(counter)] = lis[4]
+                dict["SellNoOfOrders-"+str(counter)] = lis[5]
                 depth.append(dict)
             else:
                 dict["BestBuyRate-"+str(counter)] = lis[0]
