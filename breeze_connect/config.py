@@ -113,8 +113,8 @@ class ResponseMessage(enum.Enum):
     BLANK_EXCHANGE_CODE = "Exchange-Code cannot be empty"
     BLANK_STOCK_CODE = "Stock-Code cannot be empty"
     BLANK_PRODUCT_TYPE = "Product cannot be empty"
-    BLANK_PRODUCT_TYPE_NFO = "Product-type cannot be empty for Exchange-Code 'nfo'"
-    BLANK_PRODUCT_TYPE_HIST_V2 = "Product-type cannot be empty for Exchange-Code 'nfo','ndx' or 'mcx'"
+    BLANK_PRODUCT_TYPE_NFO_BFO = "Product-type cannot be empty for Exchange-Code 'nfo' or 'bfo'"
+    BLANK_PRODUCT_TYPE_HIST_V2 = "Product-type cannot be empty for Exchange-Code 'nfo','ndx', 'mcx' or 'bfo'"
     BLANK_ACTION = "Action cannot be empty"
     BLANK_ORDER_TYPE = "Order-type cannot be empty"
     BLANK_QUANTITY = "Quantity cannot be empty"
@@ -135,10 +135,10 @@ class ResponseMessage(enum.Enum):
 
     #Validation Errors
     EXCHANGE_CODE_ERROR = "Exchange-Code should be either 'nse', or 'nfo' or 'ndx' or 'mcx'"
-    EXCHANGE_CODE_HIST_V2_ERROR = "Exchange-Code should be either 'nse', 'bse' ,'nfo', 'ndx' or 'mcx'"
+    EXCHANGE_CODE_HIST_V2_ERROR = "Exchange-Code should be either 'nse', 'bse' ,'nfo', 'ndx', 'mcx' or 'bfo'"
     PRODUCT_TYPE_ERROR = "Product should be either 'futures', 'options', 'futureplus', 'optionplus', 'cash', 'eatm','btst','mtf' or 'margin'"
-    PRODUCT_TYPE_ERROR_NFO = "Product-type should be either 'futures', 'options', 'futureplus', or 'optionplus' for Exchange-Code 'NFO'"
-    PRODUCT_TYPE_ERROR_HIST_V2 = "Product-type should be either 'futures', 'options' for Exchange-Code 'NFO','NDX' or 'MCX'"
+    PRODUCT_TYPE_ERROR_NFO_BFO = "Product-type should be either 'futures', 'options', 'futureplus', or 'optionplus' for Exchange-Code 'NFO' or 'BFO'"
+    PRODUCT_TYPE_ERROR_HIST_V2 = "Product-type should be either 'futures', 'options' for Exchange-Code 'NFO','NDX', 'MCX' or 'BFO'"
     ACTION_TYPE_ERROR = "Action should be either 'buy', or 'sell'"
     ORDER_TYPE_ERROR = "Order-type should be either 'limit', 'market', or 'stoploss'"
     VALIDITY_TYPE_ERROR = "Validity should be either 'day', 'ioc', or 'vtc'"
@@ -149,7 +149,7 @@ class ResponseMessage(enum.Enum):
     INTERVAL_TYPE_ERROR = "Interval should be either '1minute', '5minute', '30minute', or '1day'"
     INTERVAL_TYPE_ERROR_HIST_V2 = "Interval should be either '1second','1minute', '5minute', '30minute', or '1day'"
     API_SESSION_ERROR = "API Session cannot be empty"
-    OPT_CHAIN_EXCH_CODE_ERROR = "Exchange code should be nfo"
+    OPT_CHAIN_EXCH_CODE_ERROR = "Exchange code should be nfo or bfo"
     NFO_FIELDS_MISSING_ERROR = "Atleast two inputs are required out of Expiry-Date, Right & Strike-Price. All three cannot be empty'."
     UNDER_LYING_ERROR = "underlying cant be empty"
     ORDER_FLOW = "order_flow cant be empty"
@@ -229,8 +229,8 @@ ORDER_TYPES = ["limit", "market", "stoploss"]
 VALIDITY_TYPES = ["day", "ioc", "vtc"]
 TRANSACTION_TYPES = ["debit", "credit"]
 EXCHANGE_CODES_HIST = ["nse", "nfo", "ndx", "mcx"]
-EXCHANGE_CODES_HIST_V2 = ["nse","bse","nfo","ndx","mcx"]
-FNO_EXCHANGE_TYPES = ["nfo","mcx","ndx"]
+EXCHANGE_CODES_HIST_V2 = ["nse","bse","nfo","ndx","mcx","bfo"]
+FNO_EXCHANGE_TYPES = ["nfo","mcx","ndx","bfo"]
 STRATEGY_SUBSCRIPTION = ["one_click_fno","i_click_2_gain"]
 
 #Isec NSE Stockcode mapping file
