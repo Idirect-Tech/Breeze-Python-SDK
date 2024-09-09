@@ -1081,11 +1081,11 @@ class ApificationBreeze():
                 return self.validation_error_response(resp_message.BLANK_TO_DATE.value)
             elif stock_code == "" or stock_code == None:
                 return self.validation_error_response(resp_message.BLANK_STOCK_CODE.value)
-            elif exchange_code.lower() == "nfo":
+            elif exchange_code.lower() in ["nfo", "bfo"]:
                 if product_type == "" or product_type == None:
-                    return self.validation_error_response(resp_message.BLANK_PRODUCT_TYPE_NFO.value)
+                    return self.validation_error_response(resp_message.BLANK_PRODUCT_TYPE_NFO_BFO.value)
                 elif product_type.lower() not in config.PRODUCT_TYPES_HIST:
-                    return self.validation_error_response(resp_message.PRODUCT_TYPE_ERROR_NFO.value)
+                    return self.validation_error_response(resp_message.PRODUCT_TYPE_ERROR_NFO_BFO.value)
                 elif product_type.lower() == "options" and (strike_price == "" or strike_price == None):
                     return self.validation_error_response(resp_message.BLANK_STRIKE_PRICE.value)
                 elif expiry_date == "" or expiry_date == None:
@@ -1483,12 +1483,12 @@ class ApificationBreeze():
 
     def get_option_chain_quotes(self,stock_code, exchange_code, expiry_date, product_type, right, strike_price):
         try:
-            if exchange_code == "" or exchange_code == None or  exchange_code.lower()!="nfo":
+            if exchange_code == "" or exchange_code is None or exchange_code.lower() not in ["nfo", "bfo"]:
                 return self.validation_error_response(resp_message.OPT_CHAIN_EXCH_CODE_ERROR.value)
             elif product_type=="" or product_type== None:
-                return self.validation_error_response(resp_message.BLANK_PRODUCT_TYPE_NFO.value)
+                return self.validation_error_response(resp_message.BLANK_PRODUCT_TYPE_NFO_BFO.value)
             elif product_type.lower()!="futures" and product_type.lower()!="options":
-                return self.validation_error_response(resp_message.PRODUCT_TYPE_ERROR_NFO.value)
+                return self.validation_error_response(resp_message.PRODUCT_TYPE_ERROR_NFO_BFO.value)
             elif stock_code=="" or stock_code==None:
                 return self.validation_error_response(resp_message.BLANK_STOCK_CODE.value)
             elif product_type.lower() == 'options':
@@ -1651,7 +1651,7 @@ class ApificationBreeze():
             elif strike_price == "" or strike_price == None:
                 return self.validation_error_response(resp_message.BLANK_STRIKE_PRICE.value)
             elif product_type == "" or product_type == None:
-                return self.validation_error_response(resp_message.BLANK_PRODUCT_TYPE_NFO.value)
+                return self.validation_error_response(resp_message.BLANK_PRODUCT_TYPE_NFO_BFO.value)
             elif underlying == "" or underlying == None:
                 return self.validation_error_response(resp_message.UNDER_LYING_ERROR.value)
             elif order_flow == "" or order_flow == None:
