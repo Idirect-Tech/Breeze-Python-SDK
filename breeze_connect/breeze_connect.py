@@ -870,7 +870,7 @@ class BreezeConnect():
         if self.api_handler:
             return self.api_handler.get_margin(exchange_code)
 
-    def place_order(self, stock_code="", exchange_code="", product="", action="", order_type="", stoploss="", quantity="", price="", validity="", validity_date="", disclosed_quantity="", expiry_date="", right="", strike_price="", user_remark="BreezeStrategies",order_type_fresh="",order_rate_fresh="",settlement_id = "",order_segment_code = "",lots=""):
+    def place_order(self, stock_code="", exchange_code="", product="", action="", order_type="", stoploss="", quantity="", price="", validity="", validity_date="", disclosed_quantity="", expiry_date="", right="", strike_price="", user_remark="",order_type_fresh="",order_rate_fresh="",settlement_id = "",order_segment_code = "",lots=""):
         if self.api_handler:
             return self.api_handler.place_order(stock_code=stock_code, exchange_code=exchange_code, product=product, action=action, order_type=order_type, stoploss=stoploss, quantity=quantity, price=price, validity=validity, validity_date=validity_date, disclosed_quantity=disclosed_quantity, expiry_date=expiry_date, right=right, strike_price=strike_price, user_remark=user_remark, order_type_fresh=order_type_fresh, order_rate_fresh=order_rate_fresh,settlement_id = settlement_id,order_segment_code = order_segment_code, lots=lots,)
 
@@ -1081,7 +1081,7 @@ class ApificationBreeze():
                 return self.validation_error_response(resp_message.BLANK_TO_DATE.value)
             elif stock_code == "" or stock_code == None:
                 return self.validation_error_response(resp_message.BLANK_STOCK_CODE.value)
-            elif exchange_code.lower() == "nfo":
+            elif exchange_code.lower() in ["nfo", "bfo"]:
                 if product_type == "" or product_type == None:
                     return self.validation_error_response(resp_message.BLANK_PRODUCT_TYPE_NFO_BFO.value)
                 elif product_type.lower() not in config.PRODUCT_TYPES_HIST:
@@ -1234,7 +1234,7 @@ class ApificationBreeze():
         except Exception as e:
             self.error_exception(self.get_margin.__name__,e)
 
-    def place_order(self, stock_code="", exchange_code="", product="", action="", order_type="", stoploss="", quantity="", price="", validity="", validity_date="", disclosed_quantity="", expiry_date="", right="", strike_price="", user_remark="BreezeStrategies",order_type_fresh="",order_rate_fresh="",settlement_id = "",order_segment_code = "",lots="",):
+    def place_order(self, stock_code="", exchange_code="", product="", action="", order_type="", stoploss="", quantity="", price="", validity="", validity_date="", disclosed_quantity="", expiry_date="", right="", strike_price="", user_remark="",order_type_fresh="",order_rate_fresh="",settlement_id = "",order_segment_code = "",lots="",):
         try:
             if stock_code == "" or stock_code == None or exchange_code == "" or exchange_code == None or product == "" or product == None or action == "" or action == None or order_type == "" or order_type == None or price == "" or price == None or action == "" or action == None:
                 if stock_code == "" or stock_code == None:
