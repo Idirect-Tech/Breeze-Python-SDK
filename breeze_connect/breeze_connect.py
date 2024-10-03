@@ -700,6 +700,27 @@ class BreezeConnect():
                 data_dict["SellTotalOrders-"+str(marketDepthIndex)] = data[i][6]
                 data_dict["SellReserved-"+str(marketDepthIndex)] = data[i][7]
                 marketDepthIndex += 1
+        if exchange == '3':
+            nifty_data = dict()
+            nifty_data['stock_code'] = data[0]
+            nifty_data['open'] = data[1]
+            nifty_data['high'] = data[2]
+            nifty_data['low'] = data[3]
+            nifty_data['previous_close'] = data[4]
+            nifty_data['last_trade_price'] = data[5]
+            nifty_data['last_trade_quantity'] = data[6]
+            nifty_data['last_traded_time'] = data[7]
+            nifty_data['total_traded_volume'] = data[8]
+            nifty_data['percentage_change'] = data[9]
+            nifty_data['absolute_change'] = data[10]
+            nifty_data['weighted_average'] = data[11]
+            nifty_data['bid_price'] = data[12]
+            nifty_data['bid_quantity'] = data[13]
+            nifty_data['offer_price'] = data[14]
+            nifty_data['offer_quantity'] = data[15]
+            nifty_data['open_interest_value'] = data[16]
+            # nifty_data['expiry_date'] = data[17]
+            return(nifty_data)  
         elif data_type == '1':
             data_dict = {
                 "symbol": data[0],
