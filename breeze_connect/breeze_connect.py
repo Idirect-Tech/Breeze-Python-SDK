@@ -939,9 +939,9 @@ class BreezeConnect():
         if self.api_handler:
             return self.api_handler.get_trade_detail(exchange_code, order_id)
     
-    def get_names(self, exchange_code="",stock_code=""):
+    def get_names(self, exchange_code="",stock_code="", instrument_name=None, expiry_date=None, strike_price=None, option_type=None):
         if self.api_handler:
-            return self.api_handler.get_names(exchange_code, stock_code)
+            return self.api_handler.get_names(exchange_code, stock_code, instrument_name, expiry_date, strike_price, option_type)
     
     def preview_order(self, stock_code="",exchange_code="",product="",order_type="",price="",action="",quantity="",expiry_date="",right="",strike_price="",specialflag="",stoploss="",order_rate_fresh=""):
         if self.api_handler:
@@ -1630,40 +1630,123 @@ class ApificationBreeze():
         except Exception as e:
             self.error_exception(self.get_trade_detail.__name__,e)
     
-    def get_names(self, exchange_code, stock_code):
+    def get_names(self, exchange_code, stock_code, instrument_name=None, expiry_date=None, strike_price=None, option_type=None):
+        """Function to handle multiple naming conventions and resolve ambiguities for FONSE, FOBSE, and CDNSE"""
         try:
             lexchange_code = exchange_code.lower()
             stock_code = stock_code.upper()
             mapper_exchangecode_to_file = config.ISEC_NSE_CODE_MAP_FILE
             required_file = zipfile.open(mapper_exchangecode_to_file.get(lexchange_code))
-    
+
             dataframe = pd.read_csv(required_file, sep=',', engine='python')
-             
-            df2 = dataframe[(dataframe[' "ExchangeCode"'] == stock_code) | (dataframe[' "ShortName"'] == stock_code)]
-            if(len(df2)==0):
-                return self.validation_error_response(except_message.ISEC_NSE_STOCK_MAP_EXCEPTION.value)
-            requiredresult = df2[[' "ShortName"',' "ExchangeCode"','Token',' "CompanyName"']]
-    
-            isec_stock = requiredresult[' "ShortName"'].to_string().split()[1]
-            token = " ".join(requiredresult['Token'].to_string().split()[1:])
-            exchange = requiredresult[' "ExchangeCode"'].to_string()
-            compname = " ".join(requiredresult[' "CompanyName"'].to_string().split()[1:])
-            if(" " in exchange):
+
+            # Function to filter dataframe based on additional parameters
+            def filter_dataframe(df, _exchange_code, _stock_code, _instrument_name=None, _expiry_date=None, _strike_price=None, _option_type=None):
+                if _exchange_code.upper() in ["FONSE", "FOBSE", "CDNSE"]:
+                    # For FOBSE
+                    if _instrument_name in ["OPTSTK", "OPTIDX", "OPTIND", "OPTCUR"]:
+                        return df[
+                            ((df["ExchangeCode"] == _stock_code) |
+                             (df["ShortName"] == _stock_code)) &
+                            (df["InstrumentName"] == _instrument_name) &
+                            (df["ExpiryDate"] == _expiry_date) &
+                            (df["StrikePrice"] == _strike_price) &
+                            (df["OptionType"] == _option_type)
+                            ]
+                    elif _instrument_name in ["FUTSTK", "FUTIDX", "FUTIND", "FUTCUR", "UNDCUR"]:
+                        return df[
+                            ((df["ExchangeCode"] == _stock_code) |
+                             (df["ShortName"] == _stock_code)) &
+                            (df["InstrumentName"] == _instrument_name) &
+                            (df["ExpiryDate"] == _expiry_date)
+                            ]
+                    else:
+                        return
+                else:
+                    # Default behavior for NSE and BSE
+                    return df[
+                        (df[' "ExchangeCode"'] == _stock_code) | (df[' "ShortName"'] == _stock_code)
+                        ] if _exchange_code.upper() == "NSE" else df[
+                        (df["ExchangeCode"] == _stock_code) | (df["ShortName"] == _stock_code)
+                        ]
+
+            # Filter the dataframe based on exchange_code
+            df2 = filter_dataframe(dataframe, exchange_code, stock_code, _instrument_name=instrument_name,
+                                   _expiry_date=expiry_date, _strike_price=strike_price, _option_type=option_type)
+
+            if df2 is None or len(df2) == 0:
+                return self.validation_error_response("No matching data found for the given stock_code with this parameters")
+
+            # Select required columns based on exchange_code
+            if exchange_code.upper() in ["FONSE", "FOBSE", "CDNSE"]:
+                # For FONSE, FOBSE, CDNSE, decide columns dynamically based on instrument_name
+                if instrument_name in ["OPTSTK", "OPTIDX", "OPTIND", "OPTCUR"]:
+                    requiredresult = df2[[
+                        "ShortName", "ExchangeCode", "Token", "CompanyName",
+                        "InstrumentName", "ExpiryDate", "StrikePrice", "OptionType"
+                    ]]
+                elif instrument_name in ["FUTSTK", "FUTIDX", "FUTIND", "FUTCUR", "UNDCUR"]:
+                    requiredresult = df2[[
+                        "ShortName", "ExchangeCode", "Token", "CompanyName",
+                        "InstrumentName", "ExpiryDate"
+                    ]]
+                else:
+                    requiredresult = df2[["ShortName", "ExchangeCode", "Token", "CompanyName"]]
+            elif exchange_code.upper() == "NSE":
+                # For NSE, use the alternative naming convention
+                requiredresult = df2[[' "ShortName"', ' "ExchangeCode"', 'Token', ' "CompanyName"']]
+            else:  # Default case for BSE
+                requiredresult = df2[["ShortName", "ExchangeCode", "Token", "CompanyName"]]
+
+            # Extract values from the filtered dataframe
+            isec_stock = requiredresult.iloc[0]["ShortName"] if "ShortName" in requiredresult else \
+                requiredresult.iloc[0][' "ShortName"']
+            token = str(requiredresult.iloc[0]['Token'])
+            exchange = str(
+                requiredresult.iloc[0]["ExchangeCode"] if "ExchangeCode" in requiredresult else requiredresult.iloc[0][
+                    ' "ExchangeCode"']
+            )
+            compname = str(
+                requiredresult.iloc[0]["CompanyName"] if "CompanyName" in requiredresult else requiredresult.iloc[0][
+                    ' "CompanyName"']
+            )
+
+            # Common logic for processing exchange value
+            if " " in exchange:
                 exchange = " ".join(exchange.split()[1:])
 
+            # Initialize the result dictionary with common fields
             result = {
-                    'exchange_code':exchange_code,
-                    'exchange_stock_code': exchange,
-                    'isec_stock_code':isec_stock,
-                    'isec_token': token,
-                    'company name':compname,
-                    'isec_token_level1':str('4.1!') + str(token),
-                    'isec_token_level2':str('4.2!') + str(token)
-                }
-    
+                'exchange_code': exchange_code,
+                'exchange_stock_code': exchange,
+                'isec_stock_code': isec_stock,
+                'isec_token': token,
+                'company name': compname,
+                'isec_token_level1': str('4.1!') + str(token),
+                'isec_token_level2': str('4.2!') + str(token)
+            }
+
+            # Add optional fields dynamically based on instrument type
+            if instrument_name in ["OPTSTK", "OPTIDX", "OPTIND", "OPTCUR"]:
+                result["instrument_name"] = instrument_name
+                result["expiry_date"] = str(
+                    requiredresult.iloc[0]["ExpiryDate"]) if "ExpiryDate" in requiredresult else None
+                result["strike_price"] = (
+                    requiredresult.iloc[0]["StrikePrice"]) if "StrikePrice" in requiredresult else None
+                result["option_type"] = str(
+                    requiredresult.iloc[0]["OptionType"]) if "OptionType" in requiredresult else None
+            elif instrument_name in ["FUTSTK", "FUTIDX", "FUTIND", "FUTCUR", "UNDCUR"]:
+                result["instrument_name"] = instrument_name
+                result["expiry_date"] = str(
+                    requiredresult.iloc[0]["ExpiryDate"]) if "ExpiryDate" in requiredresult else None
+            else:
+                # No additional fields for other instruments
+                pass
+
             return result
+
         except Exception as e:
-            self.error_exception(self.get_names.__name__,e)
+            self.error_exception(self.get_names.__name__, e)
 
     def limit_calculator(self,strike_price,product_type,expiry_date,underlying,exchange_code,order_flow,stop_loss_trigger,option_type,source_flag,limit_rate,order_reference,available_quantity,market_type,fresh_order_limit):
         try:
