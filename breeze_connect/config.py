@@ -235,12 +235,13 @@ EXCHANGE_CODES_HIST_V2 = ["nse","bse","nfo","ndx","mcx","bfo"]
 FNO_EXCHANGE_TYPES = ["nfo","mcx","ndx","bfo"]
 STRATEGY_SUBSCRIPTION = ["one_click_fno","i_click_2_gain"]
 
-#Isec NSE Stockcode mapping file
+#Isec NSE, BSE, CDNSE, FONSE, FOBSE  Stockcode mapping file
 ISEC_NSE_CODE_MAP_FILE = {
     'nse':'NSEScripMaster.txt',
     'bse':'BSEScripMaster.txt',
     'cdnse':'CDNSEScripMaster.txt',
-    'fonse':'FONSEScripMaster.txt'
+    'fonse':'FONSEScripMaster.txt',
+    'fobse': 'FOBSEScripMaster.txt'
 }
 
 feed_interval_map = {
