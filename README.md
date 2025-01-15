@@ -245,6 +245,14 @@ For Streaming OHLCV, interval must not be empty and must be equal to either of t
  <li><a href="#preview_order"> preview_order </a></li>
  <li><a href="#limit_calculator"> limit_calculator </a></li>
  <li><a href="#margin_calculator"> margin_calculator </a></li>
+ <li><a href="#gtt_three_leg_place_order"> gtt_three_leg_place_order </a></li>
+ <li><a href="#gtt_three_leg_modify_order"> gtt_three_leg_modify_order </a></li>
+ <li><a href="#gtt_three_leg_cancel_order"> gtt_three_leg_cancel_order </a></li>
+ <li><a href="#gtt_order_book"> gtt_order_book </a></li>
+ <li><a href="#gtt_single_leg_place_order"> gtt_single_leg_place_order </a></li>
+ <li><a href="#gtt_single_leg_modify_order"> gtt_single_leg_modify_order </a></li>
+ <li><a href="#gtt_single_leg_cancel_order"> gtt_single_leg_cancel_order </a></li>
+
  <!--<li><a href="#limit_calculator"> limit calculator </a></li>-->
 </ul>
 </div>
@@ -985,3 +993,165 @@ breeze.margin_calculator([{
 
 <br>
 <a href="#index">Back to Index</a>
+
+<hr>
+
+GTT(Good Till Trigger)
+
+<h4 id="gtt_three_leg_place_order"> GTT Three Leg OCO(One Cancels Other) Place order </h4>
+
+
+```python
+
+breeze.gtt_three_leg_place_order(exchange_code ="NFO",
+                                stock_code="NIFTY",
+                                product="options",
+                                quantity = "75",
+                                expiry_date="2025-01-16T06:00:00.00Z",
+                                right = "put",
+                                strike_price = "23200",
+                                gtt_type="cover_oco",
+                                fresh_order_action="buy",
+                                fresh_order_price="30",
+                                fresh_order_type="limit",
+                                index_or_stock="index",
+                                trade_date="2025-01-12T06:00:00.00Z",
+                                order_details=[
+                                {
+                                "gtt_leg_type" : "target",
+                                "action" : "sell",
+                                "limit_price" : "300",
+                                "trigger_price" : "340"
+                                },
+                                {
+                                "gtt_leg_type" : "stoploss",
+                                "action" : "sell",
+                                "limit_price" : "10",
+                                "trigger_price" : "9"
+                                },
+                                ])
+
+```
+
+<br>
+<a href="#index">Back to Index</a>
+
+<h4 id="gtt_three_leg_modify_order"> GTT Three Leg Modify order </h4>
+
+
+```python
+
+breeze.gtt_three_leg_modify_order(exchange_code = "NFO",
+                                gtt_order_id = "2025011500003364",
+                                gtt_type ="oco",
+                                order_details = [
+                                {
+                                "gtt_leg_type" : "target",
+                                "action" : "sell",
+                                "limit_price" : "400",
+                                "trigger_price" : "450"
+                                },
+                                {
+                                "gtt_leg_type" : "stoploss",
+                                "action" : "sell",
+                                "limit_price" : "4",
+                                "trigger_price" : "5"
+                                }])
+
+```
+
+<br>
+<a href="#index">Back to Index</a>
+
+<h4 id="gtt_three_leg_cancel_order"> GTT Three Leg Cancel order </h4>
+
+
+```python
+
+breeze.gtt_three_leg_cancel_order(exchange_code = "NFO",
+                                gtt_order_id = "2025011500002742")
+
+```
+
+<br>
+<a href="#index">Back to Index</a>
+
+<h4 id="gtt_single_leg_place_order"> GTT Single Leg Place order </h4>
+
+
+```python
+
+breeze.gtt_single_leg_place_order(exchange_code ="NFO",
+                                stock_code="NIFTY",
+                                product="options",
+                                quantity = "75",
+                                expiry_date="2025-01-16T06:00:00.00Z",
+                                right = "call",
+                                strike_price = "23000",
+                                gtt_type="single",
+                                index_or_stock="index",
+                                trade_date="2024-12-31T06:00:00.00Z",
+                                order_details=[
+                                {
+                                "action" : "buy",
+                                "limit_price" : "50",
+                                "trigger_price" : "45"
+                                }])
+
+```
+
+<br>
+<a href="#index">Back to Index</a>
+
+
+<h4 id="gtt_single_leg_modify_order"> GTT Single Leg Modify order </h4>
+
+
+```python
+
+breeze.gtt_single_leg_modify_order(exchange_code="NFO",
+                                    gtt_order_id="2025011500003608",
+                                    gtt_type="single",
+                                    order_details=[
+                                    {
+                                    "action": "buy",
+                                    "limit_price": "75",
+                                    "trigger_price": "73"
+                                    }])
+
+```
+
+<br>
+<a href="#index">Back to Index</a>
+
+
+<h4 id="gtt_single_leg_cancel_order"> GTT Single Leg Cancel order </h4>
+
+
+```python
+
+breeze.gtt_single_leg_cancel_order(exchange_code = "NFO",
+                                   gtt_order_id = "2025011500003608")
+
+```
+
+<br>
+<a href="#index">Back to Index</a>
+
+
+<h4 id="gtt_order_book"> OCO and Single GTT order book </h4>
+
+
+```python
+
+breeze.gtt_order_book(exchange_code ="NFO",
+            from_date = "2025-01-15T06:00:00.00Z",
+            to_date = "2025-01-15T06:00:00.00Z")
+
+```
+
+<br>
+<a href="#index">Back to Index</a>
+
+
+

@@ -11,14 +11,12 @@ from urllib.request import urlopen
 import pandas as pd
 import os
 import sys
-import logging
 
 dirs = os.path.dirname(os.path.abspath(__file__))
 
 sys.path.insert(1,dirs)
 import config
 import socket
-
 
 
 requests.packages.urllib3.util.connection.HAS_IPV6 = False
@@ -29,9 +27,9 @@ api_endpoint = config.APIEndPoint
 resp_message = config.ResponseMessage
 except_message = config.ExceptionMessage
 req_type = config.APIRequestType
-logger = logging.getLogger('engineio.client')
-logger.propagate = False
-logger.setLevel(logging.CRITICAL)
+# logger = logging.getLogger('engineio.client')
+# logger.propagate = False
+# logger.setLevel(logging.CRITICAL)
 
 
 class SocketEventBreeze(socketio.ClientNamespace):
@@ -167,6 +165,7 @@ class BreezeConnect():
 
     def socket_connection_response(self,message):
         return {"message":message}
+
 
     def subscribe_exception(self,message):
         return Exception(message)
@@ -700,6 +699,27 @@ class BreezeConnect():
                 data_dict["SellTotalOrders-"+str(marketDepthIndex)] = data[i][6]
                 data_dict["SellReserved-"+str(marketDepthIndex)] = data[i][7]
                 marketDepthIndex += 1
+        if exchange == '3':
+            nifty_data = dict()
+            nifty_data['stock_code'] = data[0]
+            nifty_data['open'] = data[1]
+            nifty_data['high'] = data[2]
+            nifty_data['low'] = data[3]
+            nifty_data['previous_close'] = data[4]
+            nifty_data['last_trade_price'] = data[5]
+            nifty_data['last_trade_quantity'] = data[6]
+            nifty_data['last_traded_time'] = data[7]
+            nifty_data['total_traded_volume'] = data[8]
+            nifty_data['percentage_change'] = data[9]
+            nifty_data['absolute_change'] = data[10]
+            nifty_data['weighted_average'] = data[11]
+            nifty_data['bid_price'] = data[12]
+            nifty_data['bid_quantity'] = data[13]
+            nifty_data['offer_price'] = data[14]
+            nifty_data['offer_quantity'] = data[15]
+            nifty_data['open_interest_value'] = data[16]
+            # nifty_data['expiry_date'] = data[17]
+            return(nifty_data)  
         elif data_type == '1':
             data_dict = {
                 "symbol": data[0],
@@ -839,102 +859,223 @@ class BreezeConnect():
         self.api_handler = ApificationBreeze(self)
 
     def get_customer_details(self, api_session=""):
-        if self.api_handler:
-            return self.api_handler.get_customer_details(api_session)
+        try:
+            if self.api_handler:
+                return self.api_handler.get_customer_details(api_session)
+        except Exception as e:
+            self.error_exception(self.get_customer_details.__name__,e)
 
     def get_demat_holdings(self):
-        if self.api_handler:
-            return self.api_handler.get_demat_holdings()
+        try:
+            if self.api_handler:
+                return self.api_handler.get_demat_holdings()
+        except Exception as e:
+            self.error_exception(self.get_demat_holdings.__name__,e)
 
     def get_funds(self):
-        if self.api_handler:
-            return self.api_handler.get_funds()
+        try:
+            if self.api_handler:
+                return self.api_handler.get_funds()
+        except Exception as e:
+            self.error_exception(self.get_funds.__name__,e)
 
     def set_funds(self, transaction_type="", amount="", segment=""):
-        if self.api_handler:
-            return self.api_handler.set_funds(transaction_type, amount, segment)
+        try:
+            if self.api_handler:
+                return self.api_handler.set_funds(transaction_type, amount, segment)
+        except Exception as e:
+            self.error_exception(self.set_funds.__name__,e)
 
     def get_historical_data(self, interval="", from_date="", to_date="", stock_code="", exchange_code="", product_type="", expiry_date="", right="", strike_price=""):
-        if self.api_handler:
-            return self.api_handler.get_historical_data(interval, from_date, to_date, stock_code, exchange_code, product_type, expiry_date, right, strike_price)
+        try:    
+            if self.api_handler:
+                return self.api_handler.get_historical_data(interval, from_date, to_date, stock_code, exchange_code, product_type, expiry_date, right, strike_price)
+        except Exception as e:
+            self.error_exception(self.get_historical_data.__name__,e)
 
     def get_historical_data_v2(self, interval="", from_date="", to_date="", stock_code="", exchange_code="", product_type="", expiry_date="", right="", strike_price=""):
-        if self.api_handler:
-            return self.api_handler.get_historical_data_v2(interval, from_date, to_date, stock_code, exchange_code, product_type, expiry_date, right, strike_price)
-
+        try:
+            if self.api_handler:
+                return self.api_handler.get_historical_data_v2(interval, from_date, to_date, stock_code, exchange_code, product_type, expiry_date, right, strike_price)
+        except Exception as e:
+            self.error_exception(self.get_historical_data_v2.__name__,e)
+        
     def add_margin(self, product_type="", stock_code="", exchange_code="", settlement_id="", add_amount="", margin_amount="", open_quantity="", cover_quantity="", category_index_per_stock="", expiry_date="", right="", contract_tag="", strike_price="", segment_code=""):
-        if self.api_handler:
-            return self.api_handler.add_margin(product_type, stock_code, exchange_code, settlement_id, add_amount, margin_amount, open_quantity, cover_quantity, category_index_per_stock, expiry_date, right, contract_tag, strike_price, segment_code)
-
+        try:
+            if self.api_handler:
+                return self.api_handler.add_margin(product_type, stock_code, exchange_code, settlement_id, add_amount, margin_amount, open_quantity, cover_quantity, category_index_per_stock, expiry_date, right, contract_tag, strike_price, segment_code)
+        except Exception as e:
+            self.error_exception(self.add_margin.__name__,e)
+        
     def get_margin(self, exchange_code=""):
-        if self.api_handler:
-            return self.api_handler.get_margin(exchange_code)
-
-    def place_order(self, stock_code="", exchange_code="", product="", action="", order_type="", stoploss="", quantity="", price="", validity="", validity_date="", disclosed_quantity="", expiry_date="", right="", strike_price="", user_remark="BreezeStrategies",order_type_fresh="",order_rate_fresh="",settlement_id = "",order_segment_code = "",lots=""):
-        if self.api_handler:
-            return self.api_handler.place_order(stock_code=stock_code, exchange_code=exchange_code, product=product, action=action, order_type=order_type, stoploss=stoploss, quantity=quantity, price=price, validity=validity, validity_date=validity_date, disclosed_quantity=disclosed_quantity, expiry_date=expiry_date, right=right, strike_price=strike_price, user_remark=user_remark, order_type_fresh=order_type_fresh, order_rate_fresh=order_rate_fresh,settlement_id = settlement_id,order_segment_code = order_segment_code, lots=lots,)
-
+        try:
+            if self.api_handler:
+                return self.api_handler.get_margin(exchange_code)
+        except Exception as e:
+            self.error_exception(self.get_margin.__name__,e)
+        
+    def place_order(self, stock_code="", exchange_code="", product="", action="", order_type="", stoploss="", quantity="", price="", validity="", validity_date="", disclosed_quantity="", expiry_date="", right="", strike_price="", user_remark="",order_type_fresh="",order_rate_fresh="",settlement_id = "",order_segment_code = "",lots=""):
+        try:    
+            if self.api_handler:
+                return self.api_handler.place_order(stock_code=stock_code, exchange_code=exchange_code, product=product, action=action, order_type=order_type, stoploss=stoploss, quantity=quantity, price=price, validity=validity, validity_date=validity_date, disclosed_quantity=disclosed_quantity, expiry_date=expiry_date, right=right, strike_price=strike_price, user_remark=user_remark, order_type_fresh=order_type_fresh, order_rate_fresh=order_rate_fresh,settlement_id = settlement_id,order_segment_code = order_segment_code, lots=lots,)
+        except Exception as e:
+            self.error_exception(self.place_order.__name__,e)
+        
     def get_order_detail(self, exchange_code="", order_id=""):
-        if self.api_handler:
-            return self.api_handler.get_order_detail(exchange_code, order_id)
-
+        try:    
+            if self.api_handler:
+                return self.api_handler.get_order_detail(exchange_code, order_id)
+        except Exception as e:
+            self.error_exception(self.get_order_detail.__name__,e)
+        
     def get_order_list(self, exchange_code="", from_date="", to_date=""):
-        if self.api_handler:
-            return self.api_handler.get_order_list(exchange_code, from_date, to_date)
-
+        try:    
+            if self.api_handler:
+                return self.api_handler.get_order_list(exchange_code, from_date, to_date)
+        except Exception as e:
+            self.error_exception(self.get_order_list.__name__,e)
+        
     def cancel_order(self, exchange_code="", order_id=""):
-        if self.api_handler:
-            return self.api_handler.cancel_order(exchange_code, order_id)
-
+        try:    
+            if self.api_handler:
+                return self.api_handler.cancel_order(exchange_code, order_id)
+        except Exception as e:
+            self.error_exception(self.cancel_order.__name__,e)
+        
     def modify_order(self, order_id="", exchange_code="", order_type="", stoploss="", quantity="", price="", validity="", disclosed_quantity="", validity_date=""):
-        if self.api_handler:
-            return self.api_handler.modify_order(order_id, exchange_code, order_type, stoploss, quantity, price, validity, disclosed_quantity, validity_date)
+        try:    
+            if self.api_handler:
+                return self.api_handler.modify_order(order_id, exchange_code, order_type, stoploss, quantity, price, validity, disclosed_quantity, validity_date)
+        except Exception as e:
+            self.error_exception(self.modify_order.__name__,e)
 
+    def gtt_three_leg_place_order(self, exchange_code="", stock_code="", product="", quantity="", expiry_date="", right="", strike_price="",gtt_type="", fresh_order_action="", fresh_order_price="", fresh_order_type="",index_or_stock="", trade_date="", order_details=[]):
+        try:    
+            if self.api_handler:
+                return self.api_handler.gtt_three_leg_place_order(stock_code=stock_code, exchange_code=exchange_code, product=product, quantity=quantity, expiry_date=expiry_date, right=right, strike_price=strike_price, gtt_type=gtt_type, fresh_order_action=fresh_order_action, fresh_order_price=fresh_order_price, fresh_order_type=fresh_order_type, index_or_stock=index_or_stock, trade_date=trade_date, order_details= order_details)
+        except Exception as e:
+            self.error_exception(self.gtt_three_leg_place_order.__name__,e)
+    
+    def gtt_order_book(self, exchange_code="", from_date="", to_date=""):
+        try:    
+            if self.api_handler:
+                return self.api_handler.gtt_order_book(exchange_code, from_date, to_date)
+        except Exception as e:
+            self.error_exception(self.gtt_order_book.__name__,e)
+
+    def gtt_three_leg_cancel_order(self, exchange_code="", gtt_order_id=""):
+        try:    
+            if self.api_handler:
+                return self.api_handler.gtt_three_leg_cancel_order(exchange_code, gtt_order_id)
+        except Exception as e:
+            self.error_exception(self.gtt_three_leg_cancel_order.__name__,e)
+
+    def gtt_three_leg_modify_order(self, exchange_code="", gtt_order_id="", gtt_type="", order_details=[]):
+        try:    
+            if self.api_handler:
+                return self.api_handler.gtt_three_leg_modify_order(exchange_code=exchange_code,gtt_order_id=gtt_order_id, gtt_type=gtt_type, order_details=order_details)
+        except Exception as e:
+            self.error_exception(self.gtt_three_leg_modify_order.__name__,e)
+
+
+    def gtt_single_leg_place_order(self, exchange_code="", stock_code="", product="", quantity="", expiry_date="", right="", strike_price="", gtt_type="", index_or_stock="",trade_date="", order_details=[]):
+        try:
+            if self.api_handler:
+                return self.api_handler.gtt_single_leg_place_order(exchange_code=exchange_code, stock_code=stock_code, product=product, quantity=quantity, expiry_date=expiry_date, right=right, strike_price=strike_price, gtt_type=gtt_type, index_or_stock=index_or_stock,trade_date=trade_date,order_details=order_details)
+        except Exception as e:
+            self.error_exception(self.gtt_single_leg_place_order.__name__,e)
+
+
+    def gtt_single_leg_modify_order(self, exchange_code="", gtt_order_id="", gtt_type="", order_details=[]):
+        try:
+            if self.api_handler:
+                return self.api_handler.gtt_single_leg_modify_order(exchange_code=exchange_code, gtt_order_id=gtt_order_id, gtt_type=gtt_type, order_details=order_details)
+        except Exception as e:
+            self.error_exception(self.gtt_single_leg_modify_order.__name__,e)
+
+    def gtt_single_leg_cancel_order(self,exchange_code, gtt_order_id):
+        try:
+            if self.api_handler:
+                return self.api_handler.gtt_single_leg_cancel_order(exchange_code=exchange_code, gtt_order_id=gtt_order_id)
+        except Exception as e:
+            self.error_exception(self.gtt_single_leg_cancel_order.__name__,e)
+        
     def get_portfolio_holdings(self, exchange_code="", from_date="", to_date="", stock_code="", portfolio_type=""):
-        if self.api_handler:
-            return self.api_handler.get_portfolio_holdings(exchange_code, from_date, to_date, stock_code, portfolio_type)
-
+        try:    
+            if self.api_handler:
+                return self.api_handler.get_portfolio_holdings(exchange_code, from_date, to_date, stock_code, portfolio_type)
+        except Exception as e:
+            self.error_exception(self.get_portfolio_holdings.__name__,e)
+        
     def get_portfolio_positions(self):
-        if self.api_handler:
-            return self.api_handler.get_portfolio_positions()
-
+        try:    
+            if self.api_handler:
+                return self.api_handler.get_portfolio_positions()
+        except Exception as e:
+            self.error_exception(self.get_portfolio_positions.__name__,e)
+        
     def get_quotes(self, stock_code="", exchange_code="", expiry_date="", product_type="", right="", strike_price=""):
-        if self.api_handler:
-            return self.api_handler.get_quotes(stock_code, exchange_code, expiry_date, product_type, right, strike_price)
-
+        try:    
+            if self.api_handler:
+                return self.api_handler.get_quotes(stock_code, exchange_code, expiry_date, product_type, right, strike_price)
+        except Exception as e:
+            self.error_exception(self.get_quotes.__name__,e)
+        
     def get_option_chain_quotes(self, stock_code="", exchange_code="", expiry_date="", product_type="", right="", strike_price=""):
-        if(self.api_handler):
-            return self.api_handler.get_option_chain_quotes(stock_code, exchange_code, expiry_date, product_type, right, strike_price)
-
+        try:    
+            if(self.api_handler):
+                return self.api_handler.get_option_chain_quotes(stock_code, exchange_code, expiry_date, product_type, right, strike_price)
+        except Exception as e:
+            self.error_exception(self.get_option_chain_quotes.__name__,e)
+        
     def square_off(self, source_flag="", stock_code="", exchange_code="", quantity="", price="", action="", order_type="", validity="", stoploss="", disclosed_quantity="", protection_percentage="", settlement_id="", margin_amount="", open_quantity="", cover_quantity="", product="", expiry_date="", right="", strike_price="", validity_date="", trade_password="", alias_name="", order_reference = "", position_exchange_code = "", lots="",):
-        if self.api_handler:
-            return self.api_handler.square_off(source_flag, stock_code, exchange_code, quantity, price, action, order_type, validity, stoploss, disclosed_quantity, protection_percentage, settlement_id, margin_amount, open_quantity, cover_quantity, product, expiry_date, right, strike_price, validity_date, trade_password, alias_name, order_reference, position_exchange_code, lots,)
-
+        try:    
+            if self.api_handler:
+                return self.api_handler.square_off(source_flag, stock_code, exchange_code, quantity, price, action, order_type, validity, stoploss, disclosed_quantity, protection_percentage, settlement_id, margin_amount, open_quantity, cover_quantity, product, expiry_date, right, strike_price, validity_date, trade_password, alias_name, order_reference, position_exchange_code, lots,)
+        except Exception as e:
+            self.error_exception(self.square_off.__name__,e)
+        
     def get_trade_list(self, from_date="", to_date="", exchange_code="", product_type="", action="", stock_code=""):
-        if self.api_handler:
-            return self.api_handler.get_trade_list(from_date, to_date, exchange_code, product_type, action, stock_code)
-
+        try:
+            if self.api_handler:
+                return self.api_handler.get_trade_list(from_date, to_date, exchange_code, product_type, action, stock_code)
+        except Exception as e:
+            self.error_exception(self.get_trade_list.__name__,e)
+        
     def get_trade_detail(self, exchange_code="", order_id=""):
-        if self.api_handler:
-            return self.api_handler.get_trade_detail(exchange_code, order_id)
-    
+        try:
+            if self.api_handler:
+                return self.api_handler.get_trade_detail(exchange_code, order_id)
+        except Exception as e:
+            self.error_exception(self.get_trade_detail.__name__,e)
+
     def get_names(self, exchange_code="",stock_code=""):
-        if self.api_handler:
-            return self.api_handler.get_names(exchange_code, stock_code)
-    
+        try:
+            if self.api_handler:
+                return self.api_handler.get_names(exchange_code, stock_code)
+        except Exception as e:
+            self.error_exception(self.get_names.__name__,e)
+        
     def preview_order(self, stock_code="",exchange_code="",product="",order_type="",price="",action="",quantity="",expiry_date="",right="",strike_price="",specialflag="",stoploss="",order_rate_fresh=""):
-        if self.api_handler:
-            return self.api_handler.preview_order(stock_code, exchange_code, product, order_type, price, action, quantity, expiry_date, right, strike_price, specialflag, stoploss, order_rate_fresh)
-    
+        try:
+            if self.api_handler:
+                return self.api_handler.preview_order(stock_code, exchange_code, product, order_type, price, action, quantity, expiry_date, right, strike_price, specialflag, stoploss, order_rate_fresh)
+        except Exception as e:
+            self.error_exception(self.preview_order.__name__,e)    
 
     def limit_calculator(self,strike_price,product_type,expiry_date,underlying,exchange_code,order_flow,stop_loss_trigger,option_type,source_flag,limit_rate,order_reference,available_quantity,market_type,fresh_order_limit):
-        if self.api_handler:
-            return self.api_handler.limit_calculator(strike_price,product_type,expiry_date,underlying,exchange_code,order_flow,stop_loss_trigger,option_type,source_flag,limit_rate,order_reference,available_quantity,market_type,fresh_order_limit)
+        try:
+            if self.api_handler:
+                return self.api_handler.limit_calculator(strike_price,product_type,expiry_date,underlying,exchange_code,order_flow,stop_loss_trigger,option_type,source_flag,limit_rate,order_reference,available_quantity,market_type,fresh_order_limit)
+        except Exception as e:
+            self.error_exception(self.limit_calculator.__name__,e)
 
     def margin_calculator(self,lists,exchange_code):
-        if self.api_handler:
-            return self.api_handler.margin_calculator(lists,exchange_code)
-    
+        try:
+            if self.api_handler:
+                return self.api_handler.margin_calculator(lists,exchange_code)
+        except Exception as e:
+            self.error_exception(self.margin_calculator.__name__,e)
     
 class ApificationBreeze():
 
@@ -1081,7 +1222,7 @@ class ApificationBreeze():
                 return self.validation_error_response(resp_message.BLANK_TO_DATE.value)
             elif stock_code == "" or stock_code == None:
                 return self.validation_error_response(resp_message.BLANK_STOCK_CODE.value)
-            elif exchange_code.lower() == "nfo":
+            elif exchange_code.lower() in ["nfo", "bfo"]:
                 if product_type == "" or product_type == None:
                     return self.validation_error_response(resp_message.BLANK_PRODUCT_TYPE_NFO_BFO.value)
                 elif product_type.lower() not in config.PRODUCT_TYPES_HIST:
@@ -1234,7 +1375,7 @@ class ApificationBreeze():
         except Exception as e:
             self.error_exception(self.get_margin.__name__,e)
 
-    def place_order(self, stock_code="", exchange_code="", product="", action="", order_type="", stoploss="", quantity="", price="", validity="", validity_date="", disclosed_quantity="", expiry_date="", right="", strike_price="", user_remark="BreezeStrategies",order_type_fresh="",order_rate_fresh="",settlement_id = "",order_segment_code = "",lots="",):
+    def place_order(self, stock_code="", exchange_code="", product="", action="", order_type="", stoploss="", quantity="", price="", validity="", validity_date="", disclosed_quantity="", expiry_date="", right="", strike_price="", user_remark="",order_type_fresh="",order_rate_fresh="",settlement_id = "",order_segment_code = "",lots="",):
         try:
             if stock_code == "" or stock_code == None or exchange_code == "" or exchange_code == None or product == "" or product == None or action == "" or action == None or order_type == "" or order_type == None or price == "" or price == None or action == "" or action == None:
                 if stock_code == "" or stock_code == None:
@@ -1282,6 +1423,7 @@ class ApificationBreeze():
                 "settlement_id" : settlement_id,
                 "order_segment_code" : order_segment_code,
                 "lots": lots, 
+                "user_remark": user_remark
             }
 
             if stoploss != "" and stoploss != None:
@@ -1411,6 +1553,233 @@ class ApificationBreeze():
             return response
         except Exception as e:
             self.error_exception(self.modify_order.__name__,e)
+
+    def gtt_three_leg_place_order(self, exchange_code="", stock_code="", product="", quantity="", expiry_date="", right="", strike_price="", gtt_type="", fresh_order_action="", fresh_order_price="", fresh_order_type="",index_or_stock="", trade_date="", order_details=[]):
+        try:
+            if stock_code == "" or stock_code == None or exchange_code == "" or exchange_code == None or product == "" or product == None:
+                if stock_code == "" or stock_code == None:
+                    return self.validation_error_response(resp_message.BLANK_STOCK_CODE.value)
+                elif exchange_code == "" or exchange_code == None:
+                    return self.validation_error_response(resp_message.BLANK_EXCHANGE_CODE.value)
+                elif product == "" or product == None:
+                    return self.validation_error_response(resp_message.BLANK_PRODUCT_TYPE.value)
+            elif product.lower() not in config.PRODUCT_TYPES:
+                return self.validation_error_response(resp_message.PRODUCT_TYPE_ERROR.value)
+            elif right != "" and right != None and right.lower() not in config.RIGHT_TYPES:
+                return self.validation_error_response(resp_message.RIGHT_TYPE_ERROR.value)
+            elif quantity == "" or quantity == None:
+                return self.validation_error_response(resp_message.BLANK_QUANTITY.value) 
+            elif expiry_date == "" or expiry_date == None:
+                return self.validation_error_response(resp_message.BLANK_EXPIRY_DATE.value)
+            body = {
+                "exchange_code": exchange_code,
+                "stock_code": stock_code,
+                "product" : product,
+                "quantity" : quantity,
+                "expiry_date" : expiry_date,
+                "right" : right,
+                "strike_price" : strike_price,
+                "gtt_type" : gtt_type,
+                "fresh_order_action" : fresh_order_action,
+                "fresh_order_price" : fresh_order_price,
+                "fresh_order_type": fresh_order_type,
+                "index_or_stock" : index_or_stock,
+                "trade_date" : trade_date,
+                "order_details" :order_details
+            }
+            if strike_price != ""  and strike_price != None:
+                body["strike_price"] = strike_price
+            if gtt_type != "" and gtt_type != None:
+                body["gtt_type"] = gtt_type
+            if fresh_order_action != "" and fresh_order_action != None:
+                body["fresh_order_action"] = fresh_order_action
+            if fresh_order_price != "" and fresh_order_price != None:
+                body["fresh_order_price"] = fresh_order_price
+            if fresh_order_type != "" and fresh_order_type != None:
+                body["fresh_order_type"] = fresh_order_type
+            
+            body = json.dumps(body, separators=(',' , ':'))
+            headers = self.generate_headers(body)
+            response = self.make_request(req_type.POST,api_endpoint.GTT_ORDER.value, body, headers)
+            response = response.json()
+            return response
+
+        except Exception as e:
+            self.error_exception(self.gtt_three_leg_place_order.__name__,e)
+
+    def gtt_order_book(self, exchange_code="", from_date="", to_date=""):
+        try:
+            if exchange_code == "" or exchange_code == None or from_date == "" or from_date == None or to_date == "" or to_date == None:
+                if exchange_code == "" or exchange_code == None:
+                    return self.validation_error_response(resp_message.BLANK_EXCHANGE_CODE.value)
+                elif from_date == "" or from_date == None:
+                    return self.validation_error_response(resp_message.BLANK_FROM_DATE.value)
+                elif to_date == "" or to_date == None:
+                    return self.validation_error_response(resp_message.BLANK_TO_DATE.value)
+
+            body = {
+                "exchange_code": exchange_code,
+                "from_date": from_date,
+                "to_date": to_date
+            }
+            body = json.dumps(body, separators=(',', ':'))
+            headers = self.generate_headers(body)
+            response = self.make_request(req_type.GET, api_endpoint.GTT_ORDER.value, body, headers)
+            response = response.json()
+            return response
+        except Exception as e:
+            self.error_exception(self.gtt_order_book.__name__,e) 
+
+    def gtt_three_leg_modify_order(self,exchange_code ="", gtt_order_id="", gtt_type="", order_details=[]):
+        try:
+            if exchange_code == "" or exchange_code == None:
+                return self.validation_error_response(resp_message.BLANK_EXCHANGE_CODE.value)
+            if gtt_order_id == "" or gtt_order_id == None:
+                return self.validation_error_response(resp_message.BLANK_ORDER_ID.value)
+            if gtt_type != "oco" or gtt_type != "cover_oco":
+                return self.validation_error_response(resp_message.GTT_TYPE_ERROR_THREE_LEG.value)
+            
+            body = {
+                "exchange_code" : exchange_code,
+                "gtt_order_id" : gtt_order_id,
+                "gtt_type" :gtt_type,
+                "order_details" : order_details
+            }
+            
+            if exchange_code != "" and exchange_code != None:
+                body["exchange_code"] = exchange_code
+            if gtt_order_id != "" and gtt_order_id != None:
+                body["gtt_order_id"] = gtt_order_id
+            if gtt_type != "" and gtt_type != None:
+                body["gtt_type"] = gtt_type
+            
+            body = json.dumps(body, separators=(',', ':'))
+            headers = self.generate_headers(body)
+            response = self.make_request(req_type.PUT, api_endpoint.GTT_ORDER.value, body, headers)
+            response = response.json()
+            return response
+        except Exception as e:
+            self.error_exception(self.gtt_three_leg_modify_order.__name__,e)
+
+
+
+    def gtt_three_leg_cancel_order(self,exchange_code, gtt_order_id):
+        try:
+            if exchange_code == "" or exchange_code == None or gtt_order_id == "" or gtt_order_id == None:
+                if exchange_code == "" or exchange_code == None:
+                    return self.validation_error_response(resp_message.BLANK_EXCHANGE_CODE.value)
+                elif gtt_order_id == "" or gtt_order_id == None:
+                    return self.validation_error_response(resp_message.BLANK_ORDER_ID.value)
+
+            body = {
+                "exchange_code": exchange_code,
+                "gtt_order_id": gtt_order_id
+            }
+            body = json.dumps(body, separators=(',', ':'))
+            headers = self.generate_headers(body)
+            response = self.make_request(req_type.DELETE, api_endpoint.GTT_ORDER.value, body, headers)
+            response = response.json()
+            return response
+        except Exception as e:
+            self.error_exception(self.gtt_three_leg_cancel_order.__name__,e)
+
+       
+    def gtt_single_leg_place_order(self, exchange_code="", stock_code="", product="", quantity="", expiry_date="", right="", strike_price="", gtt_type="",index_or_stock="", trade_date="", order_details=[]):
+        try:
+            if stock_code == "" or stock_code == None or exchange_code == "" or exchange_code == None or product == "" or product == None:
+                if stock_code == "" or stock_code == None:
+                    return self.validation_error_response(resp_message.BLANK_STOCK_CODE.value)
+                elif exchange_code == "" or exchange_code == None:
+                    return self.validation_error_response(resp_message.BLANK_EXCHANGE_CODE.value)
+                elif product == "" or product == None:
+                    return self.validation_error_response(resp_message.BLANK_PRODUCT_TYPE.value)
+            elif product.lower() not in config.PRODUCT_TYPES:
+                    return self.validation_error_response(resp_message.PRODUCT_TYPE_ERROR.value)
+            elif right != "" and right != None and right.lower() not in config.RIGHT_TYPES:
+                    return self.validation_error_response(resp_message.RIGHT_TYPE_ERROR.value)
+            elif quantity == "" or quantity == None:
+                    return self.validation_error_response(resp_message.BLANK_QUANTITY.value) 
+            elif expiry_date == "" or expiry_date == None:
+                return self.validation_error_response(resp_message.BLANK_EXPIRY_DATE.value)
+             
+            body = {
+                    "exchange_code": exchange_code,
+                    "stock_code": stock_code,
+                    "product" : product,
+                    "quantity" : quantity,
+                    "expiry_date" : expiry_date,
+                    "right" : right,
+                    "strike_price" : strike_price,
+                    "gtt_type" : gtt_type,
+                    "index_or_stock" : index_or_stock,
+                    "trade_date" : trade_date,
+                    "order_details" :order_details
+                }
+            if strike_price != ""  and strike_price != None:
+                body["strike_price"] = strike_price
+            if gtt_type != "" and gtt_type != None:
+                body["gtt_type"] = gtt_type
+                
+            body = json.dumps(body, separators=(',' , ':'))
+            headers = self.generate_headers(body)
+            response = self.make_request(req_type.POST,api_endpoint.GTT_ORDER.value, body, headers)
+            response = response.json()
+            return response
+
+        except Exception as e:
+            self.error_exception(self.gtt_three_leg_place_order.__name__,e)
+    
+    def gtt_single_leg_cancel_order(self, exchange_code="", gtt_order_id="" ):
+        try:
+            if exchange_code == "" or exchange_code == None or gtt_order_id == "" or gtt_order_id == None:
+                if exchange_code == "" or exchange_code == None:
+                    return self.validation_error_response(resp_message.BLANK_EXCHANGE_CODE.value)
+                elif gtt_order_id == "" or gtt_order_id == None:
+                    return self.validation_error_response(resp_message.BLANK_ORDER_ID.value)
+
+            body = {
+                "exchange_code": exchange_code,
+                "gtt_order_id": gtt_order_id
+            }
+            body = json.dumps(body, separators=(',', ':'))
+            headers = self.generate_headers(body)
+            response = self.make_request(req_type.DELETE, api_endpoint.GTT_ORDER.value, body, headers)
+            response = response.json()
+            return response
+        except Exception as e:
+            self.error_exception(self.gtt_three_leg_cancel_order.__name__,e)
+
+    def gtt_single_leg_modify_order(self,exchange_code ="", gtt_order_id="", gtt_type="", order_details=[]):
+        try:
+            if exchange_code == "" or exchange_code == None:
+                return self.validation_error_response(resp_message.BLANK_EXCHANGE_CODE.value)
+            if gtt_order_id == "" or gtt_order_id == None:
+                return self.validation_error_response(resp_message.BLANK_ORDER_ID.value)
+            if gtt_type != "single":
+                return self.validation_error_response(resp_message.GTT_TYPE_ERROR_SINGLE_LEG.value)
+            
+            body = {
+                "exchange_code" : exchange_code,
+                "gtt_order_id" : gtt_order_id,
+                "gtt_type" :gtt_type,
+                "order_details" : order_details
+            }
+            if exchange_code != "" and exchange_code != None:
+                body["exchange_code"] = exchange_code
+            if gtt_order_id != "" and gtt_order_id != None:
+                body["gtt_order_id"] = gtt_order_id
+            if gtt_type != "" and gtt_type != None:
+                body["gtt_type"] = gtt_type
+            
+            body = json.dumps(body, separators=(',', ':'))
+            headers = self.generate_headers(body)
+            response = self.make_request(req_type.PUT, api_endpoint.GTT_ORDER.value, body, headers)
+            response = response.json()
+            return response
+        except Exception as e:
+            self.error_exception(self.gtt_three_leg_modify_order.__name__,e)
+
+
 
     def get_portfolio_holdings(self, exchange_code, from_date, to_date, stock_code, portfolio_type):
         try:
