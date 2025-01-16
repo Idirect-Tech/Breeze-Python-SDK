@@ -237,6 +237,7 @@ EXCHANGE_CODES_HIST = ["nse", "nfo", "ndx", "mcx"]
 EXCHANGE_CODES_HIST_V2 = ["nse","bse","nfo","ndx","mcx","bfo"]
 FNO_EXCHANGE_TYPES = ["nfo","mcx","ndx","bfo"]
 STRATEGY_SUBSCRIPTION = ["one_click_fno","i_click_2_gain"]
+GTT_ORDER_TYPES = ["oco","cover_oco"]
 
 #Isec NSE Stockcode mapping file
 ISEC_NSE_CODE_MAP_FILE = {

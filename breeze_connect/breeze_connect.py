@@ -1571,6 +1571,7 @@ class ApificationBreeze():
                 return self.validation_error_response(resp_message.BLANK_QUANTITY.value) 
             elif expiry_date == "" or expiry_date == None:
                 return self.validation_error_response(resp_message.BLANK_EXPIRY_DATE.value)
+
             body = {
                 "exchange_code": exchange_code,
                 "stock_code": stock_code,
@@ -1636,7 +1637,7 @@ class ApificationBreeze():
                 return self.validation_error_response(resp_message.BLANK_EXCHANGE_CODE.value)
             if gtt_order_id == "" or gtt_order_id == None:
                 return self.validation_error_response(resp_message.BLANK_ORDER_ID.value)
-            if gtt_type != "oco" or gtt_type != "cover_oco":
+            if gtt_type.lower() not in config.GTT_ORDER_TYPES:
                 return self.validation_error_response(resp_message.GTT_TYPE_ERROR_THREE_LEG.value)
             
             body = {
@@ -1701,7 +1702,7 @@ class ApificationBreeze():
                     return self.validation_error_response(resp_message.BLANK_QUANTITY.value) 
             elif expiry_date == "" or expiry_date == None:
                 return self.validation_error_response(resp_message.BLANK_EXPIRY_DATE.value)
-             
+ 
             body = {
                     "exchange_code": exchange_code,
                     "stock_code": stock_code,
@@ -1778,7 +1779,6 @@ class ApificationBreeze():
             return response
         except Exception as e:
             self.error_exception(self.gtt_three_leg_modify_order.__name__,e)
-
 
 
     def get_portfolio_holdings(self, exchange_code, from_date, to_date, stock_code, portfolio_type):
@@ -2115,5 +2115,3 @@ class ApificationBreeze():
             return response
         except Exception as e:
             self.error_exception(self.preview_order.__name__,e)
-
-    
