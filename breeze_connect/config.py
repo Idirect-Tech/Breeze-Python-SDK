@@ -1,6 +1,7 @@
 import enum
 
 #Breeze API BASE URL
+# API_URL = "https://uatapi.icicidirect.com/iciciDirectWebApi_core/api/v1/"
 API_URL = "https://api.icicidirect.com/breezeapi/api/v1/"
 
 #Breeze New Endpoint
@@ -10,6 +11,7 @@ BREEZE_NEW_URL = "https://breezeapi.icicidirect.com/api/v2/"
 LIVE_FEEDS_URL = "https://livefeeds.icicidirect.com"
 
 #Live Streams URL
+# LIVE_STREAM_URL = "https://uatstreams.icicidirect.com"
 LIVE_STREAM_URL = "https://livestream.icicidirect.com"
 
 #Live OHLC Stream URL
@@ -49,6 +51,7 @@ class APIEndPoint(enum.Enum):
     SQUARE_OFF = "squareoff"
     LIMIT_CALCULATOR = "fnolmtpriceandqtycal"
     MARGIN_CALULATOR = "margincalculator"
+    GTT_ORDER = "gttorder"
     
     def __str__(self):
         return str(self.value)
@@ -160,6 +163,8 @@ class ResponseMessage(enum.Enum):
     SOURCE_FLAG = "source_flag cant be empty, it should be either P or M"
     MARKET_TYPE = "market_type cant be empty"
     FRESH_ORDER_LIMIT = "fresh_order_limit cant be empty"
+    GTT_TYPE_ERROR_THREE_LEG = "type of GTT should be either 'oco' or 'cover_oco'. "
+    GTT_TYPE_ERROR_SINGLE_LEG = "type of GTT should be 'single'. "
 
 
     #Socket Connectivity Response
@@ -234,6 +239,7 @@ EXCHANGE_CODES_HIST = ["nse", "nfo", "ndx", "mcx"]
 EXCHANGE_CODES_HIST_V2 = ["nse","bse","nfo","ndx","mcx","bfo"]
 FNO_EXCHANGE_TYPES = ["nfo","mcx","ndx","bfo"]
 STRATEGY_SUBSCRIPTION = ["one_click_fno","i_click_2_gain"]
+GTT_ORDER_TYPES = ["oco","cover_oco"]
 
 #Isec NSE Stockcode mapping file
 ISEC_NSE_CODE_MAP_FILE = {
