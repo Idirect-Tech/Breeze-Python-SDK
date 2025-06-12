@@ -5,9 +5,11 @@
  <li><a href="#docslink">API Documentation</a></li>
  <li><a href="#virtualenv">Set Up Virtual Environment</a></li>
  <li><a href="#clientinstall">Installing Client</a></li>
- <li><a href="#websocket">Websocket Usage</a></li>
  <li><a href="#apiusage">API Usage</a></li>
+ <li><a href="#websocket">Websocket Usage</a></li>
  <li><a href="#index_title">List Of APIs</a></li>
+ <li><a href="#version_history">Version History</a></li>
+
 </ul>
 
 <h3 id="client"><b>Breeze API Python Client</b></h3>
@@ -61,8 +63,35 @@ pip install --upgrade breeze-connect
 Or, You can also install the specific release version via pip
 
 ```
-pip install breeze-connect==1.0.62
+pip install breeze-connect==1.0.63
 ```
+<hr>
+
+<h4 id="apiusage"> API Usage</h4>
+
+```python
+from breeze_connect import BreezeConnect
+
+# Initialize SDK
+breeze = BreezeConnect(api_key="your_api_key")
+
+# Obtain your session key from https://api.icicidirect.com/apiuser/login?api_key=YOUR_API_KEY
+# Incase your api-key has special characters(like +,=,!) then encode the api key before using in the url as shown below.
+import urllib
+print("https://api.icicidirect.com/apiuser/login?api_key="+urllib.parse.quote_plus("your_api_key"))
+
+# Generate Session
+breeze.generate_session(api_secret="your_secret_key",
+                        session_token="your_api_session")
+
+# Generate ISO8601 Date/DateTime String
+import datetime
+iso_date_string = datetime.datetime.strptime("28/02/2021","%d/%m/%Y").isoformat()[:10] + 'T05:30:00.000Z'
+iso_date_time_string = datetime.datetime.strptime("28/02/2021 23:59:59","%d/%m/%Y %H:%M:%S").isoformat()[:19] + '.000Z'
+```
+<br>
+
+<hr>
 
 
 <h3 id="websocket"><b> Websocket Usage </b></h3>
@@ -136,7 +165,37 @@ Ticks: {'symbol': '4.1!2885', 'open': 1219.45, 'last': 1209.05, 'high': 1226.9, 
 ```
 </details>
 <h4> NOTE : </h4>
-<p>For unsubscribe : breeze.subscribe_feeds(stock_token="4.1!2885")</p>
+<p>For unsubscribe : breeze.unsubscribe_feeds(stock_token="4.1!2885")</p>
+
+<h2>Subscribe to Real Time Streaming of NSE stock</h2>
+
+```python
+breeze.subscribe_feeds(exchange_code="NSE",
+                        stock_code="NIFTY",
+                        product_type="cash",
+                        get_market_depth=False,
+                        get_exchange_quotes=True)
+```
+<br>
+
+<details>
+  <summary><b>View Response</b></summary>
+ 
+```json
+{'message': 'Stock NIFTY subscribed successfully'}
+Ticks: {'symbol': '4.1!NIFTY 50', 'open': 24748.7, 'last': 25006.2, 'high': 25029.5, 'low': 24671.45, 'change': 1.03, 'bPrice': None, 'bQty': None, 'sPrice': None, 'sQty': None, 'ltq': None, 'avgPrice': None, 'quotes': 'Quotes Data', 'ttq': None, 'totalBuyQt': None, 'totalSellQ': None, 'ttv': None, 'trend': '+', 'lowerCktLm': None, 'upperCktLm': None, 'ltt': 'Fri Jun  6 15:10:48 2025', 'close': 24750.9, 'exchange': 'NSE Equity', 'stock_name': 'NIFTY 50'}
+Ticks: {'symbol': '4.1!NIFTY 50', 'open': 24748.7, 'last': 25006.05, 'high': 25029.5, 'low': 24671.45, 'change': 1.03, 'bPrice': None, 'bQty': None, 'sPrice': None, 'sQty': None, 'ltq': None, 'avgPrice': None, 'quotes': 'Quotes Data', 'ttq': None, 'totalBuyQt': None, 'totalSellQ': None, 'ttv': None, 'trend': '-', 'lowerCktLm': None, 'upperCktLm': None, 'ltt': 'Fri Jun  6 15:10:48 2025', 'close': 24750.9, 'exchange': 'NSE Equity', 'stock_name': 'NIFTY 50'}
+
+```
+</details>
+<h4> NOTE : </h4>
+<p>For unsubscribe : breeze.unsubscribe_feeds(exchange_code="NSE",
+                              stock_code="NIFTY",
+                              product_type="cash",
+                              get_market_depth=False,
+                              get_exchange_quotes=True)</p>
+
+
 <h2>Subscribe to Real Time Streaming OHLCV Data of NFO stocks</h2>
 
 ```python 
@@ -387,6 +446,47 @@ Tick Data: {'stock_name': 'POWER FINANCE CORPORATION LTD(POWFIN)Margin-Buy', 'st
 <h4> NOTE : </h4>
 <p>For unsubscribe : breeze.unsubscribe_feeds(stock_token = "i_click_2_gain")</p>
 
+
+<h2>Subscribe to multiple stock tokens</h2>
+
+```python 
+breeze.subscribe_feeds(stock_token=['4.1!3499','4.1!2885'])
+```
+<br>
+
+<details>
+  <summary><b>View Response</b></summary>
+
+```json
+{'message': "Stock ['4.1!3499', '4.1!2885'] subscribed successfully"}
+
+Ticks: {'symbol': '4.1!3499', 'open': 146.79, 'last': 148.32, 'high': 149.49, 'low': 146.2, 'change': 1.52, 'bPrice': 148.3, 'bQty': 2880, 'sPrice': 148.32, 'sQty': 5480, 'ltq': 20, 'avgPrice': 148.23, 'quotes': 'Quotes Data', 'ttq': 21831757, 'totalBuyQt': 2187011, 'totalSellQ': 3921071, 'ttv': '323.61C', 'trend': '', 'lowerCktLm': 131.49, 'upperCktLm': 160.71, 'ltt': 'Thu Mar  6 09:56:18 2025', 'close': 146.1, 'exchange': 'NSE Equity', 'stock_name': 'TATA STEEL LIMITED'}
+Ticks: {'symbol': '4.1!2885', 'open': 1197, 'last': 1189.05, 'high': 1200.5, 'low': 1185.15, 'change': 1.16, 'bPrice': 1189.05, 'bQty': 92, 'sPrice': 1189.2, 'sQty': 175, 'ltq': 308, 'avgPrice': 1194.59, 'quotes': 'Quotes Data', 'ttq': 4073591, 'totalBuyQt': 512163, 'totalSellQ': 661691, 'ttv': '486.63C', 'trend': '', 'lowerCktLm': 1058.05, 'upperCktLm': 1293.15, 'ltt': 'Thu Mar  6 09:56:19 2025', 'close': 1175.6, 'exchange': 'NSE Equity', 'stock_name': 'RELIANCE INDUSTRIES'}
+Ticks: {'symbol': '4.1!3499', 'open': 146.79, 'last': 148.32, 'high': 149.49, 'low': 146.2, 'change': 1.52, 'bPrice': 148.3, 'bQty': 2880, 'sPrice': 148.32, 'sQty': 5480, 'ltq': 20, 'avgPrice': 148.23, 'quotes': 'Quotes Data', 'ttq': 21831757, 'totalBuyQt': 2187011, 'totalSellQ': 3921071, 'ttv': '323.61C', 'trend': '', 'lowerCktLm': 131.49, 'upperCktLm': 160.71, 'ltt': 'Thu Mar  6 09:56:19 2025', 'close': 146.1, 'exchange': 'NSE Equity', 'stock_name': 'TATA STEEL LIMITED'}
+Ticks: {'symbol': '4.1!2885', 'open': 1197, 'last': 1189.2, 'high': 1200.5, 'low': 1185.15, 'change': 1.16, 'bPrice': 1189.05, 'bQty': 223, 'sPrice': 1189.2, 'sQty': 262, 'ltq': 2, 'avgPrice': 1194.58, 'quotes': 'Quotes Data', 'ttq': 4073999, 'totalBuyQt': 515067, 'totalSellQ': 662343, 'ttv': '486.67C', 'trend': '', 'lowerCktLm': 1058.05, 'upperCktLm': 1293.15, 'ltt': 'Thu Mar  6 09:56:19 2025', 'close': 1175.6, 'exchange': 'NSE Equity', 'stock_name': 'RELIANCE INDUSTRIES'}
+
+```
+</details>
+<h4> NOTE : </h4>
+<p>For unsubscribe : breeze.unsubscribe_feeds(stock_token=['4.1!3499','4.1!2885'])</p>
+
+<h2>Subscribe to order notifications</h2>
+
+```python 
+breeze.subscribe_feeds(get_order_notification=True)
+```
+<br>
+
+<details>
+  <summary><b>View Response</b></summary>
+
+```json
+{'message': 'Order Notification subscribed successfully'}
+```
+</details>
+<h4> NOTE : </h4>
+<p>For unsubscribe : breeze.unsubscribe_feeds(get_order_notification=True)</p>
+
 <br>
 <hr>
 <h3> ADDITIONAL NOTES </h3>
@@ -402,11 +502,12 @@ Tick Data: {'stock_name': 'POWER FINANCE CORPORATION LTD(POWFIN)Margin-Buy', 'st
         
 <li>Value of X can be : 
     <ul>
-        <li> 1 for BSE </li>
-        <li> 4 for NSE</li> 
-        <li> 13 for NDX </li>
-        <li> 6 for MCX </li>
-        <li> 4 for NFO </li></ul>
+        <li> 1 for BSE(equity) </li>
+        <li> 2 for BFO OHLC Data </li>
+        <li> 4 for NSE </li> 
+        <li> 4 for NFO </li>
+        <li> 8 for BFO live Data </li>
+    </ul>
 </li>      
 <li>Value of Y can be : 
     <ul>
@@ -418,15 +519,14 @@ Tick Data: {'stock_name': 'POWER FINANCE CORPORATION LTD(POWFIN)Margin-Buy', 'st
     <ul>
         <li>BSE </li>
         <li>NSE</li> 
-        <li>NDX </li>
-        <li>MCX </li>
+        <li>BFO </li>
         <li>NFO </li>
       </ul>
 </li>
 <li>Stock Code Validation: The stock_code field cannot be left empty. Valid examples include "WIPRO" or "ZEEENT".</li>
-<li>Product_type Requirements: Acceptable values are 'Futures', 'Options', or a non-empty string. For exchanges NDX, MCX, and NFO, this field must not be left empty.
+<li>Product_type Requirements: Acceptable values are 'Futures', 'Options', or a non-empty string. For exchanges NFO, this field must not be left empty.
 </li>
-<li>Expiry_date Format: Should be in DD-MMM-YYYY format (e.g., 01-Jan-2022), and cannot be empty for NDX, MCX, or NFO exchanges.</li>
+<li>Expiry_date Format: Should be in DD-MMM-YYYY format (e.g., 01-Jan-2022), and cannot be empty for NFO exchanges.</li>
 <li>Strike_price Format: Must be a float value represented as a string or remain empty. For Options under product_type, this field must not be empty.</li>
 <li>Right Field Requirements: Acceptable values are 'Put', 'Call', or an empty string. For Options, this field cannot be left empty.</li>
 <li>get_exchange_quotes and get_market_depth Validation: At least one must be set to True. Both can be True, but both cannot be False.
@@ -434,31 +534,6 @@ Tick Data: {'stock_name': 'POWER FINANCE CORPORATION LTD(POWFIN)Margin-Buy', 'st
 <li>OHLCV Streaming Interval: The interval field cannot be empty and must be one of the following values: "1second", "1minute", "5minute", or "30minute".</li>
 
 </ol>
-<br>
-<hr>
-
-<h4 id="apiusage"> API Usage</h4>
-
-```python
-from breeze_connect import BreezeConnect
-
-# Initialize SDK
-breeze = BreezeConnect(api_key="your_api_key")
-
-# Obtain your session key from https://api.icicidirect.com/apiuser/login?api_key=YOUR_API_KEY
-# Incase your api-key has special characters(like +,=,!) then encode the api key before using in the url as shown below.
-import urllib
-print("https://api.icicidirect.com/apiuser/login?api_key="+urllib.parse.quote_plus("your_api_key"))
-
-# Generate Session
-breeze.generate_session(api_secret="your_secret_key",
-                        session_token="your_api_session")
-
-# Generate ISO8601 Date/DateTime String
-import datetime
-iso_date_string = datetime.datetime.strptime("28/02/2021","%d/%m/%Y").isoformat()[:10] + 'T05:30:00.000Z'
-iso_date_time_string = datetime.datetime.strptime("28/02/2021 23:59:59","%d/%m/%Y %H:%M:%S").isoformat()[:19] + '.000Z'
-```
 <br>
 
 <hr>
@@ -474,7 +549,7 @@ iso_date_time_string = datetime.datetime.strptime("28/02/2021 23:59:59","%d/%m/%
  <li><a href="#set_funds">set_funds</a></li>
  <li><a href="#historical_data1">get_historical_data</a></li>
  <li><a href="#historical_data_v21">get_historical_data_v2</a></li>
- <li><a href="#add_margin">add_margin</a></li>
+ <!-- <li><a href="#add_margin">add_margin</a></li> -->
  <li><a href="#get_margin">get_margin</a></li>
  <li><a href="#place_order">place_order</a></li>
  <li><a href="#order_detail">order_detail</a></li>
@@ -495,10 +570,11 @@ iso_date_time_string = datetime.datetime.strptime("28/02/2021 23:59:59","%d/%m/%
  <li><a href="#gtt_three_leg_place_order"> gtt_three_leg_place_order </a></li>
  <li><a href="#gtt_three_leg_modify_order"> gtt_three_leg_modify_order </a></li>
  <li><a href="#gtt_three_leg_cancel_order"> gtt_three_leg_cancel_order </a></li>
- <li><a href="#gtt_order_book"> gtt_order_book </a></li>
  <li><a href="#gtt_single_leg_place_order"> gtt_single_leg_place_order </a></li>
  <li><a href="#gtt_single_leg_modify_order"> gtt_single_leg_modify_order </a></li>
  <li><a href="#gtt_single_leg_cancel_order"> gtt_single_leg_cancel_order </a></li>
+  <li><a href="#gtt_order_book"> gtt_order_book </a></li>
+
 
  <!--<li><a href="#limit_calculator"> limit calculator </a></li>-->
 </ul>
@@ -968,7 +1044,7 @@ breeze.get_historical_data_v2(interval="1minute",
 <a href="#index">Back to Index</a>
 <hr>
 
-
+<!-- 
 <h3 id="add_margin">Add Margin</h3>
 
 
@@ -996,9 +1072,9 @@ breeze.add_margin(product_type="margin",
   ```
 </details> -->
 
-<br>
+<!-- <br>
 <a href="#index">Back to Index</a>
-<hr>
+<hr> --> 
 
 <h3 id="get_margin">Get Margin of your account.</h3>
 
@@ -2288,132 +2364,6 @@ breeze.gtt_single_leg_place_order(exchange_code ="NFO",
 
 <hr>
 
-
-GTT(Good Till Trigger)
-
-<h4 id="gtt_three_leg_place_order"> GTT Three Leg OCO(One Cancels Other) Place order </h4>
-
-
-```python
-
-breeze.gtt_three_leg_place_order(exchange_code ="NFO",
-                                stock_code="NIFTY",
-                                product="options",
-                                quantity = "75",
-                                expiry_date="2025-01-16T06:00:00.00Z",
-                                right = "put",
-                                strike_price = "23200",
-                                gtt_type="cover_oco",
-                                fresh_order_action="buy",
-                                fresh_order_price="30",
-                                fresh_order_type="limit",
-                                index_or_stock="index",
-                                trade_date="2025-01-12T06:00:00.00Z",
-                                order_details=[
-                                {
-                                "gtt_leg_type" : "target",
-                                "action" : "sell",
-                                "limit_price" : "300",
-                                "trigger_price" : "340"
-                                },
-                                {
-                                "gtt_leg_type" : "stoploss",
-                                "action" : "sell",
-                                "limit_price" : "10",
-                                "trigger_price" : "9"
-                                },
-                                ])
-
-```
-
-<br>
-<a href="#index">Back to Index</a>
-
-<h4 id="gtt_three_leg_modify_order"> GTT Three Leg Modify order </h4>
-
-
-```python
-
-breeze.gtt_three_leg_modify_order(exchange_code = "NFO",
-                                gtt_order_id = "2025011500003364",
-                                gtt_type ="oco",
-                                order_details = [
-                                {
-                                "gtt_leg_type" : "target",
-                                "action" : "sell",
-                                "limit_price" : "400",
-                                "trigger_price" : "450"
-                                },
-                                {
-                                "gtt_leg_type" : "stoploss",
-                                "action" : "sell",
-                                "limit_price" : "4",
-                                "trigger_price" : "5"
-                                }])
-
-```
-
-<br>
-<a href="#index">Back to Index</a>
-
-<h4 id="gtt_three_leg_cancel_order"> GTT Three Leg Cancel order </h4>
-
-
-```python
-
-breeze.gtt_three_leg_cancel_order(exchange_code = "NFO",
-                                gtt_order_id = "2025011500002742")
-
-```
-
-<br>
-<a href="#index">Back to Index</a>
-
-<h4 id="gtt_single_leg_place_order"> GTT Single Leg Place order </h4>
-
-
-```python
-
-breeze.gtt_single_leg_place_order(exchange_code ="NFO",
-                                stock_code="NIFTY",
-                                product="options",
-                                quantity = "75",
-                                expiry_date="2025-01-16T06:00:00.00Z",
-                                right = "call",
-                                strike_price = "23000",
-                                gtt_type="single",
-                                index_or_stock="index",
-                                trade_date="2024-12-31T06:00:00.00Z",
-                                order_details=[
-                                {
-                                "action" : "buy",
-                                "limit_price" : "50",
-                                "trigger_price" : "45"
-                                }])
-
-```
-
-<br>
-<a href="#index">Back to Index</a>
-
-
-<h4 id="gtt_single_leg_modify_order"> GTT Single Leg Modify order </h4>
-
-
-```python
-
-breeze.gtt_single_leg_modify_order(exchange_code="NFO",
-                                    gtt_order_id="2025011500003608",
-                                    gtt_type="single",
-                                    order_details=[
-                                    {
-                                    "action": "buy",
-                                    "limit_price": "75",
-                                    "trigger_price": "73"
-                                    }])
-
-```
-=======
 <h3 id="gtt_single_leg_modify_order"> GTT Single Leg Modify order </h3>
 
 
@@ -2443,21 +2393,9 @@ breeze.gtt_single_leg_modify_order(exchange_code="NFO",
   ```
 </details>
 
-
 <br>
 <a href="#index">Back to Index</a>
 
-
-<h4 id="gtt_single_leg_cancel_order"> GTT Single Leg Cancel order </h4>
-
-
-```python
-
-breeze.gtt_single_leg_cancel_order(exchange_code = "NFO",
-                                   gtt_order_id = "2025011500003608")
-
-```
-=======
 <hr>
 <h3 id="gtt_single_leg_cancel_order"> GTT Single Leg Cancel order </h3>
 
@@ -2479,22 +2417,9 @@ breeze.gtt_single_leg_cancel_order(exchange_code = "NFO",
   ```
 </details>
 
-
 <br>
 <a href="#index">Back to Index</a>
 
-
-<h4 id="gtt_order_book"> OCO and Single GTT order book </h4>
-
-
-```python
-
-breeze.gtt_order_book(exchange_code ="NFO",
-            from_date = "2025-01-15T06:00:00.00Z",
-            to_date = "2025-01-15T06:00:00.00Z")
-
-```
-=======
 <hr>
 
 <h3 id="gtt_order_book"> OCO and Single GTT order book </h3>
@@ -2556,9 +2481,18 @@ breeze.gtt_order_book(exchange_code ="NFO",
   ```
 </details>
 
-
 <br>
 <a href="#index">Back to Index</a>
 
 <hr>
 
+<h3 id="version_history"><b> Version History </b></h3>
+
+<ul>
+<li>Version 1.0.57: BFO integration</li>
+<li>Version 1.0.58: GIFT NIFTY integration</li>
+<li>Version 1.0.60: GTT integration</li>
+<li>Version 1.0.61: README.md file updation</li>
+<li>Version 1.0.62: API USAGE addition </li>
+<li>Version 1.0.63: MTF order changes </li>
+</ul>

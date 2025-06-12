@@ -116,8 +116,6 @@ class ResponseMessage(enum.Enum):
     BLANK_EXCHANGE_CODE = "Exchange-Code cannot be empty"
     BLANK_STOCK_CODE = "Stock-Code cannot be empty"
     BLANK_PRODUCT_TYPE = "Product cannot be empty"
-    BLANK_PRODUCT_TYPE_NFO = "Product-type cannot be empty for Exchange-Code 'nfo'"
-    BLANK_PRODUCT_TYPE_BFO = "Product-type cannot be empty for Exchange-Code 'bfo'"
     BLANK_PRODUCT_TYPE_NFO_BFO = "Product-type cannot be empty for Exchange-Code 'nfo' or 'bfo'"
     BLANK_PRODUCT_TYPE_HIST_V2 = "Product-type cannot be empty for Exchange-Code 'nfo','ndx', 'mcx' or 'bfo'"
     BLANK_ACTION = "Action cannot be empty"
@@ -165,6 +163,7 @@ class ResponseMessage(enum.Enum):
     FRESH_ORDER_LIMIT = "fresh_order_limit cant be empty"
     GTT_TYPE_ERROR_THREE_LEG = "type of GTT should be either 'oco' or 'cover_oco'. "
     GTT_TYPE_ERROR_SINGLE_LEG = "type of GTT should be 'single'. "
+    MTF_SELL_NOT_ALLOWED = "SELL action is not allowed for MTF product type. "
 
 
     #Socket Connectivity Response
