@@ -1,7 +1,6 @@
 import enum
 
 #Breeze API BASE URL
-# API_URL = "https://uatapi.icicidirect.com/iciciDirectWebApi_core/api/v1/"
 API_URL = "https://api.icicidirect.com/breezeapi/api/v1/"
 
 #Breeze New Endpoint
@@ -11,7 +10,6 @@ BREEZE_NEW_URL = "https://breezeapi.icicidirect.com/api/v2/"
 LIVE_FEEDS_URL = "https://livefeeds.icicidirect.com"
 
 #Live Streams URL
-# LIVE_STREAM_URL = "https://uatstreams.icicidirect.com"
 LIVE_STREAM_URL = "https://livestream.icicidirect.com"
 
 #Live OHLC Stream URL

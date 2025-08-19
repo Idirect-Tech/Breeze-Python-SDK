@@ -63,7 +63,7 @@ pip install --upgrade breeze-connect
 Or, You can also install the specific release version via pip
 
 ```
-pip install breeze-connect==1.0.63
+pip install breeze-connect==1.0.64
 ```
 <hr>
 
@@ -593,27 +593,39 @@ breeze.get_customer_details(api_session="your_api_session")
   <summary><b>View API Response</b></summary>
 
   ```json
-  {'Success': 
-      {'exg_trade_date': {'NSE': '04-Feb-2025',
-                          'BSE': '04-Feb-2025',
-                          'FNO': '04-Feb-2025',
-                          'NDX': '04-Feb-2025'},
-    'exg_status': {'NSE': 'C', 'BSE': 'C', 'FNO': 'Y', 'NDX': 'C'},
-    'segments_allowed': {'Trading': 'Y',
-                        'Equity': 'Y',
-                        'Derivatives': 'Y',
-                        'Currency': 'N'},
-    'idirect_userid': 'XY123456',
-    'idirect_user_name': 'John Smith',
-    'idirect_ORD_TYP': 'N',
-    'idirect_lastlogin_time': '04-Feb-2025 08:52:03',
-    'mf_holding_mode_popup_flg': 'N',
-    'commodity_exchange_status': 'N',
-    'commodity_trade_date': '04-Feb-2025',
-    'commodity_allowed': 'C'},
-  'Status': 200,
-  'Error': None
- }
+  {
+    "Success": {
+        "exg_trade_date": {
+            "NSE": "04-Feb-2025",
+            "BSE": "04-Feb-2025",
+            "FNO": "04-Feb-2025",
+            "NDX": "12-Feb-2025"
+        },
+        "exg_status": {
+            "NSE": "O",
+            "BSE": "O",
+            "FNO": "Y",
+            "NDX": "X"
+        },
+        "segments_allowed": {
+            "Trading": "Y",
+            "Equity": "Y",
+            "Derivatives": "Y",
+            "Currency": "Z"
+        },
+        "idirect_userid": "XY604721",
+        "session_token": "SNjhweuihjndmsbdhjqgy*",
+        "idirect_user_name": "JOHN SMITH",
+        "idirect_ORD_TYP": "N",
+        "idirect_lastlogin_time": "04-Feb-2025 15:07:17",
+        "mf_holding_mode_popup_flg": "N",
+        "commodity_exchange_status": "Y",
+        "commodity_trade_date": "04-Feb-2025",
+        "commodity_allowed": "O"
+    },
+    "Status": 200,
+    "Error": null
+}
 
   ```
 </details>
@@ -769,6 +781,10 @@ breeze.get_historical_data(interval="1minute",
 
   ```
 </details>
+
+<h4> NOTE: </h4>
+<p><ol><li>The historical data provided does not account for corporate adjusted data. </li></ol></p>
+
 <br>
 <a href="#index">Back to Index</a>
 <hr>
@@ -823,6 +839,9 @@ breeze.get_historical_data(interval="1minute",
 
   ```
 </details>
+
+<h4> NOTE: </h4>
+<p><ol><li>The historical data provided does not account for corporate adjusted data. </li></ol></p>
 
 <br>
 <a href="#index">Back to Index</a>
@@ -883,7 +902,10 @@ breeze.get_historical_data(interval="1minute",
   ```
 </details>
 <h4> NOTE: </h4>
-<p>  Get Historical Data for specific stock-code by mentioned interval either as "1minute", "5minute", "30minute" or as "1day"</p>
+<p> <ol><li>Get Historical Data for specific stock-code by mentioned interval either as "1minute", "5minute", "30minute" or as "1day" </li>
+<li>The historical data provided does not account for corporate adjusted data. </li></ol></p>
+
+
 <a href="#index">Back to Index</a>
 <hr>
 
@@ -926,7 +948,8 @@ breeze.get_historical_data_v2(interval="1minute",
 
 <h4> NOTE: </h4>
 <ol><li>Product Type historical data v2 should be "futures", "options","cash"</li>
-                 <li>Interval should be "1minute", "5minute", "30minute" or "1day"</li></ol>
+                 <li>Interval should be "1minute", "5minute", "30minute" or "1day"</li>
+                 <li>The historical data provided does not account for corporate adjusted data. </li></ol>
 
 <a href="#index">Back to Index</a>
 
@@ -978,6 +1001,10 @@ breeze.get_historical_data_v2(interval="1minute",
 
   ```
 </details>
+
+<h4> NOTE: </h4>
+<ol><li>The historical data provided does not account for corporate adjusted data. </li></ol>
+
 <br>
 <a href="#index">Back to Index</a>
 
@@ -1038,7 +1065,8 @@ breeze.get_historical_data_v2(interval="1minute",
 <h4> NOTE: </h4>
 <p>
 <ol> <li>Get Historical Data (version 2) for specific stock-code by mentioning interval either as "1second","1minute", "5minute", "30minute" or as "1day".</li>
-       <li>Maximum candle intervals in one single request is 1000 </li> </ol>
+       <li>Maximum candle intervals in one single request is 1000 </li> 
+       <li>The historical data provided does not account for corporate adjusted data. </li></ol>
  </p>
 <br>
 <a href="#index">Back to Index</a>
@@ -1142,7 +1170,8 @@ breeze.place_order(stock_code="NIFTY",
 </details>
 
 <h4> NOTE: </h4>
-<p><ol><li>Order Type should be either "limit" or "market"</li></ol></p>
+<p><ol><li>Order Type should be either "limit" or "market". </li>
+       <li>The validity_date parameter has no impact on the order execution and even if you pass it while placing the order, it will be excluded from order processing.</li></ol></p>
 <a href="#index">Back to Index</a>
 
 <hr>
@@ -1182,7 +1211,8 @@ breeze.place_order(stock_code="NIFTY",
 </details>
 
 <h4> NOTE: </h4>
-<p><ol><li>Order Type should be either "limit" or "market"</li></ol></p>
+<p><ol><li>Order Type should be either "limit" or "market"</li>
+       <li>The validity_date parameter has no impact on the order execution and even if you pass it while placing the order, it will be excluded from order processing.</li></ol></p>
 
 <br>
 <a href="#index">Back to Index</a>
@@ -1219,6 +1249,9 @@ breeze.place_order(stock_code="ITC",
 
   ```
 </details>
+
+<h4> NOTE: </h4>
+<p><ol><li>The validity_date parameter has no impact on the order execution and even if you pass it while placing the order, it will be excluded from order processing.</li></ol></p>
 
 <br>
 <a href="#index">Back to Index</a>
@@ -1469,6 +1502,9 @@ breeze.modify_order(order_id="202502051400012345",
   ```
 </details>
 
+<h4> NOTE: </h4>
+<p><ol><li>The validity_date parameter has no impact on the modification of the order and even if you pass it while modifying the order, it will be excluded from order modification processing.</li></ol></p>
+
 <br>
 <a href="#index">Back to Index</a>
 <hr>
@@ -1573,7 +1609,6 @@ breeze.get_portfolio_positions()
 
 <h3 id="get_quotes">Get quotes</h3>
 
-
 ```python
 breeze.get_quotes(stock_code="NIFTY",
                     exchange_code="NFO",
@@ -1626,14 +1661,15 @@ product_type = "options", right="call/put", strike_price="24000" </li> </ol>
 <a href="#index">Back to Index</a>
 <hr>
 
-<h3 id="get_option_chain">Get option chain quotes</h3>
+<h3 id="get_option_chain">Get option chain quotes: Call</h3>
 
 
 ```python
 breeze.get_option_chain_quotes(stock_code="ICIBAN",
                     exchange_code="NFO",
-                    product_type="futures",
-                    expiry_date="2025-01-25T06:00:00.000Z")
+                    product_type="options",
+                    right="call",
+                    expiry_date="2025-08-28T06:00:00.000Z")
 ```                    
 
 <br>
@@ -1641,93 +1677,144 @@ breeze.get_option_chain_quotes(stock_code="ICIBAN",
   <summary><b>View API Response</b></summary>
 
   ```json
-  {'Success': [{'exchange_code': 'NFO',
-   'product_type': 'Options',
-   'stock_code': 'NIFTY',
-   'expiry_date': '06-Feb-2025',
-   'right': 'Call',
-   'strike_price': 17600.0,
-   'ltp': 0.0,
-   'ltt': '',
-   'best_bid_price': 0.0,
-   'best_bid_quantity': '0',
-   'best_offer_price': 0.0,
-   'best_offer_quantity': '0',
-   'open': 0.0,
-   'high': 0.0,
-   'low': 0.0,
-   'previous_close': 0.0,
-   'ltp_percent_change': 0.0,
-   'upper_circuit': 6750.4,
-   'lower_circuit': 5541.8,
-   'total_quantity_traded': '0',
-   'spot_price': '23787',
-   'ltq': '0',
-   'open_interest': 0.0,
-   'chnge_oi': 0.0,
-   'total_buy_qty': '0',
-   'total_sell_qty': '0'},
-  {'exchange_code': 'NFO',
-   'product_type': 'Options',
-   'stock_code': 'NIFTY',
-   'expiry_date': '06-Feb-2025',
-   'right': 'Call',
-   'strike_price': 17650.0,
-   'ltp': 0.0,
-   'ltt': '',
-   'best_bid_price': 0.0,
-   'best_bid_quantity': '0',
-   'best_offer_price': 0.0,
-   'best_offer_quantity': '0',
-   'open': 0.0,
-   'high': 0.0,
-   'low': 0.0,
-   'previous_close': 0.0,
-   'ltp_percent_change': 0.0,
-   'upper_circuit': 6700.45,
-   'lower_circuit': 5491.85,
-   'total_quantity_traded': '0',
-   'spot_price': '23787',
-   'ltq': '0',
-   'open_interest': 0.0,
-   'chnge_oi': 0.0,
-   'total_buy_qty': '0',
-   'total_sell_qty': '0'}],
- 'Status': 200,
- 'Error': None}
+  {'Success': [{'exchange_code': 'NFO', 
+  'product_type': 'Options', 
+  'stock_code': 'ICIBAN', 
+  'expiry_date': '28-Aug-2025', 
+  'right': 'Call', 
+  'strike_price': 760.0, 
+  'ltp': 0.0, 
+  'ltt': '', 
+  'best_bid_price': 0.0, 
+  'best_bid_quantity': '0', 
+  'best_offer_price': 0.0, 
+  'best_offer_quantity': '0', 
+  'open': 0.0, 
+  'high': 0.0, 
+  'low': 0.0, 
+  'previous_close': 0.0, 
+  'ltp_percent_change': 0.0, 
+  'upper_circuit': 712.4, 
+  'lower_circuit': 613.0, 
+  'total_quantity_traded': '0', 
+  'spot_price': '1424.4', 
+  'ltq': '0', 
+  'open_interest': 0.0, 
+  'chnge_oi': 0.0, 
+  'total_buy_qty': '0', 
+  'total_sell_qty': '0'}, 
+  {'exchange_code': 'NFO', 
+  'product_type': 'Options', 
+  'stock_code': 'ICIBAN', 
+  'expiry_date': '28-Aug-2025', 
+  'right': 'Call', 
+  'strike_price': 780.0, 
+  'ltp': 0.0, 
+  'ltt': '', 
+  'best_bid_price': 0.0, 
+  'best_bid_quantity': '0', 
+  'best_offer_price': 0.0, 
+  'best_offer_quantity': '0', 
+  'open': 0.0, 
+  'high': 0.0, 
+  'low': 0.0, 
+  'previous_close': 0.0, 
+  'ltp_percent_change': 0.0, 
+  'upper_circuit': 692.45, 
+  'lower_circuit': 593.05, 
+  'total_quantity_traded': '0', 
+  'spot_price': '1424.4', 
+  'ltq': '0', 
+  'open_interest': 0.0, 
+  'chnge_oi': 0.0, 
+  'total_buy_qty': '0', 
+  'total_sell_qty': '0'}], 'Status': 200, 'Error': None}
 
   ```
 </details>
 
 <h4> NOTE: </h4>
-<p><ol><li>Get option-chain of mentioned stock-code for product-type Options where atleast 2 input is required out of expiry-date, right and strike-price</li>
-    <li>Get option-chain of mentioned stock-code for product-type Futures where input of expiry-date is not compulsory</li></ol></p>
+<p><ol><li>Get option-chain of mentioned stock-code for product-type Options where atleast 2 input is required out of expiry-date, right and strike-price</li></ol></p>
 
 
 <a href="#index">Back to Index</a>
 
-<!-- <h3 id="get_option_chain2">Get option-chain of mentioned stock-code for product-type Options where atleast 2 input is required out of expiry-date, right and strike-price</h3>
-
+<h3 id="get_option_chain">Get option chain quotes: Put</h3>
 
 ```python
 breeze.get_option_chain_quotes(stock_code="ICIBAN",
                     exchange_code="NFO",
                     product_type="options",
-                    expiry_date="2022-08-25T06:00:00.000Z",
-                    right="call")
+                    right="put",
+                    expiry_date="2025-08-28T06:00:00.000Z")
 ```
-
 <br>
 <details>
   <summary><b>View API Response</b></summary>
 
   ```json
+  
+{'Success': [{'exchange_code': 'NFO', 
+'product_type': 'Options', 
+'stock_code': 'ICIBAN', 
+'expiry_date': '28-Aug-2025', 
+'right': 'Put', 
+'strike_price': 760.0, 
+'ltp': 0.0, 
+'ltt': '', 
+'best_bid_price': 0.0, 
+'best_bid_quantity': '0', 
+'best_offer_price': 0.0, 
+'best_offer_quantity': '0', 
+'open': 0.0, 
+'high': 0.0, 
+'low': 0.0, 
+'previous_close': 0.0, 
+'ltp_percent_change': 0.0, 
+'upper_circuit': 20.05, 
+'lower_circuit': 0.05, 
+'total_quantity_traded': '0', 
+'spot_price': '1430.1', 
+'ltq': '0', 
+'open_interest': 0.0, 
+'chnge_oi': 0.0, 
+'total_buy_qty': '0', 
+'total_sell_qty': '0'},
+{'exchange_code': 'NFO', 
+'product_type': 'Options', 
+'stock_code': 'ICIBAN', 
+'expiry_date': '28-Aug-2025', 
+'right': 'Put', 
+'strike_price': 780.0, 
+'ltp': 0.0, 
+'ltt': '', 
+'best_bid_price': 0.0, 
+'best_bid_quantity': '0', 
+'best_offer_price': 0.0, 
+'best_offer_quantity': '0', 
+'open': 0.0, 
+'high': 0.0, 
+'low': 0.0, 
+'previous_close': 0.0, 
+'ltp_percent_change': 0.0, 
+'upper_circuit': 20.05, 
+'lower_circuit': 0.05, 
+'total_quantity_traded': '0', 
+'spot_price': '1430.1', 
+'ltq': '0', 
+'open_interest': 0.0, 
+'chnge_oi': 0.0, 
+'total_buy_qty': '0', 
+'total_sell_qty': '0'}], 'Status': 200, 'Error': None}
 
   ```
 </details>
 
-<br> -->
-<!-- <a href="#index">Back to Index</a> -->
+<h4> NOTE: </h4>
+<p><ol><li>Get option-chain of mentioned stock-code for product-type Options where atleast 2 input is required out of expiry-date, right and strike-price</li></ol></p>
+
+<br>
+<a href="#index">Back to Index</a>
 <hr>
 
 <!-- <h3 id="square_off1">Square off an Equity Margin Order</h3>
@@ -1798,6 +1885,9 @@ breeze.square_off(exchange_code="NFO",
   ```
 </details>
 
+<h4> NOTE: </h4>
+<p><ol><li>The validity_date parameter has no impact on the square off order execution and even if you pass it while squaring off the position, it will be excluded from square off order processing.</li></ol></p>
+
 <br>
 <!-- <h5> NOTE : </h5>
 <p> <ol><li> Please refer get_portfolio_positions() for settlement id and margin_amount </li></ol></p> -->
@@ -1835,6 +1925,9 @@ breeze.square_off(exchange_code="NFO",
 
   ```
 </details>
+
+<h4> NOTE: </h4>
+<p><ol><li>The validity_date parameter has no impact on the square off order execution and even if you pass it while squaring off the position, it will be excluded from square off order processing.</li></ol></p>
 
 <br>
 <a href="#index">Back to Index</a>
@@ -2494,5 +2587,4 @@ breeze.gtt_order_book(exchange_code ="NFO",
 <li>Version 1.0.60: GTT integration</li>
 <li>Version 1.0.61: README.md file updation</li>
 <li>Version 1.0.62: API USAGE addition </li>
-<li>Version 1.0.63: MTF order changes </li>
 </ul>
