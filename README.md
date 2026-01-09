@@ -63,7 +63,7 @@ pip install --upgrade breeze-connect
 Or, You can also install the specific release version via pip
 
 ```
-pip install breeze-connect==1.0.64
+pip install breeze-connect==1.0.65
 ```
 <hr>
 
