@@ -12,6 +12,10 @@ import pandas as pd
 import os
 import sys
 import logging
+import requests
+import io
+import csv
+
 
 dirs = os.path.dirname(os.path.abspath(__file__))
 
@@ -26,7 +30,7 @@ if not os.path.exists(log_folder):
 requests.packages.urllib3.util.connection.HAS_IPV6 = False
 
 resp = urlopen(config.SECURITY_MASTER_URL)
-zipfile = ZipFile(BytesIO(resp.read()))
+zip = ZipFile(BytesIO(resp.read()))
 api_endpoint = config.APIEndPoint
 resp_message = config.ResponseMessage
 except_message = config.ExceptionMessage
@@ -304,72 +308,75 @@ class BreezeConnect():
             return {}
 
     def get_stock_token_value(self, exchange_code="", stock_code="", product_type="", expiry_date="", strike_price="", right="", get_exchange_quotes=True, get_market_depth=True):
-        if get_exchange_quotes == False and get_market_depth == False:
-            self.subscribe_exception(except_message.QUOTE_DEPTH_EXCEPTION.value)
-        else:
-            exchange_code_name = ""
-            exchange_code_list = {
-                "BSE": "1.",
-                "NSE": "4.",
-                "NDX": "13.",
-                "MCX": "6.",
-                "NFO": "4.",
-                "BFO": "2.",
-            }
-
-            #only for rate refresh live feeds
-            if self.interval == "" or self.interval == None:
-                exchange_code_list["BFO"] = "8."
-
-            exchange_code_name = exchange_code_list.get(exchange_code, False)
-            if exchange_code_name == False:
-                self.subscribe_exception(except_message.EXCHANGE_CODE_EXCEPTION.value)
-            elif stock_code == "":
-                self.subscribe_exception(except_message.STOCK_CODE_EXCEPTION.value)
+        try:
+            if get_exchange_quotes == False and get_market_depth == False:
+                self.subscribe_exception(except_message.QUOTE_DEPTH_EXCEPTION.value)
             else:
-                token_value = False
-                if exchange_code.lower() == "bse":
-                    token_value = self.stock_script_dict_list[0].get(stock_code, False)
-                elif exchange_code.lower() == "nse":
-                    token_value = self.stock_script_dict_list[1].get(stock_code, False)
+                exchange_code_name = ""
+                exchange_code_list = {
+                    "BSE": "1.",
+                    "NSE": "4.",
+                    "NDX": "13.",
+                    "MCX": "6.",
+                    "NFO": "4.",
+                    "BFO": "2.",
+                }
+
+                #only for rate refresh live feeds
+                if self.interval == "" or self.interval == None:
+                    exchange_code_list["BFO"] = "8."
+
+                exchange_code_name = exchange_code_list.get(exchange_code, False)
+                if exchange_code_name == False:
+                    self.subscribe_exception(except_message.EXCHANGE_CODE_EXCEPTION.value)
+                elif stock_code == "":
+                    self.subscribe_exception(except_message.STOCK_CODE_EXCEPTION.value)
                 else:
-                    if expiry_date == "":
-                        self.subscribe_exception(except_message.EXPIRY_DATE_EXCEPTION.value)
-                    if product_type.lower() == "futures":
-                        contract_detail_value = "FUT"
-                    elif product_type.lower() == "options":
-                        contract_detail_value = "OPT"
+                    token_value = False
+                    if exchange_code.lower() == "bse":
+                        token_value = self.stock_script_dict_list[0].get(stock_code, False)
+                    elif exchange_code.lower() == "nse":
+                        token_value = self.stock_script_dict_list[1].get(stock_code, False)
                     else:
-                        self.subscribe_exception(except_message.PRODUCT_TYPE_EXCEPTION.value)
-                    contract_detail_value = contract_detail_value + "-" + stock_code + "-" + expiry_date
-                    if product_type.lower() == "options":
-                        if strike_price == "":
-                            self.subscribe_exception(except_message.STRIKE_PRICE_EXCEPTION.value)
+                        if expiry_date == "":
+                            self.subscribe_exception(except_message.EXPIRY_DATE_EXCEPTION.value)
+                        if product_type.lower() == "futures":
+                            contract_detail_value = "FUT"
+                        elif product_type.lower() == "options":
+                            contract_detail_value = "OPT"
                         else:
-                            contract_detail_value = contract_detail_value + "-" + strike_price
-                        if right.lower() == "put":
-                            contract_detail_value = contract_detail_value + "-" + "PE"
-                        elif right.lower() == "call":
-                            contract_detail_value = contract_detail_value + "-" + "CE"
-                        else:
-                            self.subscribe_exception(except_message.RIGHT_EXCEPTION.value)
-                    if exchange_code.lower() == "ndx":
-                        token_value = self.stock_script_dict_list[2].get(contract_detail_value, False)
-                    elif exchange_code.lower() == "mcx":
-                        token_value = self.stock_script_dict_list[3].get(contract_detail_value, False)
-                    elif exchange_code.lower() == "nfo":
-                        token_value = self.stock_script_dict_list[4].get(contract_detail_value, False)
-                    elif exchange_code.lower() == "bfo":
-                        token_value = self.stock_script_dict_list[5].get(contract_detail_value, False)
-                if token_value == False:
-                    self.subscribe_exception(except_message.STOCK_INVALID_EXCEPTION.value)
-                exchange_quotes_token_value = False
-                if get_exchange_quotes != False:
-                    exchange_quotes_token_value = exchange_code_name + "1!" + token_value
-                market_depth_token_value = False
-                if get_market_depth != False:
-                    market_depth_token_value = exchange_code_name + "2!" + token_value
-                return exchange_quotes_token_value, market_depth_token_value
+                            self.subscribe_exception(except_message.PRODUCT_TYPE_EXCEPTION.value)
+                        contract_detail_value = contract_detail_value + "-" + stock_code + "-" + expiry_date
+                        if product_type.lower() == "options":
+                            if strike_price == "":
+                                self.subscribe_exception(except_message.STRIKE_PRICE_EXCEPTION.value)
+                            else:
+                                contract_detail_value = contract_detail_value + "-" + strike_price
+                            if right.lower() == "put":
+                                contract_detail_value = contract_detail_value + "-" + "PE"
+                            elif right.lower() == "call":
+                                contract_detail_value = contract_detail_value + "-" + "CE"
+                            else:
+                                self.subscribe_exception(except_message.RIGHT_EXCEPTION.value)
+                        if exchange_code.lower() == "ndx":
+                            token_value = self.stock_script_dict_list[2].get(contract_detail_value, False)
+                        elif exchange_code.lower() == "mcx":
+                            token_value = self.stock_script_dict_list[3].get(contract_detail_value, False)
+                        elif exchange_code.lower() == "nfo":
+                            token_value = self.stock_script_dict_list[4].get(contract_detail_value, False)
+                        elif exchange_code.lower() == "bfo":
+                            token_value = self.stock_script_dict_list[5].get(contract_detail_value, False)
+                    if token_value == False:
+                        self.subscribe_exception(except_message.STOCK_INVALID_EXCEPTION.value)
+                    exchange_quotes_token_value = False
+                    if get_exchange_quotes != False:
+                        exchange_quotes_token_value = str(exchange_code_name) + "1!" + str(token_value)
+                    market_depth_token_value = False
+                    if get_market_depth != False:
+                        market_depth_token_value = str(exchange_code_name) + "2!" + str(token_value)
+                    return exchange_quotes_token_value, market_depth_token_value
+        except Exception as e:
+            return e
 
     def subscribe_feeds(self, stock_token="", exchange_code="", stock_code="", product_type="", expiry_date="", strike_price="", right="", interval = "", get_exchange_quotes=True, get_market_depth=True, get_order_notification=False):
         try:
@@ -554,7 +561,7 @@ class BreezeConnect():
                 depth.append(dict)
         return depth
 
-    def parse_data(self, data):    
+    def parse_data(self, data):
         if data and type(data) == list and len(data) > 0 and type(data[0]) == str and "!" not in data[0] and len(data) == 19:
             #if data and type(data) == list and len(data) > 0 and type(data[0]) == str and "!" not in data[0] and len(data) == 19:
             iclick_data = dict()
@@ -854,36 +861,110 @@ class BreezeConnect():
             # Handle other exceptions
             raise Exception(f"Unexpected error: {str(e)}")
 
-    def get_stock_script_list(self):
+  
+    def convert_to_formatted_rupees(self,value: str) -> str:
         try:
-            self.stock_script_dict_list = [{}, {}, {}, {}, {}, {}]
-            self.token_script_dict_list = [{}, {}, {}, {}, {}, {}]
-            with requests.Session() as s:
-                download = s.get(config.STOCK_SCRIPT_CSV_URL)
-                decoded_content = download.content.decode('utf-8')
-                cr = csv.reader(decoded_content.splitlines(), delimiter=',')
-                my_list = list(cr)
-                for row in my_list:
-                    if row[2] == "BSE":
-                        self.stock_script_dict_list[0][row[3]] = row[5]
-                        self.token_script_dict_list[0][row[5]] = [row[3], row[1]]
-                    elif row[2] == "NSE":
-                        self.stock_script_dict_list[1][row[3]] = row[5]
-                        self.token_script_dict_list[1][row[5]] = [row[3], row[1]]
-                    elif row[2] == "NDX":
-                        self.stock_script_dict_list[2][row[7]] = row[5]
-                        self.token_script_dict_list[2][row[5]] = [row[7], row[1]]
-                    elif row[2] == "MCX":
-                        self.stock_script_dict_list[3][row[7]] = row[5]
-                        self.token_script_dict_list[3][row[5]] = [row[7], row[1]]
-                    elif row[2] == "NFO":
-                        self.stock_script_dict_list[4][row[7]] = row[5]
-                        self.token_script_dict_list[4][row[5]] = [row[7], row[1]]
-                    elif row[2] == "BFO":
-                        self.stock_script_dict_list[5][row[7]] = row[5]
-                        self.token_script_dict_list[5][row[5]] = [row[7], row[1]]
-        except Exception as e:
-            pass
+            rupees = value / 100
+            return format(rupees, 'f').rstrip('0').rstrip('.') 
+        except Exception:
+            return value
+
+
+    def get_contract_name(self, underlying: str, product_type: str, expiry_date: str,
+                      strike_price: str, option_type: str) -> str:
+        """Build contract name like in C# getContractName()"""
+        product_type = product_type.strip('"').upper()
+        underlying = underlying.strip('"')
+        expiry_date = expiry_date.strip('"')
+        strike_price = strike_price.strip('"')
+        option_type = option_type.strip('"').upper()
+
+        if "FUT" in product_type:
+            product_type = "FUT"
+            contract_name = f"{product_type}-{underlying}-{expiry_date}"
+        else:
+            product_type = "OPT"
+            strike_price = self.convert_to_formatted_rupees(strike_price)
+            option_type = "CE" if "C" in option_type else "PE"
+            contract_name = f"{product_type}-{underlying}-{expiry_date}-{strike_price}-{option_type}"
+        return contract_name
+
+    def get_stock_script_list(self):
+        """Equivalent to C# getStockScriptList()"""
+        self.stock_script_dict_list = [{},{},{},{},{},{}]   
+        self.token_script_dict_list = [{},{},{},{},{},{}]
+
+        try:
+            resp = urlopen(config.SECURITY_MASTER_URL)
+            zip = ZipFile(BytesIO(resp.read()))
+            response = requests.get(config.SECURITY_MASTER_URL, timeout=60)
+            response.raise_for_status()
+            with zip as archive:
+                for file_name in archive.namelist():
+                    if not file_name.lower().endswith(".txt"):
+                        continue
+
+                    f_upper = file_name.upper()
+                    if "FONSE" in f_upper:
+                        exchange_code, idx = "NFO", 4
+                    elif "FOBSE" in f_upper:
+                        exchange_code, idx = "BFO", 5
+                    elif "MCX" in f_upper:
+                        exchange_code, idx = "MCX", 3
+                    elif "NDX" in f_upper:
+                        exchange_code, idx = "NDX", 2
+                    elif "NSE" in f_upper:
+                        exchange_code, idx = "NSE", 1
+                    elif "BSE" in f_upper:
+                        exchange_code, idx = "BSE", 0
+                    else:
+                        continue
+
+                    with zip.open(file_name) as file:
+                        reader = csv.reader(io.TextIOWrapper(file, encoding='utf-8'))
+                        # header = next(reader, None)  # skip header
+                        for columns in reader:
+                            if len(columns) < 5:
+                                continue
+
+                            if exchange_code in ("BSE", "NSE"):
+                                token = columns[0].strip('"')
+                                stock_code = columns[1].strip('"')
+                                company_name = columns[3].strip('"')
+                                self.stock_script_dict_list[idx][stock_code] = token
+                                self.token_script_dict_list[idx][token] = [stock_code, company_name]
+
+                            elif exchange_code in ("NFO", "BFO"):
+                                contract_name = self.get_contract_name(
+                                    columns[2], columns[3], columns[4], columns[5], columns[6])
+                                token = columns[0].strip('"')
+                                company_name = columns[29].strip('"') if len(columns) > 29 else ""
+                                self.stock_script_dict_list[idx][contract_name] = token
+                                self.token_script_dict_list[idx][token] = [contract_name, company_name]
+
+                            elif exchange_code == "MCX":
+                                contract_name = self.get_contract_name(
+                                    columns[2], columns[3], columns[7], columns[9], columns[8]
+                                )
+                                token = columns[0].strip('"')
+                                company_name = columns[4].strip('"')
+                                self.stock_script_dict_list[idx][contract_name] = token
+                                self.token_script_dict_list[idx][token] = [contract_name, company_name]
+
+                            elif exchange_code == "NDX":
+                                contract_name = self.get_contract_name(
+                                    columns[2], columns[3], columns[4], columns[5], columns[6]
+                                )
+                                token = columns[0].strip('"')
+                                stock_code = columns[2].strip('"')
+                                company_name = columns[29].strip('"') if len(columns) > 29 else ""
+                                self.stock_script_dict_list[idx][stock_code] = token
+                                self.token_script_dict_list[idx][token] = [stock_code, company_name]
+            return self.token_script_dict_list
+
+        except Exception as ex:
+            print(f"Error loading SecurityMaster.zip: {ex}")
+            return self.token_script_dict_list
 
     def generate_session(self, api_secret, session_token):
         self.session_key = session_token
@@ -1982,10 +2063,8 @@ class ApificationBreeze():
             lexchange_code = exchange_code.lower()
             stock_code = stock_code.upper()
             mapper_exchangecode_to_file = config.ISEC_NSE_CODE_MAP_FILE
-            required_file = zipfile.open(mapper_exchangecode_to_file.get(lexchange_code))
-    
+            required_file = zip.open(mapper_exchangecode_to_file.get(lexchange_code))
             dataframe = pd.read_csv(required_file, sep=',', engine='python')
-             
             df2 = dataframe[(dataframe[' "ExchangeCode"'] == stock_code) | (dataframe[' "ShortName"'] == stock_code)]
             if(len(df2)==0):
                 return self.validation_error_response(except_message.ISEC_NSE_STOCK_MAP_EXCEPTION.value)
