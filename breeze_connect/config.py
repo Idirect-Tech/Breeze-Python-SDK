@@ -7,16 +7,16 @@ API_URL = "https://api.icicidirect.com/breezeapi/api/v1/"
 BREEZE_NEW_URL = "https://breezeapi.icicidirect.com/api/v2/"
 
 #Live Feeds URL
-LIVE_FEEDS_URL = "https://livefeeds.icicidirect.com"
+LIVE_FEEDS_URL = "https://livefeeds.icicidirect.com"  # order notification
 
 #Live Streams URL
-LIVE_STREAM_URL = "https://livestream.icicidirect.com"
+LIVE_STREAM_URL = "https://livestream.icicidirect.com"  # live feeds streaming
 
 #Live OHLC Stream URL
-LIVE_OHLC_STREAM_URL = "https://breezeapi.icicidirect.com"
+LIVE_OHLC_STREAM_URL = "https://breezeapi.icicidirect.com" #OHLC 
 
 #Security Master Download Link 
-SECURITY_MASTER_URL = "https://directlink.icicidirect.com/NewSecurityMaster/SecurityMaster.zip"
+SECURITY_MASTER_URL = "https://directlink.icicidirect.com/MotherAppMaster/SecurityMaster.zip"
 
 #Stock Script Code Download Link
 STOCK_SCRIPT_CSV_URL = "https://traderweb.icicidirect.com/Content/File/txtFile/ScripFile/StockScriptNew.csv"
@@ -243,7 +243,9 @@ ISEC_NSE_CODE_MAP_FILE = {
     'nse':'NSEScripMaster.txt',
     'bse':'BSEScripMaster.txt',
     'cdnse':'CDNSEScripMaster.txt',
-    'fonse':'FONSEScripMaster.txt'
+    'nfo':'FONSEScripMaster.txt',
+    'bfo':'FOBSEScripMaster.txt',
+    'mcx':'MCXScripMaster.txt'
 }
 
 feed_interval_map = {
