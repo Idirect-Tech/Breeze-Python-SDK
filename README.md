@@ -2,6 +2,7 @@
 
 <ul>
  <li><a href="#client">Breeze API Python Client</a></li>
+ <li><a href="#regulatoryChanges">Regulatory Changes</a></li>
  <li><a href="#docslink">API Documentation</a></li>
  <li><a href="#virtualenv">Set Up Virtual Environment</a></li>
  <li><a href="#clientinstall">Installing Client</a></li>
@@ -25,6 +26,15 @@ The official Python client library for the ICICI Securities trading APIs. Breeze
 5. Option Chain API
 
 To install breeze strategies :<a href="https://pypi.org/project/breeze-strategies/"> Click here </a>
+
+<h3 id="regulatoryChanges"><b>Regulatory Changes</b></h3>
+
+1) Orders must be placed only from the static IP address registered with ICICI Direct while procuring API key.
+2) Primary or secondary static IP provided by the client can be updated only once per week.
+3) Each client can have multiple API keys as per the circular, however for unregistered algos (Breeze API) the client is restricted to route orders via single API key.
+4) A maximum combined limit of 10 orders per second is allowed, which includes order placement, cancellation, modification, and square-off requests.
+5) Market orders are not permitted.
+6) Placement, modification, or cancelation of Margin and Option Plus orders via the Breeze API is prohibited. 
 
 <h3 id="docslink"><b>API Documentation</b></h3>
 
@@ -63,7 +73,7 @@ pip install --upgrade breeze-connect
 Or, You can also install the specific release version via pip
 
 ```
-pip install breeze-connect==1.0.65
+pip install breeze-connect==1.0.66
 ```
 <hr>
 
@@ -1170,8 +1180,9 @@ breeze.place_order(stock_code="NIFTY",
 </details>
 
 <h4> NOTE: </h4>
-<p><ol><li>Order Type should be either "limit" or "market". </li>
-       <li>The validity_date parameter has no impact on the order execution and even if you pass it while placing the order, it will be excluded from order processing.</li></ol></p>
+<p><ol><li>Order Type should be "limit"</li>
+       <li>The validity_date parameter has no impact on the order execution and even if you pass it while placing the order, it will be excluded from order processing.</li>
+       <li> As per SEBI circular, "Safer participation of retail investors in Algorithmic trading", placing market orders through the Breeze API is not permitted. You are required to place limit orders instead of market orders.</li></ol></p>
 <a href="#index">Back to Index</a>
 
 <hr>
@@ -1211,8 +1222,9 @@ breeze.place_order(stock_code="NIFTY",
 </details>
 
 <h4> NOTE: </h4>
-<p><ol><li>Order Type should be either "limit" or "market"</li>
-       <li>The validity_date parameter has no impact on the order execution and even if you pass it while placing the order, it will be excluded from order processing.</li></ol></p>
+<p><ol><li>Order Type should be "limit"</li>
+       <li>The validity_date parameter has no impact on the order execution and even if you pass it while placing the order, it will be excluded from order processing.</li>
+       <li> As per SEBI circular, "Safer participation of retail investors in Algorithmic trading", placing market orders through the Breeze API is not permitted. You are required to place limit orders instead of market orders.</li></ol></p>
 
 <br>
 <a href="#index">Back to Index</a>
@@ -1251,7 +1263,8 @@ breeze.place_order(stock_code="ITC",
 </details>
 
 <h4> NOTE: </h4>
-<p><ol><li>The validity_date parameter has no impact on the order execution and even if you pass it while placing the order, it will be excluded from order processing.</li></ol></p>
+<p><ol><li>The validity_date parameter has no impact on the order execution and even if you pass it while placing the order, it will be excluded from order processing.</li>
+<li> As per SEBI circular, "Safer participation of retail investors in Algorithmic trading", placing market orders through the Breeze API is not permitted. You are required to place limit orders instead of market orders.</li></ol></p>
 
 <br>
 <a href="#index">Back to Index</a>
@@ -1503,7 +1516,8 @@ breeze.modify_order(order_id="202502051400012345",
 </details>
 
 <h4> NOTE: </h4>
-<p><ol><li>The validity_date parameter has no impact on the modification of the order and even if you pass it while modifying the order, it will be excluded from order modification processing.</li></ol></p>
+<p><ol><li>The validity_date parameter has no impact on the modification of the order and even if you pass it while modifying the order, it will be excluded from order modification processing.</li>
+<li>As per SEBI circular, "Safer participation of retail investors in Algorithmic trading", modifying market orders through the Breeze API is not permitted. You are required to modify limit orders instead of market orders.</li></ol></p>
 
 <br>
 <a href="#index">Back to Index</a>
@@ -1886,7 +1900,8 @@ breeze.square_off(exchange_code="NFO",
 </details>
 
 <h4> NOTE: </h4>
-<p><ol><li>The validity_date parameter has no impact on the square off order execution and even if you pass it while squaring off the position, it will be excluded from square off order processing.</li></ol></p>
+<p><ol><li>The validity_date parameter has no impact on the square off order execution and even if you pass it while squaring off the position, it will be excluded from square off order processing.</li>
+<li>As per SEBI circular, "Safer participation of retail investors in Algorithmic trading", squaring off orders to market orders through the Breeze API is not permitted. You are required to place limit or stoploss order instead of market orders.</li></ol></p>
 
 <br>
 <!-- <h5> NOTE : </h5>
@@ -1927,7 +1942,8 @@ breeze.square_off(exchange_code="NFO",
 </details>
 
 <h4> NOTE: </h4>
-<p><ol><li>The validity_date parameter has no impact on the square off order execution and even if you pass it while squaring off the position, it will be excluded from square off order processing.</li></ol></p>
+<p><ol><li>The validity_date parameter has no impact on the square off order execution and even if you pass it while squaring off the position, it will be excluded from square off order processing.</li>
+<li>As per SEBI circular, "Safer participation of retail investors in Algorithmic trading", squaring off orders to market orders through the Breeze API is not permitted. You are required to place limit or stoploss order instead of market orders.</li></ol></p>
 
 <br>
 <a href="#index">Back to Index</a>
@@ -2142,7 +2158,7 @@ breeze.preview_order(stock_code = "ITC",
 
 ```python
 breeze.limit_calculator(strike_price="24000",                                    
-            product_type = "optionplus",                 
+            product_type = "options",                 
             expiry_date  = "06-Feb-2025",
             underlying = "NIFTY",
             exchange_code = "NFO",
@@ -2349,6 +2365,9 @@ breeze.gtt_three_leg_place_order(exchange_code ="NFO",
   ```
 </details>
 
+<h4> NOTE: </h4>
+<p><ol><li>As per SEBI circular, "Safer participation of retail investors in Algorithmic trading", placing market orders through the Breeze API is not permitted. You are required to place limit orders instead of market orders.</li></ol></p>
+
 <br>
 <a href="#index">Back to Index</a>
 <hr>
@@ -2386,6 +2405,9 @@ breeze.gtt_three_leg_modify_order(exchange_code = "NFO",
 
   ```
 </details>
+
+<h4> NOTE: </h4>
+<p><ol><li>As per SEBI circular, "Safer participation of retail investors in Algorithmic trading", modifying market orders through the Breeze API is not permitted. You are required to modify limit orders instead of market orders.</li></ol></p>
 
 <br>
 <a href="#index">Back to Index</a>
@@ -2452,6 +2474,9 @@ breeze.gtt_single_leg_place_order(exchange_code ="NFO",
   ```
 </details>
 
+<h4> NOTE: </h4>
+<p><ol><li>As per SEBI circular, "Safer participation of retail investors in Algorithmic trading", placing market orders through the Breeze API is not permitted. You are required to place limit orders instead of market orders.</li></ol></p>
+
 <br>
 <a href="#index">Back to Index</a>
 
@@ -2485,6 +2510,9 @@ breeze.gtt_single_leg_modify_order(exchange_code="NFO",
 
   ```
 </details>
+
+<h4> NOTE: </h4>
+<p><ol><li> As per SEBI circular, "Safer participation of retail investors in Algorithmic trading", modifying market orders through the Breeze API is not permitted. You are required to modify limit orders instead of market orders.</li></ol></p>
 
 <br>
 <a href="#index">Back to Index</a>
