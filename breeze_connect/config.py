@@ -15,7 +15,6 @@ LIVE_STREAM_URL = "https://livestream.icicidirect.com"  # live feeds streaming
 #Live OHLC Stream URL
 LIVE_OHLC_STREAM_URL = "https://breezeapi.icicidirect.com" #OHLC 
 
-#Security Master Download Link 
 SECURITY_MASTER_URL = "https://directlink.icicidirect.com/MotherAppMaster/SecurityMaster.zip"
 
 #Stock Script Code Download Link
@@ -63,7 +62,7 @@ TUX_TO_USER_MAP = {
             },
             "limitMarketFlag": {
                 "L": "Limit",
-                # "M": "Market",
+                "M": "Market",
                 "S": "StopLoss"
             },
             "orderType": {
@@ -127,6 +126,7 @@ class ResponseMessage(enum.Enum):
     BLANK_RIGHT_STRIKE_PRICE = "Either Right or Strike-Price cannot be empty."
     BLANK_RIGHT_EXPIRY_DATE = "Either Expiry-Date or Right cannot be empty."
     BLANK_EXPIRY_DATE_STRIKE_PRICE = "Either Expiry-Date or Strike-Price cannot be empty."
+    BLANK_PRICE = "Price cannot be empty"
 
     #Validation Errors
     EXCHANGE_CODE_ERROR = "Exchange-Code should be either 'nse', or 'nfo' or 'ndx' or 'mcx'"
@@ -223,7 +223,7 @@ PRODUCT_TYPES_HIST = ["futures", "options"]
 PRODUCT_TYPES_HIST_V2 = ["futures", "options","cash"]
 RIGHT_TYPES = ["call", "put", "others"]
 ACTION_TYPES = ["buy", "sell"]
-ORDER_TYPES = ["limit", "stoploss"]
+ORDER_TYPES = ["limit", "stoploss","market"]
 VALIDITY_TYPES = ["day", "ioc", "vtc"]
 TRANSACTION_TYPES = ["debit", "credit"]
 EXCHANGE_CODES_HIST = ["nse", "nfo", "ndx", "mcx"]
@@ -231,6 +231,8 @@ EXCHANGE_CODES_HIST_V2 = ["nse","bse","nfo","ndx","mcx","bfo"]
 FNO_EXCHANGE_TYPES = ["nfo","mcx","ndx","bfo"]
 STRATEGY_SUBSCRIPTION = ["one_click_fno","i_click_2_gain"]
 GTT_ORDER_TYPES = ["oco","cover_oco"]
+AGGRESSIVE_LIMIT_INDICES = ["NIFTY","CNXBAN","NIFSEL","NIFFIN","BSESEN","BANKEX"]
+
 
 #Isec NSE Stockcode mapping file
 ISEC_NSE_CODE_MAP_FILE = {

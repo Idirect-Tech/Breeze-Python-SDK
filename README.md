@@ -10,7 +10,6 @@
  <li><a href="#websocket">Websocket Usage</a></li>
  <li><a href="#index_title">List Of APIs</a></li>
  <li><a href="#version_history">Version History</a></li>
-
 </ul>
 
 <h3 id="client"><b>Breeze API Python Client</b></h3>
@@ -33,7 +32,7 @@ To install breeze strategies :<a href="https://pypi.org/project/breeze-strategie
 2) Primary or secondary static IP provided by the client can be updated only once per week.
 3) Each client can have multiple API keys as per the circular, however for unregistered algos (Breeze API) the client is restricted to route orders via single API key.
 4) A maximum combined limit of 10 orders per second is allowed, which includes order placement, cancellation, modification, and square-off requests.
-5) Market orders are not permitted.
+5) Market orders are not permitted. Any order marked as a “market” order will instead be placed as an ‘aggressive limit order’ across Equity and F&O segments. For more information <a href="#aggressive_limit_order">Aggressive Limit order</a>
 6) Placement, modification, or cancelation of Margin and Option Plus orders via the Breeze API is prohibited. 
 
 <h3 id="docslink"><b>API Documentation</b></h3>
@@ -73,7 +72,7 @@ pip install --upgrade breeze-connect
 Or, You can also install the specific release version via pip
 
 ```
-pip install breeze-connect==1.0.66
+pip install breeze-connect==1.0.68
 ```
 <hr>
 
@@ -547,7 +546,90 @@ breeze.subscribe_feeds(get_order_notification=True)
 <br>
 
 <hr>
-<h2> List of other APIs:</h2>
+<h2 id="aggressive_limit_order">Aggressive Limit Order</h2>
+
+As per regulatory requirements, market orders are not supported via Breeze API.  
+Any order marked as a "market" order will instead be placed as an aggressive limit order across Equity and F&O segments.
+
+To increase the probability of execution, the system determines order price using the following logic:
+### 1. Reference Price (LTP)
+- The **Last Traded Price (LTP)** is used as the base.
+
+### 2. Range Calculation (±%)
+A price range is calculated based on a percentage of LTP for each segment:
+
+| Segment  | Percentage Range |
+|----------|-----------------|
+| Equity   | 3% above and below LTP   |
+| Futures  | 1.5% above and below LTP |
+| Options  | 10% above and below LTP  |
+
+### 3. Minimum Difference Rule
+A minimum difference of 5 points for options and 0.05 for future and equity is ensured (even if the calculated percentage-based result is less than 5/0.05 for the respective segments)| 
+
+### 4. DPR Range Check
+The final order price must fall within the exchange-defined DPR (Daily Price Range).
+
+### 5. Final Order Placement
+
+- **Buy Orders** → Placed at a higher price but within DPR limits.
+- **Sell Orders** → Placed at a lower price, but within DPR limits.
+
+---
+## Let’s take an example of an option’s contract to understand this:
+### Test Case 1: If 10% of LTP > Minimum Difference
+
+**LTP:** 100  
+
+**Step 1: Calculate 10% Range**
+- 10% of 100 = 10  
+- Range = 100 plus and minus 10 = 90 to 110  
+
+**Step 2: Check Minimum Difference**
+- Difference = 10 which is greater than minimum difference of 5, so no change needed
+
+**Step 3: Compare with DPR Range**
+- DPR Range = 95 to 105  
+- AThe calculated range (90–110) goes beyond DPR limits
+
+**Step 4: Final Price**
+
+ → For Buy: We choose the higher price, but cannot exceed DPR upper limit
+
+ → **Buy Order = 105**
+ 
+ → For Sell: We choose the lower price, but cannot go below DPR lower limit
+ 
+ → **Sell Order = 95**
+
+---
+
+### Test Case 2:  If 10% of LTP < Minimum Difference
+
+**LTP:** 40  
+
+**Step 1: Calculate 10% Range**
+- 10% of 40 = 4  
+- Range = 40 plus or minus 4 = 36 to 44
+
+**Step 2: Check Minimum Difference**
+- Difference = 4 (which is less than minimum 5)
+- So, we apply minimum difference of 5 
+
+**Step 3: Adjust Prices using minimum difference**
+- Buy Price = 40 + 5 = 45  
+- Sell Price = 40 - 5 = 35  
+
+**Step 4: Compare with DPR Range**
+- DPR Range = 34 to 46  
+- Both 45 and 35 fall within this range
+
+**Step 5: Final Price**
+- **Buy Order = 45**  
+- **Sell Order = 35**
+ 
+<hr>
+<h2>List of APIs:</h2>
 
 <h3 id="index_title" >Index</h3>
 
@@ -1182,7 +1264,8 @@ breeze.place_order(stock_code="NIFTY",
 <h4> NOTE: </h4>
 <p><ol><li>Order Type should be "limit"</li>
        <li>The validity_date parameter has no impact on the order execution and even if you pass it while placing the order, it will be excluded from order processing.</li>
-       <li> As per SEBI circular, "Safer participation of retail investors in Algorithmic trading", placing market orders through the Breeze API is not permitted. You are required to place limit orders instead of market orders.</li></ol></p>
+       <li> As per SEBI circular, "Safer participation of retail investors in Algorithmic trading", placing market orders through the Breeze API is not permitted. You are required to place limit orders instead of market order but any order marked as a “market” order will instead be placed as an ‘aggressive limit order’ across Equity and F&O segments. For more information <a href="#aggressive_limit_order">Aggressive Limit order</a></li></ol></p>
+
 <a href="#index">Back to Index</a>
 
 <hr>
@@ -1224,7 +1307,7 @@ breeze.place_order(stock_code="NIFTY",
 <h4> NOTE: </h4>
 <p><ol><li>Order Type should be "limit"</li>
        <li>The validity_date parameter has no impact on the order execution and even if you pass it while placing the order, it will be excluded from order processing.</li>
-       <li> As per SEBI circular, "Safer participation of retail investors in Algorithmic trading", placing market orders through the Breeze API is not permitted. You are required to place limit orders instead of market orders.</li></ol></p>
+       <li> As per SEBI circular, "Safer participation of retail investors in Algorithmic trading", placing market orders through the Breeze API is not permitted. You are required to place limit orders instead of market orders but any order marked as a “market” order will instead be placed as an ‘aggressive limit order’ across Equity and F&O segments. For more information <a href="#aggressive_limit_order">Aggressive Limit order</a></li></ol></p>
 
 <br>
 <a href="#index">Back to Index</a>
@@ -1264,7 +1347,7 @@ breeze.place_order(stock_code="ITC",
 
 <h4> NOTE: </h4>
 <p><ol><li>The validity_date parameter has no impact on the order execution and even if you pass it while placing the order, it will be excluded from order processing.</li>
-<li> As per SEBI circular, "Safer participation of retail investors in Algorithmic trading", placing market orders through the Breeze API is not permitted. You are required to place limit orders instead of market orders.</li></ol></p>
+<li> As per SEBI circular, "Safer participation of retail investors in Algorithmic trading", placing market orders through the Breeze API is not permitted. You are required to place limit orders instead of market orders but any order marked as a “market” order will instead be placed as an ‘aggressive limit order’ across Equity and F&O segments. For more information <a href="#aggressive_limit_order">Aggressive Limit order</a></li></ol></p>
 
 <br>
 <a href="#index">Back to Index</a>
@@ -1517,7 +1600,7 @@ breeze.modify_order(order_id="202502051400012345",
 
 <h4> NOTE: </h4>
 <p><ol><li>The validity_date parameter has no impact on the modification of the order and even if you pass it while modifying the order, it will be excluded from order modification processing.</li>
-<li>As per SEBI circular, "Safer participation of retail investors in Algorithmic trading", modifying market orders through the Breeze API is not permitted. You are required to modify limit orders instead of market orders.</li></ol></p>
+<li>As per SEBI circular, "Safer participation of retail investors in Algorithmic trading", modifying to market orders through the Breeze API is not permitted. You are required to modify to limit orders instead of market orders but any order marked as a “market” order will instead be modified as an ‘aggressive limit order’ across Equity and F&O segments. For more information <a href="#aggressive_limit_order">Aggressive Limit order</a></li></ol></p>
 
 <br>
 <a href="#index">Back to Index</a>
@@ -1901,7 +1984,7 @@ breeze.square_off(exchange_code="NFO",
 
 <h4> NOTE: </h4>
 <p><ol><li>The validity_date parameter has no impact on the square off order execution and even if you pass it while squaring off the position, it will be excluded from square off order processing.</li>
-<li>As per SEBI circular, "Safer participation of retail investors in Algorithmic trading", squaring off orders to market orders through the Breeze API is not permitted. You are required to place limit or stoploss order instead of market orders.</li></ol></p>
+<li>As per SEBI circular, "Safer participation of retail investors in Algorithmic trading", squaring off orders to market orders through the Breeze API is not permitted. You are required to place limit or stoploss order instead of market orders but any order marked as a “market” order will instead be placed as an ‘aggressive limit order’ across Equity and F&O segments. For more information <a href="#aggressive_limit_order">Aggressive Limit order</a></li></ol></p>
 
 <br>
 <!-- <h5> NOTE : </h5>
@@ -1943,7 +2026,7 @@ breeze.square_off(exchange_code="NFO",
 
 <h4> NOTE: </h4>
 <p><ol><li>The validity_date parameter has no impact on the square off order execution and even if you pass it while squaring off the position, it will be excluded from square off order processing.</li>
-<li>As per SEBI circular, "Safer participation of retail investors in Algorithmic trading", squaring off orders to market orders through the Breeze API is not permitted. You are required to place limit or stoploss order instead of market orders.</li></ol></p>
+<li>As per SEBI circular, "Safer participation of retail investors in Algorithmic trading", squaring off orders to market orders through the Breeze API is not permitted. You are required to place limit or stoploss order instead of market orders but any order marked as a “market” order will instead be placed as an ‘aggressive limit order’ across Equity and F&O segments. For more information <a href="#aggressive_limit_order">Aggressive Limit order</a></li></ol></p>
 
 <br>
 <a href="#index">Back to Index</a>
@@ -2615,4 +2698,6 @@ breeze.gtt_order_book(exchange_code ="NFO",
 <li>Version 1.0.60: GTT integration</li>
 <li>Version 1.0.61: README.md file updation</li>
 <li>Version 1.0.62: API USAGE addition </li>
+<li>Version 1.0.65: Master file Switch </li>
+<li>Version 1.0.68: Aggressive Limit Order </li>
 </ul>
