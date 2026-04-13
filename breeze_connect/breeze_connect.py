@@ -43,7 +43,7 @@ api_logger = logging.getLogger('APILogger')
 api_logger.setLevel(logging.INFO)
 api_logger.setLevel(logging.ERROR)
 api_logger.setLevel(logging.DEBUG)
-api_handler = logging.FileHandler(f'{log_folder}/apiLogs_1305.log')
+api_handler = logging.FileHandler(f'{log_folder}/apiLogs.log')
 api_handler.setFormatter(logging.Formatter('%(asctime)s - %(message)s'))
 api_logger.addHandler(api_handler)
 
@@ -51,7 +51,7 @@ websocket_logger = logging.getLogger('WebsocketLogger')
 websocket_logger.setLevel(logging.INFO)
 websocket_logger.setLevel(logging.ERROR)
 websocket_logger.setLevel(logging.DEBUG)
-websocket_handler = logging.FileHandler(f'{log_folder}/websocketLogs_1305.log')
+websocket_handler = logging.FileHandler(f'{log_folder}/websocketLogs.log')
 websocket_handler.setFormatter(logging.Formatter('%(asctime)s - %(message)s'))
 websocket_logger.addHandler(websocket_handler)
 
@@ -1096,6 +1096,12 @@ class BreezeConnect():
     def margin_calculator(self,lists,exchange_code):
             if self.api_handler:
                 return self.api_handler.margin_calculator(lists,exchange_code)
+            
+                
+    def aggressive_limit_order_placement(self,stock_code,exchange_code,product_type,right,expiry_date,strike_price, action, order_type, quantity,stoploss, validity):
+            if self.api_handler:
+                return self.api_handler.aggressive_limit_order_placement(stock_code, exchange_code, product_type, right, expiry_date, strike_price, action, order_type, quantity,stoploss, validity)
+
     
 class ApificationBreeze():
 
@@ -1419,88 +1425,6 @@ class ApificationBreeze():
             api_logger.error(f"Exception in get_margin : {e}")
             self.error_exception(self.get_margin.__name__,e)
 
-    def place_order(self, stock_code="", exchange_code="", product="", action="", order_type="", stoploss="", quantity="", price="", validity="", validity_date="", disclosed_quantity="", expiry_date="", right="", strike_price="", user_remark="",order_type_fresh="",order_rate_fresh="",settlement_id = "",order_segment_code = "",lots="",):
-        try:
-            if stock_code == "" or stock_code == None or exchange_code == "" or exchange_code == None or product == "" or product == None or action == "" or action == None or order_type == "" or order_type == None or price == "" or price == None or action == "" or action == None:
-                if stock_code == "" or stock_code == None:
-                    return self.validation_error_response(resp_message.BLANK_STOCK_CODE.value)
-                elif exchange_code == "" or exchange_code == None:
-                    return self.validation_error_response(resp_message.BLANK_EXCHANGE_CODE.value)
-                elif product == "" or product == None:
-                    return self.validation_error_response(resp_message.BLANK_PRODUCT_TYPE.value)
-                elif action == "" or action == None:
-                    return self.validation_error_response(resp_message.BLANK_ACTION.value)
-                elif order_type == "" or order_type == None:
-                    return self.validation_error_response(resp_message.BLANK_ORDER_TYPE.value)
-                # elif quantity == "" or quantity == None:
-                #     return self.validation_error_response(resp_message.BLANK_QUANTITY.value)
-                elif validity == "" or validity == None:
-                    return self.validation_error_response(resp_message.BLANK_VALIDITY.value)
-            elif product.lower() not in config.PRODUCT_TYPES:
-                return self.validation_error_response(resp_message.PRODUCT_TYPE_ERROR.value)
-            elif action.lower() not in config.ACTION_TYPES:
-                return self.validation_error_response(resp_message.ACTION_TYPE_ERROR.value)
-            elif product.lower() == "mtf" and action.lower() == "sell":
-                return self.validation_error_response(resp_message.MTF_SELL_NOT_ALLOWED.value)
-            elif order_type.lower() not in config.ORDER_TYPES:
-                return self.validation_error_response(resp_message.ORDER_TYPE_ERROR.value)
-            elif validity.lower() not in config.VALIDITY_TYPES:
-                return self.validation_error_response(resp_message.VALIDITY_TYPE_ERROR.value)
-            elif right != "" and right != None and right.lower() not in config.RIGHT_TYPES:
-                return self.validation_error_response(resp_message.RIGHT_TYPE_ERROR.value)
-            if exchange_code.lower() in ["mcx"]:
-                if lots == "" or lots == None:
-                    return self.validation_error_response(resp_message.BLANK_LOTS.value)
-            elif exchange_code.lower() in ["ndx"]:
-                return self.validation_error_response(resp_message.CURRENCY_NOT_ALLOWED.value)
-            else:
-                if quantity == "" or quantity == None:
-                    return self.validation_error_response(resp_message.BLANK_QUANTITY.value)
-
-            body = {
-                "stock_code": stock_code,
-                "exchange_code": exchange_code.upper(),
-                "product": product,
-                "action": action,
-                "order_type": order_type,
-                "quantity": quantity,
-                "price": price,
-                "validity": validity,
-                "settlement_id" : settlement_id,
-                "order_segment_code" : order_segment_code,
-                "lots": lots, 
-                "user_remark": user_remark
-            }
-
-            if stoploss != "" and stoploss != None:
-                body["stoploss"] = stoploss
-            if validity_date != "" and validity_date != None:
-                body["validity_date"] = validity_date
-            if disclosed_quantity != "" and disclosed_quantity != None:
-                body["disclosed_quantity"] = disclosed_quantity
-            if expiry_date != "" and expiry_date != None:
-                body["expiry_date"] = expiry_date
-            if right != "" and right != None:
-                body["right"] = right
-            if strike_price != "" and strike_price != None:
-                body["strike_price"] = strike_price
-            if user_remark != "" and user_remark != None:
-                body["user_remark"] = user_remark
-            if(order_type_fresh != "" and order_type_fresh != None):
-                body['order_type_fresh'] = order_type_fresh
-            if(order_rate_fresh != "" and order_rate_fresh != None):
-                body['order_rate_fresh'] = order_rate_fresh
-
-            body = json.dumps(body, separators=(',', ':'))
-            headers = self.generate_headers(body)
-            response = self.make_request(req_type.POST, api_endpoint.ORDER.value, body, headers)
-            response = response.json()
-            api_logger.debug(f"Place Order response : {response}")
-            return response
-        except Exception as e:
-            api_logger.error(f"Exception in place_order : {e}")
-            self.error_exception(self.place_order.__name__,e)
-
     def get_order_detail(self, exchange_code, order_id):
         try:
             if exchange_code == "" or exchange_code == None or order_id == "" or order_id == None:
@@ -1569,46 +1493,6 @@ class ApificationBreeze():
         except Exception as e:
             api_logger.error(f"Exception in cancel_order : {e}")
             self.error_exception(self.cancel_order.__name__,e)
-
-    def modify_order(self, order_id, exchange_code, order_type, stoploss, quantity, price, validity, disclosed_quantity, validity_date):
-        try:
-            if exchange_code == "" or exchange_code == None or order_id == "" or order_id == None:
-                if exchange_code == "" or exchange_code == None:
-                    return self.validation_error_response(resp_message.BLANK_EXCHANGE_CODE.value)
-                elif order_id == "" or order_id == None:
-                    return self.validation_error_response(resp_message.BLANK_ORDER_ID.value)
-            elif order_type != "" and order_type != None and order_type.lower() not in config.ORDER_TYPES:
-                return self.validation_error_response(resp_message.ORDER_TYPE_ERROR.value)
-            elif validity != "" and validity != None and validity.lower() not in config.VALIDITY_TYPES:
-                return self.validation_error_response(resp_message.VALIDITY_TYPE_ERROR.value)
-
-            body = {
-                "order_id": order_id,
-                "exchange_code": exchange_code,
-            }
-            if order_type != "" and order_type != None:
-                body["order_type"] = order_type
-            if stoploss != "" and stoploss != None:
-                body["stoploss"] = stoploss
-            if quantity != "" and quantity != None:
-                body["quantity"] = quantity
-            if price != "" and price != None:
-                body["price"] = price
-            if validity != "" and validity != None:
-                body["validity"] = validity
-            if disclosed_quantity != "" and disclosed_quantity != None:
-                body["disclosed_quantity"] = disclosed_quantity
-            if validity_date != "" and validity_date != None:
-                body["validity_date"] = validity_date
-            body = json.dumps(body, separators=(',', ':'))
-            headers = self.generate_headers(body)
-            response = self.make_request(req_type.PUT, api_endpoint.ORDER.value, body, headers)
-            response = response.json()
-            api_logger.debug(f"Modify Order response : {response}")
-            return response
-        except Exception as e:
-            api_logger.error(f"Exception in modify_order : {e}")
-            self.error_exception(self.modify_order.__name__,e)
 
     def gtt_three_leg_place_order(self, exchange_code="", stock_code="", product="", quantity="", expiry_date="", right="", strike_price="", gtt_type="", fresh_order_action="", fresh_order_price="", fresh_order_type="",index_or_stock="", trade_date="", order_details=[]):
         try:
@@ -1744,8 +1628,7 @@ class ApificationBreeze():
         except Exception as e:
             api_logger.error(f"Exception in gtt_three_leg_cancel_order : {e}")
             self.error_exception(self.gtt_three_leg_cancel_order.__name__,e)
-
-       
+   
     def gtt_single_leg_place_order(self, exchange_code="", stock_code="", product="", quantity="", expiry_date="", right="", strike_price="", gtt_type="",index_or_stock="", trade_date="", order_details=[]):
         try:
             if stock_code == "" or stock_code == None or exchange_code == "" or exchange_code == None or product == "" or product == None:
@@ -1845,7 +1728,6 @@ class ApificationBreeze():
         except Exception as e:
             api_logger.error(f"Exception in gtt_single_leg_modify_order : {e}")
             self.error_exception(self.gtt_single_leg_modify_order.__name__,e)
-
 
     def get_portfolio_holdings(self, exchange_code, from_date, to_date, stock_code, portfolio_type):
         try:
@@ -1965,45 +1847,6 @@ class ApificationBreeze():
         except Exception as e:
             api_logger.error(f"Exception in get_option_chain_quotes : {e}")
             self.error_exception(self.get_option_chain_quotes.__name__,e)
-
-    def square_off(self, source_flag, stock_code, exchange_code, quantity, price, action, order_type, validity, stoploss, disclosed_quantity, protection_percentage, settlement_id, margin_amount, open_quantity, cover_quantity, product, expiry_date, right, strike_price, validity_date, trade_password, alias_name, order_reference, position_exchange_code, lots):
-        try:
-            body = {
-                "source_flag": source_flag,
-                "stock_code": stock_code,
-                "exchange_code": exchange_code,
-                "quantity": quantity,
-                "price": price,
-                "action": action,
-                "order_type": order_type,
-                "validity": validity,
-                "stoploss_price": stoploss,
-                "disclosed_quantity": disclosed_quantity,
-                "protection_percentage": protection_percentage,
-                "settlement_id": settlement_id,
-                "margin_amount": margin_amount,
-                "open_quantity": open_quantity,
-                "cover_quantity": cover_quantity,
-                "product_type": product,
-                "expiry_date": expiry_date,
-                "right": right,
-                "strike_price": strike_price,
-                "validity_date": validity_date,
-                "alias_name": alias_name,
-                "trade_password": trade_password,
-                "order_reference":order_reference,
-                "position_exchange_code":position_exchange_code,
-                "lots": lots
-            }
-            body = json.dumps(body, separators=(',', ':'))
-            headers = self.generate_headers(body)
-            response = self.make_request(req_type.POST, api_endpoint.SQUARE_OFF.value, body, headers)
-            response = response.json()
-            api_logger.debug(f"Square off response : {response}")
-            return response
-        except Exception as e:
-            api_logger.error(f"Exception in square_off : {e}")
-            self.error_exception(self.square_off.__name__,e)
 
     def get_trade_list(self, from_date, to_date, exchange_code, product_type, action, stock_code):
         try:
@@ -2200,3 +2043,326 @@ class ApificationBreeze():
         except Exception as e:
             api_logger.error(f"Exception in preview_order : {e}")
             self.error_exception(self.preview_order.__name__,e)
+
+    def tick_size_calculation(self, stock_code,product,exchange_code):
+        stock_code = stock_code.upper()
+        product = product.lower()
+        exchange_code = exchange_code.upper()  
+
+        if exchange_code in ["NSE", "NFO"]:
+            if stock_code.upper() in config.AGGRESSIVE_LIMIT_INDICES:
+                    if product.lower() == "options":
+                        return 0.05
+                    elif product.lower() == "futures":
+                        if self.ltp < 15000:
+                            return 0.05
+                        elif self.ltp >= 15000 and self.ltp < 30000:
+                            return 0.10
+                        elif self.ltp >= 30000:
+                            return 0.20
+            else:
+                if product.lower() == "futures" or product.lower() == "cash":
+                    if self.ltp < 250:
+                        return 0.01
+                    elif self.ltp >= 250 and self.ltp < 1000:
+                        return 0.05
+                    elif self.ltp >= 1000 and self.ltp < 5000:
+                        return 0.10
+                    elif self.ltp >= 5000 and self.ltp < 10000:
+                        return 0.50
+                    elif self.ltp >= 10000 and self.ltp < 20000:
+                        return 1
+                    elif self.ltp >= 20000:
+                        return 5
+                elif product.lower() == "options": 
+                    return 0.05
+        elif exchange_code in ["BSE", "BFO"]:
+            if stock_code in config.AGGRESSIVE_LIMIT_INDICES:
+                return 0.05
+            else:
+                if self.ltp <= 100:
+                    return 0.01
+                elif self.ltp > 100:
+                    return 0.05   
+        
+    def get_aggressive_limit_price(self, stock_code="", exchange_code="", product="",
+                                   action="", right="", expiry_date="", strike_price=""):
+        try:
+            quotes = self.get_quotes(stock_code=stock_code,exchange_code=exchange_code, product_type=product,
+                                    right=right, expiry_date=expiry_date, strike_price=strike_price)
+            
+            data = quotes.get('Success', [])
+            if not data:
+                return None, "Quotes not available"
+
+            if exchange_code.lower()== "bse":
+                q = data[1]
+            else:
+                q = data[0]
+
+            self.ltp = q['ltp']
+            upper_ckt = q['upper_circuit']
+            lower_ckt = q['lower_circuit']
+            exchange_code = q['exchange_code']
+
+            if product.lower() == "options":
+                percent, min_diff = 10, 5
+            elif product.lower() == "futures":
+                percent, min_diff = 1.5, 0.05
+            elif product.lower() == "cash":
+                percent, min_diff = 3, 0.05
+            else:
+                return None, "Invalid product"
+            
+            percent_price = (self.ltp * percent/100)
+
+            if percent_price >= min_diff:
+                if action.lower() == "buy":
+                    price = self.ltp + percent_price
+                elif action.lower() == "sell":
+                    price = self.ltp - percent_price
+            elif percent_price < min_diff:
+                if action.lower() == "buy":
+                    price = self.ltp + min_diff
+                elif action.lower() == "sell":
+                    price = self.ltp - min_diff
+
+            DPR_price = max(lower_ckt, min(price, upper_ckt))
+
+            tick_size = self.tick_size_calculation(stock_code=stock_code,product=product,exchange_code=exchange_code)
+            api_logger.debug(f"Tick size for {stock_code} with product {product} and ltp {self.ltp} is {tick_size}")
+            final_price = round(DPR_price / tick_size) * tick_size
+            api_logger.debug(f"Aggressive limit price : {final_price}")
+
+            return final_price, None
+
+        except Exception as e:
+            api_logger.error(f"Aggressive price error: {e}")
+            return None, str(e)
+
+    def place_order(self, stock_code="", exchange_code="", product="", action="", order_type="", quantity="", price="", validity="",
+                stoploss="", validity_date="", disclosed_quantity="", expiry_date="", right="", strike_price="", user_remark="",
+                order_type_fresh="", order_rate_fresh="", settlement_id="", order_segment_code="", lots=""):
+
+        try:
+            # -------- AGGRESSIVE --------
+            if order_type.lower() == "market":
+                final_price, err = self.get_aggressive_limit_price(
+                    stock_code, exchange_code, product, action,
+                    right, expiry_date, strike_price
+                )
+                if err:
+                    return self.validation_error_response(err)
+
+                api_logger.debug(f"[PLACE] Market -- Limit | Price: {final_price}")
+
+                price = final_price
+                order_type = "limit"
+
+            # -------- BODY --------
+            body = {
+                "stock_code": stock_code,
+                "exchange_code": exchange_code.upper(),
+                "product": product,
+                "action": action,
+                "order_type": order_type,
+                "quantity": quantity,
+                "price": price,
+                "validity": validity,
+                "settlement_id": settlement_id,
+                "order_segment_code": order_segment_code,
+                "lots": lots,
+                "user_remark": user_remark
+            }
+
+            if stoploss != "" and stoploss != None:
+                body["stoploss"] = stoploss
+            if validity_date != "" and validity_date != None:
+                body["validity_date"] = validity_date
+            if disclosed_quantity != "" and disclosed_quantity != None:
+                body["disclosed_quantity"] = disclosed_quantity
+            if expiry_date != "" and expiry_date != None:
+                body["expiry_date"] = expiry_date
+            if right != "" and right != None:
+                body["right"] = right
+            if strike_price != "" and strike_price != None:
+                body["strike_price"] = strike_price
+            if order_type_fresh != "" and order_type_fresh != None:
+                body["order_type_fresh"] = order_type_fresh
+            if order_rate_fresh != "" and order_rate_fresh != None:
+                body["order_rate_fresh"] = order_rate_fresh
+
+            body = json.dumps(body, separators=(',', ':'))
+            headers = self.generate_headers(body)
+
+            response = self.make_request(req_type.POST, api_endpoint.ORDER.value, body, headers).json()
+
+            api_logger.debug(f"Place Order response : {response}")
+            return response
+
+        except Exception as e:
+            api_logger.error(f"Exception in place_order : {e}")
+            self.error_exception(self.place_order.__name__, e)   
+
+    def modify_order(self, order_id, exchange_code, order_type, stoploss, quantity, price, validity, disclosed_quantity, validity_date):
+
+        try:
+            # -------- FETCH ORDER --------
+            order_data = self.get_order_detail(exchange_code, order_id)
+            data = order_data.get("Success", [])
+
+            if not data:
+                return self.validation_error_response("Order not found")
+
+            order = data[0]
+            status = order.get("status", "").lower()
+
+            # -------- STATUS CHECK --------
+            if status not in ["ordered", "requested", "partially executed"]:
+                return self.validation_error_response("Order has already been executed and cannot be modified.")
+
+            # -------- EXTRACT ORIGINAL --------
+            stock_code = order.get("stock_code")
+            product = order.get("product_type")
+            action = order.get("action")
+            expiry_date = order.get("expiry_date")
+            right = order.get("right")
+            strike_price = order.get("strike_price")
+
+            original_values = {
+                "order_type": order.get("order_type"),
+                "price": order.get("price"),
+                "quantity": order.get("quantity")
+            }
+
+            # -------- AGGRESSIVE --------
+            if order_type and order_type.lower() == "market":
+                final_price, err = self.get_aggressive_limit_price(
+                    stock_code, exchange_code, product, action,
+                    right, expiry_date, strike_price
+                )
+                if err:
+                    return self.validation_error_response(err)
+
+                price = final_price
+                order_type = "limit"
+
+            # -------- LOG CHANGES --------
+            modified_values = {
+                "order_type": order_type,
+                "price": price,
+                "quantity": quantity
+            }
+
+            api_logger.debug(f"[MODIFY] Original: {original_values}")
+            api_logger.debug(f"[MODIFY] Modified: {modified_values}")
+
+            # -------- BODY --------
+            body = {
+                "order_id": order_id,
+                "exchange_code": exchange_code
+            }
+
+            if order_type != "" and order_type != None:
+                body["order_type"] = order_type
+            if stoploss != "" and stoploss != None:
+                body["stoploss"] = stoploss
+            if quantity != "" and quantity != None:
+                body["quantity"] = quantity
+            if price != "" and price != None:
+                body["price"] = price
+            if validity != "" and validity != None:
+                body["validity"] = validity
+            if disclosed_quantity != "" and disclosed_quantity != None:
+                body["disclosed_quantity"] = disclosed_quantity
+            if validity_date != "" and validity_date != None:
+                body["validity_date"] = validity_date
+
+            body = json.dumps(body, separators=(',', ':'))
+            headers = self.generate_headers(body)
+
+            response = self.make_request(req_type.PUT, api_endpoint.ORDER.value, body, headers).json()
+
+            api_logger.debug(f"Modify Order response : {response}")
+            return response
+
+        except Exception as e:
+            api_logger.error(f"Exception in modify_order : {e}")
+            self.error_exception(self.modify_order.__name__, e)
+
+    def square_off(self, source_flag, stock_code, exchange_code, quantity, price,action, order_type, validity, stoploss, disclosed_quantity,
+               protection_percentage, settlement_id, margin_amount,open_quantity, cover_quantity, product, expiry_date, right,
+               strike_price, validity_date, trade_password, alias_name, order_reference, position_exchange_code, lots, order_id=None):
+
+        try:
+            # -------- FETCH ORDER (OPTIONAL) --------
+            if order_id:
+                order_data = self.get_order_detail(exchange_code, order_id)
+                data = order_data.get("Success", [])
+
+                if data:
+                    order = data[0]
+
+                    # Reverse action
+                    original_action = order.get("action", "").lower()
+                    action = "sell" if original_action == "buy" else "buy"
+
+                    api_logger.debug(f"[SQUARE OFF] Action: {original_action} -- {action}")
+                else:
+                    return self.validation_error_response("Order not found")
+
+            # -------- AGGRESSIVE --------
+            if order_type.lower() == "market":
+                final_price, err = self.get_aggressive_limit_price(
+                    stock_code, exchange_code, product, action,
+                    right, expiry_date, strike_price
+                )
+                if err:
+                    return self.validation_error_response(err)
+
+                price = final_price
+                order_type = "limit"
+
+            # -------- LOG --------
+            api_logger.debug(f"[SQUARE OFF] Final Action: {action}, Price: {price}")
+
+            # -------- BODY --------
+            body = {
+                "source_flag": source_flag,
+                "stock_code": stock_code,
+                "exchange_code": exchange_code,
+                "quantity": quantity,
+                "price": price,
+                "action": action,
+                "order_type": order_type,
+                "validity": validity,
+                "stoploss_price": stoploss,
+                "disclosed_quantity": disclosed_quantity,
+                "protection_percentage": protection_percentage,
+                "settlement_id": settlement_id,
+                "margin_amount": margin_amount,
+                "open_quantity": open_quantity,
+                "cover_quantity": cover_quantity,
+                "product_type": product,
+                "expiry_date": expiry_date,
+                "right": right,
+                "strike_price": strike_price,
+                "validity_date": validity_date,
+                "alias_name": alias_name,
+                "trade_password": trade_password,
+                "order_reference": order_reference,
+                "position_exchange_code": position_exchange_code,
+                "lots": lots
+            }
+
+            body = json.dumps(body, separators=(',', ':'))
+            headers = self.generate_headers(body)
+
+            response = self.make_request(req_type.POST, api_endpoint.SQUARE_OFF.value, body, headers).json()
+
+            api_logger.debug(f"Square off response : {response}")
+            return response
+
+        except Exception as e:
+            api_logger.error(f"Exception in square_off : {e}")
+            self.error_exception(self.square_off.__name__, e)
