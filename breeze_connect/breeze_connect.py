@@ -651,7 +651,7 @@ class BreezeConnect():
                 order_dict["exchangeSegmentCode"] = data[35]                #Exchange Segment Code
                 order_dict["exchangeSegmentSettlement"] = data[36]          #Exchange Segment Settlement 
                 order_dict["segmentDescription"] = data[37]                 #Segment Description
-                order_dict["marginSquareOffMode"] = data[38]                #Margin Square Off Mode
+                order_dict["marginSquareOffMode"] = data[38]                #Margin Square Off Mode // field alignment order streaming
                 order_dict["orderValidDate"] = data[40]                     #Order Valid Date
                 order_dict["orderMessageCharacter"] = data[41]              #Order Message Character
                 order_dict["averageExecutedRate"] = data[42]                #Average Exited Rate
