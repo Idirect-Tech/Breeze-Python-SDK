@@ -236,7 +236,6 @@ class BreezeConnect():
         websocket_logger.debug(response)
         return(response)
 
-
     def ws_disconnect_ohlc(self):
         if self.sio_rate_refresh_handler:
             self.sio_rate_refresh_handler.on_disconnect()
@@ -691,17 +690,17 @@ class BreezeConnect():
                 order_dict["modificationOrCancelFlag"] = data[35]           #Modification or Cancel Flag
                 order_dict["tradeDate"] = data[36]                          #Trade Date
                 order_dict["acknowledgeNumber"] = data[37]                  #Acknowledgement Number
-                order_dict["stopLossOrderReference"] = data[37]             #Stop Loss Order Reference
-                order_dict["totalAmountBlocked"] = data[38]                 # Total Amount Blocked
-                order_dict["averageExecutedRate"] = data[39]                #Average Executed Rate
-                order_dict["cancelFlag"] = data[40]                         #Cancel Flag
-                order_dict["squareOffMarket"] = data[41]                    #SquareOff Market
-                order_dict["quickExitFlag"] = data[42]                      #Quick Exit Flag
-                order_dict["stopValidTillDateFlag"] = data[43]              #Stop Valid till Date Flag
-                order_dict["priceImprovementFlag"] = data[44]               #Price Improvement Flag
-                order_dict["conversionImprovementFlag"] = data[45]          #Conversion Improvement Flag
-                order_dict["trailUpdateCondition"] = data[45]               #Trail Update Condition
-                order_dict["systemPartnerCode"] = data[46]                  #System Partner Code
+                order_dict["stopLossOrderReference"] = data[38]             #Stop Loss Order Reference
+                order_dict["totalAmountBlocked"] = data[39]                 # Total Amount Blocked
+                order_dict["averageExecutedRate"] = data[40]                #Average Executed Rate
+                order_dict["cancelFlag"] = data[41]                         #Cancel Flag
+                order_dict["squareOffMarket"] = data[42]                    #SquareOff Market
+                order_dict["quickExitFlag"] = data[43]                      #Quick Exit Flag
+                order_dict["stopValidTillDateFlag"] = data[44]              #Stop Valid till Date Flag
+                order_dict["priceImprovementFlag"] = data[45]               #Price Improvement Flag
+                order_dict["conversionImprovementFlag"] = data[46]          #Conversion Improvement Flag
+                order_dict["trailUpdateCondition"] = data[47]               #Trail Update Condition
+                order_dict["systemPartnerCode"] = data[48]                  #System Partner Code
             return order_dict
         exchange = str.split(data[0], '!')[0].split('.')[0]
         data_type = str.split(data[0], '!')[0].split('.')[1]
@@ -1096,12 +1095,6 @@ class BreezeConnect():
     def margin_calculator(self,lists,exchange_code):
             if self.api_handler:
                 return self.api_handler.margin_calculator(lists,exchange_code)
-            
-                
-    def aggressive_limit_order_placement(self,stock_code,exchange_code,product_type,right,expiry_date,strike_price, action, order_type, quantity,stoploss, validity):
-            if self.api_handler:
-                return self.api_handler.aggressive_limit_order_placement(stock_code, exchange_code, product_type, right, expiry_date, strike_price, action, order_type, quantity,stoploss, validity)
-
     
 class ApificationBreeze():
 
@@ -1511,6 +1504,20 @@ class ApificationBreeze():
                 return self.validation_error_response(resp_message.BLANK_QUANTITY.value) 
             elif expiry_date == "" or expiry_date == None:
                 return self.validation_error_response(resp_message.BLANK_EXPIRY_DATE.value)
+            
+                        # -------- AGGRESSIVE --------
+            if fresh_order_type.lower() == "market":
+                final_price, err = self.get_aggressive_limit_price(
+                    stock_code, exchange_code, product, fresh_order_action,
+                    right, expiry_date, strike_price
+                )
+                if err:
+                    return self.validation_error_response(err)
+
+                api_logger.debug(f"[PLACE] Market -- Limit | Price: {final_price}")
+
+                fresh_order_price = final_price
+                fresh_order_type = "limit"
 
             body = {
                 "exchange_code": exchange_code,
@@ -2086,7 +2093,7 @@ class ApificationBreeze():
                     return 0.05   
         
     def get_aggressive_limit_price(self, stock_code="", exchange_code="", product="",
-                                   action="", right="", expiry_date="", strike_price=""):
+                                   action="", right="", expiry_date="", strike_price="", fresh_order_action=""):
         try:
             quotes = self.get_quotes(stock_code=stock_code,exchange_code=exchange_code, product_type=product,
                                     right=right, expiry_date=expiry_date, strike_price=strike_price)
@@ -2117,14 +2124,14 @@ class ApificationBreeze():
             percent_price = (self.ltp * percent/100)
 
             if percent_price >= min_diff:
-                if action.lower() == "buy":
+                if action.lower() == "buy" or fresh_order_action.lower() == "buy":
                     price = self.ltp + percent_price
-                elif action.lower() == "sell":
+                elif action.lower() == "sell" or fresh_order_action.lower() == "sell":
                     price = self.ltp - percent_price
             elif percent_price < min_diff:
-                if action.lower() == "buy":
+                if action.lower() == "buy" or fresh_order_action.lower() == "buy":
                     price = self.ltp + min_diff
-                elif action.lower() == "sell":
+                elif action.lower() == "sell" or fresh_order_action.lower() == "sell":
                     price = self.ltp - min_diff
 
             DPR_price = max(lower_ckt, min(price, upper_ckt))
@@ -2145,6 +2152,42 @@ class ApificationBreeze():
                 order_type_fresh="", order_rate_fresh="", settlement_id="", order_segment_code="", lots=""):
 
         try:
+            if stock_code == "" or stock_code == None or exchange_code == "" or exchange_code == None or product == "" or product == None or action == "" or action == None or order_type == "" or order_type == None or price == "" or price == None or action == "" or action == None:
+                if stock_code == "" or stock_code == None:
+                    return self.validation_error_response(resp_message.BLANK_STOCK_CODE.value)
+                elif exchange_code == "" or exchange_code == None:
+                    return self.validation_error_response(resp_message.BLANK_EXCHANGE_CODE.value)
+                elif product == "" or product == None:
+                    return self.validation_error_response(resp_message.BLANK_PRODUCT_TYPE.value)
+                elif action == "" or action == None:
+                    return self.validation_error_response(resp_message.BLANK_ACTION.value)
+                elif order_type == "" or order_type == None:
+                    return self.validation_error_response(resp_message.BLANK_ORDER_TYPE.value)
+                # elif quantity == "" or quantity == None:
+                #     return self.validation_error_response(resp_message.BLANK_QUANTITY.value)
+                elif validity == "" or validity == None:
+                    return self.validation_error_response(resp_message.BLANK_VALIDITY.value)
+            elif product.lower() not in config.PRODUCT_TYPES:
+                return self.validation_error_response(resp_message.PRODUCT_TYPE_ERROR.value)
+            elif action.lower() not in config.ACTION_TYPES:
+                return self.validation_error_response(resp_message.ACTION_TYPE_ERROR.value)
+            elif product.lower() == "mtf" and action.lower() == "sell":
+                return self.validation_error_response(resp_message.MTF_SELL_NOT_ALLOWED.value)
+            elif order_type.lower() not in config.ORDER_TYPES:
+                return self.validation_error_response(resp_message.ORDER_TYPE_ERROR.value)
+            elif validity.lower() not in config.VALIDITY_TYPES:
+                return self.validation_error_response(resp_message.VALIDITY_TYPE_ERROR.value)
+            elif right != "" and right != None and right.lower() not in config.RIGHT_TYPES:
+                return self.validation_error_response(resp_message.RIGHT_TYPE_ERROR.value)
+            if exchange_code.lower() in ["mcx"]:
+                if lots == "" or lots == None:
+                    return self.validation_error_response(resp_message.BLANK_LOTS.value)
+            elif exchange_code.lower() in ["ndx"]:
+                return self.validation_error_response(resp_message.CURRENCY_NOT_ALLOWED.value)
+            else:
+                if quantity == "" or quantity == None:
+                    return self.validation_error_response(resp_message.BLANK_QUANTITY.value)
+                
             # -------- AGGRESSIVE --------
             if order_type.lower() == "market":
                 final_price, err = self.get_aggressive_limit_price(
@@ -2207,6 +2250,16 @@ class ApificationBreeze():
     def modify_order(self, order_id, exchange_code, order_type, stoploss, quantity, price, validity, disclosed_quantity, validity_date):
 
         try:
+            if exchange_code == "" or exchange_code == None or order_id == "" or order_id == None:
+                if exchange_code == "" or exchange_code == None:
+                    return self.validation_error_response(resp_message.BLANK_EXCHANGE_CODE.value)
+                elif order_id == "" or order_id == None:
+                    return self.validation_error_response(resp_message.BLANK_ORDER_ID.value)
+            elif order_type != "" and order_type != None and order_type.lower() not in config.ORDER_TYPES:
+                return self.validation_error_response(resp_message.ORDER_TYPE_ERROR.value)
+            elif validity != "" and validity != None and validity.lower() not in config.VALIDITY_TYPES:
+                return self.validation_error_response(resp_message.VALIDITY_TYPE_ERROR.value)
+
             # -------- FETCH ORDER --------
             order_data = self.get_order_detail(exchange_code, order_id)
             data = order_data.get("Success", [])

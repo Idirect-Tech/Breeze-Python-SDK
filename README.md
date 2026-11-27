@@ -72,7 +72,7 @@ pip install --upgrade breeze-connect
 Or, You can also install the specific release version via pip
 
 ```
-pip install breeze-connect==1.0.68
+pip install breeze-connect==1.0.70
 ```
 <hr>
 
@@ -101,7 +101,6 @@ iso_date_time_string = datetime.datetime.strptime("28/02/2021 23:59:59","%d/%m/%
 <br>
 
 <hr>
-
 
 <h3 id="websocket"><b> Websocket Usage </b></h3>
 
@@ -627,6 +626,9 @@ The final order price must fall within the exchange-defined DPR (Daily Price Ran
 **Step 5: Final Price**
 - **Buy Order = 45**  
 - **Sell Order = 35**
+
+<h3> IMPORTANT NOTE: </h3>
+<p>As ‘Aggressive limit order’ are limit orders, there is a possibility that they may get partially executed, remain pending, or even get rejected depending on market conditions. We request you to kindly monitor the price movements and manage your orders accordingly.</p>
  
 <hr>
 <h2>List of APIs:</h2>
